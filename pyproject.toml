@@ -1,0 +1,48 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "aat"
+version = "0.1.0"
+description = "A reductive Agent-Action-Target (AAT) model of natural-language syntax, plus a DSPy-based pipeline applying it to English."
+readme = "README.md"
+license = { file = "LICENSE" }
+requires-python = ">=3.10"
+authors = [
+    { name = "Neel Smith", email = "nsmith@holycross.edu" },
+]
+dependencies = [
+    "pydantic>=2.0",
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
+    "Programming Language :: Python :: 3",
+    "Topic :: Text Processing :: Linguistic",
+]
+
+[project.optional-dependencies]
+# Only aat.english (and the root scripts that use it) need dspy. aat.core
+# -- the language-agnostic model itself -- has no dependency on it at all,
+# so `pip install aat` alone is enough for a downstream project that only
+# wants CitableToken/AATNode/AATGraph/validate/serialization.
+english = [
+    "dspy>=3.0",
+]
+dev = [
+    "dspy>=3.0",
+    "pytest>=7.0",
+    "python-dotenv>=1.0",
+    "pdoc>=14",
+    "marimo>=0.9",
+]
+
+[project.urls]
+Homepage = "https://github.com/neelsmith/aat"
+Repository = "https://github.com/neelsmith/aat"
+Issues = "https://github.com/neelsmith/aat/issues"
+
+[tool.setuptools.packages.find]
+include = ["aat*"]
