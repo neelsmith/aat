@@ -10,4 +10,4 @@ venv/
 .env
 gepa_logs/
 __marimo__/
-
+uv.lock
