@@ -16,6 +16,7 @@ from .graph import AATGraph, AATNode, Role, ROLES
 from .validate import validate
 from .serialization import serialize_nodes, write_nodes, read_nodes, read_graph
 from .mermaid import graph_to_mermaid, save_mermaid
+from .coloring import assign_action_colors
 
 __all__ = [
     "CitableToken",
@@ -31,4 +32,5 @@ __all__ = [
     "read_graph",
     "graph_to_mermaid",
     "save_mermaid",
+    "assign_action_colors",
 ]

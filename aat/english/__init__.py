@@ -11,6 +11,7 @@ runs one way only, so a downstream project can depend on aat.core alone.
 
 from .dspy_signatures import AgentActionTarget, analyze, validate
 from .gepa_metric import aat_metric
+from .html import tokens_to_html
 from .pipeline import analyze_passage, analyze_passages
 from .tokenize import tokenize
 
@@ -22,4 +23,5 @@ __all__ = [
     "analyze_passage",
     "analyze_passages",
     "aat_metric",
+    "tokens_to_html",
 ]

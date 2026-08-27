@@ -1,5 +1,7 @@
 """Offline tests for aat.core.mermaid -- no dspy or network needed."""
 
+import pytest
+
 from aat.core import AATGraph, AATNode
 from aat.core.mermaid import graph_to_mermaid
 
@@ -45,11 +47,34 @@ def test_dependent_action_edge_is_labelled_dependent():
     assert "    t6 -->|dependent| t2" in diagram
 
 
-def test_orientation_is_used_verbatim():
-    diagram, _warnings = graph_to_mermaid(_dog_ate_homework_graph(), orientation="TB")
-    assert diagram.startswith("graph TB")
-    diagram, _warnings = graph_to_mermaid(_dog_ate_homework_graph(), orientation="LR")
+def test_default_orientation_is_bt():
+    diagram, _warnings = graph_to_mermaid(_dog_ate_homework_graph())
+    assert diagram.startswith("graph BT")
+
+
+@pytest.mark.parametrize("orientation", ["TB", "TD", "BT", "RL", "LR"])
+def test_every_valid_orientation_is_accepted_and_used_verbatim(orientation):
+    diagram, _warnings = graph_to_mermaid(_dog_ate_homework_graph(), orientation=orientation)
+    assert diagram.startswith(f"graph {orientation}")
+
+
+def test_orientation_is_matched_case_insensitively_and_uppercased():
+    diagram, _warnings = graph_to_mermaid(_dog_ate_homework_graph(), orientation="lr")
     assert diagram.startswith("graph LR")
+
+
+def test_orientation_surrounding_whitespace_is_stripped():
+    diagram, _warnings = graph_to_mermaid(_dog_ate_homework_graph(), orientation=" TB ")
+    assert diagram.startswith("graph TB")
+
+
+def test_invalid_orientation_raises_value_error_naming_valid_options():
+    with pytest.raises(ValueError) as excinfo:
+        graph_to_mermaid(_dog_ate_homework_graph(), orientation="sideways")
+    message = str(excinfo.value)
+    assert "sideways" in message
+    for valid in ("TB", "TD", "BT", "RL", "LR"):
+        assert valid in message
 
 
 def test_broken_related_node_is_skipped_and_warned_not_crashed():
@@ -63,8 +88,8 @@ def test_broken_related_node_is_skipped_and_warned_not_crashed():
 
 def test_color_by_action_gives_agent_and_target_the_same_class_as_their_action():
     diagram, _warnings = graph_to_mermaid(_dog_ate_homework_graph(), color_by_action=True)
-    assert "classDef a0" in diagram
-    assert "class t3,t2,t5 a0;" in diagram
+    assert "classDef c0" in diagram
+    assert "class t3,t2,t5 c0;" in diagram
 
 
 def test_dependent_action_gets_its_own_class_not_its_governors():
@@ -77,8 +102,8 @@ def test_dependent_action_gets_its_own_class_not_its_governors():
         ]
     )
     diagram, _warnings = graph_to_mermaid(graph)
-    assert "class t2,t1 a0;" in diagram
-    assert "class t6,t5 a1;" in diagram
+    assert "class t2,t1 c0;" in diagram
+    assert "class t6,t5 c1;" in diagram
 
 
 def test_color_by_action_false_gives_plain_diagram():
@@ -94,10 +119,19 @@ def test_more_actions_than_palette_slots_warns_but_still_renders():
     ]
     diagram, warnings = graph_to_mermaid(AATGraph(nodes=nodes))
     assert any("only 8 palette" in w for w in warnings)
-    assert "classDef a9" in diagram  # still renders every action, just cycling colors
+    # 10 actions cycle through 8 palette colors -- only 8 distinct
+    # classDefs are emitted (c0..c7, not one per action), and the
+    # two actions that land on a repeated color (t8 on t0's color,
+    # t9 on t1's) share that class rather than getting a redundant
+    # classDef of their own.
+    assert "classDef c0" in diagram
+    assert "classDef c7" in diagram
+    assert "classDef c8" not in diagram
+    assert "class t0,t8 c0;" in diagram
+    assert "class t1,t9 c1;" in diagram
 
 
 def test_empty_graph_renders_header_only():
     diagram, warnings = graph_to_mermaid(AATGraph(nodes=[]))
-    assert diagram == "graph LR"
+    assert diagram == "graph BT"
     assert warnings == []

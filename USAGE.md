@@ -100,9 +100,52 @@ reloaded = read_graph("analysis.txt")
 The file has one `#!aatnodes` block per call to `write_nodes()`/`serialize_nodes()`, each with the fixed header `context|id|value|role|related_node` -- see `serialization.py`'s module docstring for the exact format. Multiple blocks in one file are concatenated, in file order, into the list `read_nodes()` returns, so simply concatenating several `write_nodes()` outputs together and reading the result back gives you one combined graph.
 
 
+## Rendering a graph as Mermaid
+
+`graph_to_mermaid()` (in `aat/core/mermaid.py`) renders an `AATGraph` as a [Mermaid](https://mermaid.js.org) flowchart: an action is a rectangle, an agent is rounded, a target is a stadium shape, and every node with a `related_node` becomes a labelled edge pointing at it. By default every node is also colored by which action it clusters with, so the separate clauses in a multi-action passage are visually distinguishable.
+
+```python
+from aat.core import graph_to_mermaid
+
+diagram, warnings = graph_to_mermaid(graph)
+print(diagram)
+for w in warnings:
+    print(f"Warning: {w}")
+```
+
+`orientation` controls the diagram's layout direction -- Mermaid's own flowchart direction codes: `"BT"` (bottom-to-top, the default), `"TB"`/`"TD"` (top-down, synonyms), `"LR"`, or `"RL"`. Matched case-insensitively (`"lr"` works the same as `"LR"`); anything else raises `ValueError` naming the valid options, rather than silently producing invalid Mermaid syntax:
+
+```python
+diagram, warnings = graph_to_mermaid(graph, orientation="LR")
+```
+
+Pass `color_by_action=False` for a plain, uncolored diagram. `save_mermaid(graph, path, ...)` takes the same `orientation`/`color_by_action` arguments and writes the diagram straight to a file (e.g. `analysis.mmd`).
+
+`warnings` lists any node whose `related_node` doesn't resolve to another node actually present in `graph` -- normally a sign the graph failed `validate()` upstream (see "Analyzing multiple citable passages" above), worth checking there first -- plus, if the graph has more distinct actions than the color palette has slots (currently 8), one warning that colors repeat.
+
+
+## Rendering tokens as highlighted HTML
+
+`tokens_to_html()` (in `aat/english/html.py`) renders a passage's tokens as one continuous HTML string, reconstructing normal reading spacing (punctuation attaches to the preceding word; opening brackets and the first of a paired quote attach to what follows) rather than putting a space before every token. Pass the same `AATGraph` you'd hand to `graph_to_mermaid()` and every token that's also an AAT graph node is highlighted using the *same* color that node gets in the Mermaid diagram (`aat.core.coloring.assign_action_colors()` -- one shared assignment behind both renderers), with a border style keyed on the node's role: a box around an `action` token, a rounded box around an `agent` token, and an underline under a `target` token.
+
+```python
+from aat.english import tokenize, tokens_to_html
+from aat.core import CitedPassage
+
+tokens, graph = analyze_passage("The dog ate the homework.", context="urn:cts:...")
+html = tokens_to_html(tokens, graph=graph)
+```
+
+Omit `graph` (or pass `graph=None`) for plain, unhighlighted text -- still with the same spacing reconstruction.
+
+Every token's text is HTML-escaped before being emitted (`&`, `<`, `>`, and quote characters), so passage text containing any of those characters round-trips safely rather than being mistaken for markup.
+
+Note: for a *compound* action (e.g. "was eating"), only the principal-verb token is highlighted, since that's the only token id the `AATNode` itself records -- see the module's own docstring.
+
+
 ## Interactive notebook
 
-`marimo/aat_graph.py` is a [marimo](https://marimo.io) notebook: enter a context ID and a passage in one form, submit it, and it tokenizes the passage, runs it through `analyze_passage()`, and renders the resulting `AATGraph` as a Mermaid diagram via `aat.core.graph_to_mermaid()`. Needs the 'dev' extra (`pip install -e ".[dev]"`) and a working `.env` (see above) -- the LM is configured as soon as the notebook loads.
+`marimo/aat_graph.py` is a [marimo](https://marimo.io) notebook: enter a context ID and a passage in one form, submit it, and it tokenizes the passage, runs it through `analyze_passage()`, and renders the resulting `AATGraph` as a Mermaid diagram via `aat.core.graph_to_mermaid()`. A separate orientation control (default `BT`) updates the diagram live, without resubmitting the form or making another LM call. Needs the 'dev' extra (`pip install -e ".[dev]"`) and a working `.env` (see above) -- the LM is configured as soon as the notebook loads.
 
 ```bash
 marimo edit marimo/aat_graph.py

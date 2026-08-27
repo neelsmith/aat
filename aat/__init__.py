@@ -29,6 +29,7 @@ from .core import (
     read_graph,
     graph_to_mermaid,
     save_mermaid,
+    assign_action_colors,
 )
 
 __version__ = "0.1.0"
@@ -47,5 +48,6 @@ __all__ = [
     "read_graph",
     "graph_to_mermaid",
     "save_mermaid",
+    "assign_action_colors",
     "__version__",
 ]

@@ -25,11 +25,40 @@ Multiple contexts in one `graph` are all drawn into a single diagram, with
 no special separation between them -- if you want one diagram per context,
 filter `graph.nodes` first (e.g. `AATGraph(nodes=[n for n in graph.nodes
 if n.context == wanted])`).
+
+`orientation` (default "BT", bottom-to-top) is validated against Mermaid's
+own set of flowchart direction codes -- see `_VALID_ORIENTATIONS` and
+`graph_to_mermaid()`'s own docstring.
+
+The action-cluster color assignment itself lives in aat.core.coloring
+(assign_action_colors()), not here, so it can be reused wherever else a
+node needs to be colored the same way -- see that module's own docstring.
 """
 
 from typing import Dict, List, Tuple
 
+from .coloring import ColorTriple, assign_action_colors
 from .graph import AATGraph, AATNode
+
+# Mermaid's own flowchart direction codes (https://mermaid.js.org/syntax/
+# flowchart.html#direction): TB and TD are synonyms (top-down); BT, RL, LR
+# are the other three directions. graph_to_mermaid() checks `orientation`
+# against this set (case-insensitively) rather than passing it through
+# unchecked, so a typo becomes a clear ValueError here instead of silently
+# invalid Mermaid syntax in the output.
+_VALID_ORIENTATIONS = {"TB", "TD", "BT", "RL", "LR"}
+
+
+def _normalize_orientation(orientation: str) -> str:
+    normalized = orientation.strip().upper()
+    if normalized not in _VALID_ORIENTATIONS:
+        raise ValueError(
+            f"invalid orientation {orientation!r} -- must be one of "
+            f"{sorted(_VALID_ORIENTATIONS)} (Mermaid's flowchart direction "
+            "codes: https://mermaid.js.org/syntax/flowchart.html#direction)"
+        )
+    return normalized
+
 
 # Characters that need escaping inside a Mermaid quoted label.
 _LABEL_ESCAPES = {
@@ -44,21 +73,6 @@ def _escape_label(text: str) -> str:
         text = text.replace(char, replacement)
     return text
 
-
-# (fill, stroke, text) hex triples, chosen for readable contrast between
-# fill and text in both light- and dark-themed Mermaid renderers. Cycles
-# (with a warning -- see graph_to_mermaid()'s own docstring) if a graph has
-# more distinct actions than this palette has slots.
-_ACTION_COLOR_PALETTE = [
-    ("#E3F2FD", "#1565C0", "#0D47A1"),  # blue
-    ("#FFF3E0", "#EF6C00", "#E65100"),  # orange
-    ("#E8F5E9", "#2E7D32", "#1B5E20"),  # green
-    ("#FCE4EC", "#AD1457", "#880E4F"),  # pink
-    ("#EDE7F6", "#5E35B1", "#4527A0"),  # purple
-    ("#FFFDE7", "#F9A825", "#F57F17"),  # yellow
-    ("#E0F7FA", "#00838F", "#006064"),  # cyan
-    ("#FBE9E7", "#D84315", "#BF360C"),  # deep orange
-]
 
 # Mermaid node-shape delimiters, keyed by AATNode.role. A role this module
 # doesn't recognize (shouldn't happen -- Role is a Literal of exactly
@@ -77,17 +91,18 @@ def _node_key(node: AATNode) -> Tuple[str, str]:
 
 def graph_to_mermaid(
     graph: AATGraph,
-    orientation: str = "LR",
+    orientation: str = "BT",
     color_by_action: bool = True,
 ) -> Tuple[str, List[str]]:
     """Build a Mermaid `graph` diagram from an AATGraph.
 
-    `orientation` is Mermaid's own flowchart orientation code -- `LR`
-    (left-to-right, the default here), `TB`, `BT`, or `RL` -- used
-    verbatim in the diagram's opening line (`graph LR`, etc.). See
-    https://mermaid.js.org/syntax/flowchart.html for what each value looks
-    like; this function doesn't validate it, so a typo just becomes
-    invalid Mermaid syntax in the output rather than an error here.
+    `orientation` is Mermaid's own flowchart direction code -- `BT`
+    (bottom-to-top, the default here), `TB`/`TD` (top-down -- synonyms),
+    `LR`, or `RL` -- used verbatim (uppercased) in the diagram's opening
+    line (`graph BT`, etc.). Matched case-insensitively against
+    `_VALID_ORIENTATIONS`; anything else raises `ValueError` naming the
+    valid options, rather than silently producing invalid Mermaid syntax.
+    See https://mermaid.js.org/syntax/flowchart.html#direction.
 
     `color_by_action` (default True) -- see this module's own docstring.
     Pass False for a plain, uncolored diagram.
@@ -100,6 +115,8 @@ def graph_to_mermaid(
     has more distinct actions than the palette has colors (currently 8),
     one warning notes that colors repeat.
     """
+    orientation = _normalize_orientation(orientation)
+
     by_key: Dict[Tuple[str, str], AATNode] = {_node_key(n): n for n in graph.nodes}
 
     lines = [f"graph {orientation}"]
@@ -122,43 +139,41 @@ def graph_to_mermaid(
         lines.append(f"    {node.id} -->|{edge_label}| {node.related_node}")
 
     if color_by_action:
-        actions = [n for n in graph.nodes if n.role == "action"]
-        action_keys_in_order = [_node_key(a) for a in actions]
+        color_of_node, color_warnings = assign_action_colors(graph)
+        warnings.extend(color_warnings)
 
-        if len(actions) > len(_ACTION_COLOR_PALETTE):
-            warnings.append(
-                f"{len(actions)} actions but only {len(_ACTION_COLOR_PALETTE)} palette "
-                "colors -- colors repeat and some distinct actions will share a color"
-            )
-
-        # Every node's cluster is the action it belongs to: its own key
-        # for an action node (dependent or not -- see module docstring),
-        # or the action its related_node points at for an agent/target. A
-        # node with no related_node that isn't an action (shouldn't
-        # happen in a validate()-clean graph) is left uncolored.
-        cluster_of_node: Dict[Tuple[str, str], Tuple[str, str]] = {}
-        for node in graph.nodes:
-            key = _node_key(node)
-            if node.role == "action":
-                cluster_of_node[key] = key
-            elif node.related_node is not None:
-                related_key = (node.context, node.related_node)
-                if related_key in by_key:
-                    cluster_of_node[key] = related_key
-
-        if action_keys_in_order:
+        if color_of_node:
             lines.append("")
-            class_name_of_action = {key: f"a{i}" for i, key in enumerate(action_keys_in_order)}
-            for i, key in enumerate(action_keys_in_order):
-                fill, stroke, text = _ACTION_COLOR_PALETTE[i % len(_ACTION_COLOR_PALETTE)]
-                lines.append(f"    classDef a{i} fill:{fill},stroke:{stroke},color:{text};")
+
+            # Group by color VALUE, not by action -- two actions that
+            # cycle to the same palette color (more actions than the
+            # palette has slots) share a single classDef/class pair here
+            # rather than emitting two redundant classes with identical
+            # colors.
+            colors_in_order: List[ColorTriple] = []
+            seen_colors = set()
+            for node in graph.nodes:
+                color = color_of_node.get(_node_key(node))
+                if color is not None and color not in seen_colors:
+                    seen_colors.add(color)
+                    colors_in_order.append(color)
+
+            class_name_of_color: Dict[ColorTriple, str] = {
+                color: f"c{i}" for i, color in enumerate(colors_in_order)
+            }
+            for color in colors_in_order:
+                fill, stroke, text = color
+                lines.append(
+                    f"    classDef {class_name_of_color[color]} "
+                    f"fill:{fill},stroke:{stroke},color:{text};"
+                )
 
             nodes_by_class: Dict[str, List[str]] = {}
             for node in graph.nodes:
-                cluster_key = cluster_of_node.get(_node_key(node))
-                class_name = class_name_of_action.get(cluster_key)
-                if class_name is None:
+                color = color_of_node.get(_node_key(node))
+                if color is None:
                     continue
+                class_name = class_name_of_color[color]
                 nodes_by_class.setdefault(class_name, []).append(node.id)
 
             for class_name, node_ids in nodes_by_class.items():
@@ -170,11 +185,12 @@ def graph_to_mermaid(
 def save_mermaid(
     graph: AATGraph,
     path: str,
-    orientation: str = "LR",
+    orientation: str = "BT",
     color_by_action: bool = True,
 ) -> List[str]:
     """Write the diagram to `path` (e.g. 'analysis.mmd') and return any
-    warnings from graph_to_mermaid()."""
+    warnings from graph_to_mermaid(). `orientation` is validated the same
+    way -- see graph_to_mermaid()'s own docstring."""
     diagram, warnings = graph_to_mermaid(graph, orientation=orientation, color_by_action=color_by_action)
     with open(path, "w", encoding="utf-8") as f:
         f.write(diagram + "\n")

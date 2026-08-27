@@ -11,35 +11,49 @@ def _():
     return (mo,)
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(mo):
     mo.md("""
     # Build an Agent-Action-Target graph
-
-    Enter a context reference and a passage of English text, then submit
-    the form. The passage is tokenized (`aat.english.tokenize`), analyzed
-    into agent/action/target nodes (`aat.english.analyze_passage`), and
-    rendered as a Mermaid diagram (`aat.core.graph_to_mermaid`).
-
-    Needs a working `.env` in the repo root (see `../.env.example` and
-    `USAGE.md`) -- the LM is configured as soon as this notebook loads,
-    before you submit anything.
     """)
     return
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(mo):
     mo.md("""
-    Prerequisites: access to a LM configured in`.env` in the root of this repository (see `../.env.example` and
-    `USAGE.md`)
+    >**Prerequisites**: access to a LM configured in`.env` in the root of this repository (see [`.env.example`](https://github.com/neelsmith/aat/blob/main/.env.example) and
+    [`USAGE.md`](https://github.com/neelsmith/aat/blob/main/USAGE.md)).
+
+
+    *Enter a context reference and a passage of English text. Once you have
+    a graph, the diagram orientation control updates it live -- no need to
+    resubmit the form.*
     """)
     return
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(passage_form):
     passage_form
+    return
+
+
+@app.cell(hide_code=True)
+def _(htmlstack):
+    htmlstack
+    return
+
+
+@app.cell(hide_code=True)
+def _(showdiagram):
+    showdiagram
+    return
+
+
+@app.cell(hide_code=True)
+def _(orientation_input):
+    orientation_input
     return
 
 
@@ -58,7 +72,7 @@ def _(mo):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md("""
-    ## Implementation
+    # Implementation
     """)
     return
 
@@ -154,9 +168,9 @@ def _(configure_lm):
 @app.cell
 def _():
     from aat.core import graph_to_mermaid
-    from aat.english import analyze_passage
+    from aat.english import analyze_passage, tokens_to_html
 
-    return analyze_passage, graph_to_mermaid
+    return analyze_passage, graph_to_mermaid, tokens_to_html
 
 
 @app.cell(hide_code=True)
@@ -187,6 +201,22 @@ def _(mo):
 
 
 @app.cell
+def _(mo):
+    # Deliberately NOT part of passage_form's batch() below -- orientation
+    # is a rendering choice, not something that should require resubmitting
+    # the form (and re-running analyze_passage() against the LM) just to
+    # try a different layout. Changing it live re-runs graph_to_mermaid()
+    # only.
+    orientation_input = mo.ui.radio(
+        options=["BT", "TB", "LR", "RL"],
+        value="BT",
+        inline=True,
+        label="*Diagram orientation*:",
+    )
+    return (orientation_input,)
+
+
+@app.cell
 def _(context_input, mo, passage_input):
     # Both inputs as one form -- marimo only updates passage_form.value (and
     # so only re-triggers the analysis cell below) when the form is
@@ -203,6 +233,32 @@ def _(context_input, mo, passage_input):
         .form(submit_button_label="Build AAT graph")
     )
     return (passage_form,)
+
+
+@app.cell
+def _(diagram, mo):
+    showdiagram = None
+    if diagram:
+        showdiagram = mo.vstack([mo.md("**Graph**"), mo.mermaid(diagram)])
+    return (showdiagram,)
+
+
+@app.cell
+def _(graph, mo, tokens, tokens_to_html):
+    htmltext = None
+    htmlhilite = None
+    if graph:
+        htmlhilite = mo.md(tokens_to_html(tokens, graph=graph))
+        htmltext = mo.md("*" + tokens_to_html(tokens) + "*" )
+    return htmlhilite, htmltext
+
+
+@app.cell
+def _(htmlhilite, htmltext, mo):
+    leftcol = mo.vstack([mo.md("**Text**"), htmltext])
+    rightcol = mo.vstack([mo.md("**Analysis**"), htmlhilite])
+    htmlstack = mo.hstack([leftcol, rightcol])
+    return (htmlstack,)
 
 
 @app.cell(hide_code=True)
@@ -224,15 +280,15 @@ def _(analyze_passage, passage_form):
         context = passage_form.value.get("context_input") or ""
         text = passage_form.value["passage_input"]
         tokens, graph = analyze_passage(text, context=context)
-    return (graph,)
+    return graph, tokens
 
 
 @app.cell
-def _(graph, graph_to_mermaid):
+def _(graph, graph_to_mermaid, orientation_input):
     diagram, diagram_warnings = None, []
     if graph is not None:
-        diagram, diagram_warnings = graph_to_mermaid(graph)
-    return (diagram_warnings,)
+        diagram, diagram_warnings = graph_to_mermaid(graph, orientation=orientation_input.value)
+    return diagram, diagram_warnings
 
 
 if __name__ == "__main__":
