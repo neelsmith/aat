@@ -14,7 +14,18 @@ pulling in dspy at all.
 from .tokens import CitableToken, CitedPassage
 from .graph import AATGraph, AATNode, Role, ROLES
 from .validate import validate
-from .serialization import serialize_nodes, write_nodes, read_nodes, read_graph
+from .serialization import (
+    serialize_nodes,
+    write_nodes,
+    read_nodes,
+    read_graph,
+    serialize_passages,
+    write_passages,
+    read_passages,
+    serialize_analysis,
+    write_analysis,
+    read_analysis,
+)
 from .mermaid import graph_to_mermaid, save_mermaid
 from .coloring import assign_action_colors
 
@@ -30,6 +41,12 @@ __all__ = [
     "write_nodes",
     "read_nodes",
     "read_graph",
+    "serialize_passages",
+    "write_passages",
+    "read_passages",
+    "serialize_analysis",
+    "write_analysis",
+    "read_analysis",
     "graph_to_mermaid",
     "save_mermaid",
     "assign_action_colors",

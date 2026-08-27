@@ -28,7 +28,11 @@ def _(mo):
 
     *Enter a context reference and a passage of English text. Once you have
     a graph, the diagram orientation control updates it live -- no need to
-    resubmit the form.*
+    resubmit the form. You can also save the analysis (passage + graph):
+    pick a directory and click "Save analysis to file" -- the filename is
+    derived automatically from the context ID -- and reopen it later in
+    `aat_reader.py`, which replicates this same display but needs
+    no LM access at all.*
     """)
     return
 
@@ -54,6 +58,18 @@ def _(showdiagram):
 @app.cell(hide_code=True)
 def _(orientation_input):
     orientation_input
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo, save_button, save_dir_browser):
+    mo.vstack([save_dir_browser, save_button])
+    return
+
+
+@app.cell(hide_code=True)
+def _(save_status):
+    save_status
     return
 
 
@@ -167,10 +183,16 @@ def _(configure_lm):
 
 @app.cell
 def _():
-    from aat.core import graph_to_mermaid
+    from aat.core import CitedPassage, graph_to_mermaid, write_analysis
     from aat.english import analyze_passage, tokens_to_html
 
-    return analyze_passage, graph_to_mermaid, tokens_to_html
+    return (
+        CitedPassage,
+        analyze_passage,
+        graph_to_mermaid,
+        tokens_to_html,
+        write_analysis,
+    )
 
 
 @app.cell(hide_code=True)
@@ -217,6 +239,29 @@ def _(mo):
 
 
 @app.cell
+def _(Path, mo):
+    # selection_mode="directory" + multiple=False -- the user picks
+    # exactly one directory to save into; the filename itself is derived
+    # from the passage's own context (see filename_base below), not
+    # typed here. Starts browsing from the repo root, and .value stays
+    # empty until the user actually picks something -- see save_status
+    # below for the fallback that applies until then.
+    save_dir_browser = mo.ui.file_browser(
+        initial_path=Path(__file__).parent.parent,
+        selection_mode="directory",
+        multiple=False,
+        label="*Save analysis in*:",
+    )
+    return (save_dir_browser,)
+
+
+@app.cell
+def _(mo):
+    save_button = mo.ui.run_button(label="Save analysis to file")
+    return (save_button,)
+
+
+@app.cell
 def _(context_input, mo, passage_input):
     # Both inputs as one form -- marimo only updates passage_form.value (and
     # so only re-triggers the analysis cell below) when the form is
@@ -259,6 +304,87 @@ def _(htmlhilite, htmltext, mo):
     rightcol = mo.vstack([mo.md("**Analysis**"), htmlhilite])
     htmlstack = mo.hstack([leftcol, rightcol])
     return (htmlstack,)
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md("""
+    ## Serialization
+    """)
+    return
+
+
+@app.cell
+def _(CitedPassage, passage_form):
+    # The passage last submitted, kept as a CitedPassage so it can be
+    # written back out (write_analysis()) alongside its graph -- built
+    # straight from the form's own value, so it's available for saving
+    # even independent of how the analysis cell below is implemented.
+    passage_for_save = None
+    if passage_form.value and passage_form.value.get("passage_input"):
+        passage_for_save = CitedPassage(
+            context=passage_form.value.get("context_input") or "",
+            text=passage_form.value["passage_input"],
+        )
+    return (passage_for_save,)
+
+
+@app.cell
+def _(passage_for_save):
+    # A safe filename base derived from the passage's own context
+    # reference (e.g. a CTS/CITE URN like "urn:cite2:aat:examples.v1:ex1",
+    # full of ':' and '.') -- every run of characters that isn't a
+    # letter, digit, '_', or '-' collapses to a single '_', with
+    # leading/trailing '_' stripped. Falls back to "analysis" if that
+    # leaves nothing (e.g. no context was given).
+    filename_base = "analysis"
+    if passage_for_save is not None:
+        slug = "".join(
+            c if (c.isalnum() or c in "_-") else "_" for c in passage_for_save.context
+        )
+        slug = slug.strip("_")
+        filename_base = slug or "analysis"
+    return (filename_base,)
+
+
+@app.cell
+def _(
+    Path,
+    filename_base,
+    graph,
+    mo,
+    passage_for_save,
+    save_button,
+    save_dir_browser,
+    write_analysis,
+):
+    # Only runs (writes a file) when save_button is actually clicked --
+    # mo.ui.run_button's value is True for exactly the run triggered by
+    # that click, then resets to False, so this cell is a no-op on every
+    # other reactive re-run (e.g. re-submitting the form, changing the
+    # orientation control, or just browsing to a different directory
+    # without clicking Save).
+    save_status = None
+    if save_button.value:
+        if graph is None or passage_for_save is None:
+            save_status = mo.callout(
+                mo.md("No analysis to save yet -- build a graph first."), kind="warn"
+            )
+        else:
+            # save_dir_browser.value is empty until the user actually
+            # picks a directory -- default to this notebook's own parent
+            # directory (the repo root) rather than erroring.
+            save_dir = (
+                save_dir_browser.path(0)
+                if save_dir_browser.value
+                else Path(__file__).parent.parent
+            )
+            save_path = Path(save_dir) / f"{filename_base}.txt"
+            write_analysis([passage_for_save], graph, str(save_path))
+            save_status = mo.callout(
+                mo.md(f"Saved analysis to `{save_path}`."), kind="success"
+            )
+    return (save_status,)
 
 
 @app.cell(hide_code=True)

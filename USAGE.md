@@ -99,6 +99,17 @@ reloaded = read_graph("analysis.txt")
 
 The file has one `#!aatnodes` block per call to `write_nodes()`/`serialize_nodes()`, each with the fixed header `context|id|value|role|related_node` -- see `serialization.py`'s module docstring for the exact format. Multiple blocks in one file are concatenated, in file order, into the list `read_nodes()` returns, so simply concatenating several `write_nodes()` outputs together and reading the result back gives you one combined graph.
 
+`serialize_analysis()`/`write_analysis()` (a thin wrapper that writes `serialize_analysis()`'s string to a file) and `read_analysis()` save and reload a *complete, re-displayable* analysis -- the graph AND its source passage(s) -- so a later reader can recover tokens (via `aat.english.tokenize()`, which needs no LM) and pair them back up with the graph, without ever calling an LM again:
+
+```python
+from aat.core import CitedPassage, write_analysis, read_analysis
+
+write_analysis([CitedPassage(context=context, text=text)], graph, "analysis.txt")
+passages, reloaded_graph = read_analysis("analysis.txt")
+```
+
+Call `serialize_analysis()` directly (no `path` argument) when you want the text itself rather than a file -- this is what powers `aat_graph.py`'s "Save analysis to file" button, which writes the string wherever the user's own directory picker points, not to a fixed path. `aat_reader.py` is the matching file-loading notebook -- see "Interactive notebook" below. The file has a `#!passages` block (header `context|text`) alongside the `#!aatnodes` block; each is read independently by its own function (`read_passages()`/`read_nodes()`), so the two block types can coexist in one file without interfering with each other.
+
 
 ## Rendering a graph as Mermaid
 
@@ -145,13 +156,19 @@ Note: for a *compound* action (e.g. "was eating"), only the principal-verb token
 
 ## Interactive notebook
 
-`marimo/aat_graph.py` is a [marimo](https://marimo.io) notebook: enter a context ID and a passage in one form, submit it, and it tokenizes the passage, runs it through `analyze_passage()`, and renders the resulting `AATGraph` as a Mermaid diagram via `aat.core.graph_to_mermaid()`. A separate orientation control (default `BT`) updates the diagram live, without resubmitting the form or making another LM call. Needs the 'dev' extra (`pip install -e ".[dev]"`) and a working `.env` (see above) -- the LM is configured as soon as the notebook loads.
+`marimo/aat_graph.py` is a [marimo](https://marimo.io) notebook: enter a context ID and a passage in one form, submit it, and it tokenizes the passage, runs it through `analyze_passage()`, and renders the resulting `AATGraph` both as a Mermaid diagram (`aat.core.graph_to_mermaid()`) and as highlighted passage text (`aat.english.tokens_to_html()`), side by side. A separate orientation control (default `BT`) updates the diagram live, without resubmitting the form or making another LM call. A directory picker and a "Save analysis to file" button write the current passage and graph via `aat.core.write_analysis()`; the filename is derived automatically from the context ID (non-alphanumeric characters collapsed to `_`, falling back to `analysis.txt`), so you can reopen the result later without re-running the LM. Needs the 'dev' extra (`pip install -e ".[dev]"`) and a working `.env` (see above) -- the LM is configured as soon as the notebook loads.
 
 ```bash
 marimo edit marimo/aat_graph.py
 ```
 
 opens it in an editable, reactive browser session; `marimo run marimo/aat_graph.py` runs the same notebook as a read-only app (code cells hidden, just the form and the diagram).
+
+`marimo/aat_reader.py` is a companion notebook with the identical Mermaid-diagram-plus-highlighted-text display, but instead of a passage form and an LM call, it has a file picker: browse to and select a file `aat_graph.py`'s "Save analysis to file" button wrote (or one written directly with `aat.core.write_analysis()`), and it re-tokenizes the saved passage (`aat.english.tokenize()` -- deterministic, no LM) and pairs it back up with the saved graph. It needs no `.env`, no configured LM, and makes no network access at all -- everything it shows comes straight from the file:
+
+```bash
+marimo edit marimo/aat_reader.py
+```
 
 
 ## Using an optimized prompt

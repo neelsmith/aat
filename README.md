@@ -35,7 +35,8 @@ Working on `aat` itself (this repo checked out locally): `pip install -e ".[dev]
 - [TESTING.md](TESTING.md) -- running the offline test suite
 - [OPTIMIZING.md](OPTIMIZING.md) -- tuning `AgentActionTarget`'s prompt with GEPA
 - [DEVELOPMENT.md](DEVELOPMENT.md) -- how the above fit together into one development loop
-- `marimo/aat_graph.py` -- an interactive marimo notebook: enter a passage, submit, see its AAT graph as a Mermaid diagram
+- `marimo/aat_graph.py` -- an interactive marimo notebook: enter a passage, submit, see its AAT graph as a Mermaid diagram and highlighted text, and optionally save the analysis to a local file
+- `marimo/aat_reader.py` -- the same display, loaded from a file `aat_graph.py` saved (pick it with a file picker) -- no LM access needed
 - API documentation -- published automatically to GitHub Pages on every push to `main` (see `.github/workflows/docs.yml`); once enabled for this repo, it's at `https://neelsmith.github.io/aat/`
 
 See the [project issue tracker](https://github.com/neelsmith/aat/issues) for known gaps and work in progress.
