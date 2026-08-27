@@ -9,4 +9,5 @@ dist/
 venv/
 .env
 gepa_logs/
-docs/site/
+__marimo__/
+
