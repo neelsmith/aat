@@ -1,47 +1,57 @@
 # aat
 
-`aat` is a python package implementing a reductive model of natural-language syntax called Agent-Action-Target (AAT), documented in [`aat-model.md`](aat-model.md), plus a [dspy](https://dspy.ai)-based pipeline that applies the model to English text.
+> *See release history*
 
-The package is deliberately split into two halves that don't depend on each other in the direction that matters:
 
-- **`aat.core`** -- the AAT model itself: `CitableToken`/`CitedPassage` (input), `AATNode`/`AATGraph` (output), `validate()`, and a plain-text serialization format. No dependency on dspy, or on any particular language. A downstream project that wants to apply the AAT model to a *different* language can depend on `aat.core` alone and write its own extraction code the way `aat.english` does here.
-- **`aat.english`** -- a dspy program (`AgentActionTarget`) that actually extracts agent/action/target nodes from English text, plus a tokenizer, a pipeline (`analyze_passage`/`analyze_passages`), and a GEPA scoring metric. Depends on `aat.core`, and on `dspy`.
+`aat` is a python package leveraging LMs with `dspy` to apply a reductive model of natural-language syntax called Agent-Action-Target (AAT) to citable text in English. The AAT model is documented in [`aat-model.md`](https://github.com/neelsmith/aat/blob/main/aat-model.md).
+
+The package is deliberately split into two independent modules:
+
+- **`aat.core`** implements the AAT model with classes for input (`CitableToken`/`CitedPassage`) and output (`AATNode`/`AATGraph`). It includes functions to validate and serialize analyses to a plain-text format.
+- **`aat.english`** uses an LM  configured with `dspy` to tokenize English text and compose an `AATGraph`.
 
 Released under the [GNU General Public License v3 or later](LICENSE).
 
 
 ## Installing
 
-To use `aat` from another project, install it straight from this repository (no PyPI account or release process needed):
+To use the `aat` model froinm another project, install the core module directly from this repository:
 
 ```sh
 pip install git+https://github.com/neelsmith/aat.git
 ```
 
-That installs `aat.core` only -- no dspy dependency at all. To also install `aat.english` (the dspy-based English pipeline):
+To include `aat.english` (the dspy-based English pipeline):
 
 ```sh
 pip install "aat[english] @ git+https://github.com/neelsmith/aat.git"
 ```
 
-Pin to a specific branch, tag, or commit by appending `@<ref>` to the URL, e.g. `...aat.git@v0.1.0` once a version is tagged.
+To pin to a specific branch, tag, or commit  appending `@<ref>` to the URL, e.g.
 
-Working on `aat` itself (this repo checked out locally): `pip install -e ".[dev]"` from the repo root installs it in editable mode with every dev dependency (dspy, pytest, python-dotenv, pdoc), so source edits take effect immediately without reinstalling.
+```sh
+pip install "aat[english] @ git+https://github.com/neelsmith/aat.git@v0.1.0`
+```
+
+
 
 
 ## Using `aat`
+
+### marimo notebooks
+
+- `marimo/aat_graph.py` lets you enter a passage, analyze it with the configured LM, and visualize the resulting AAT graph. Optionally, save the analysis to a local file.
+- `marimo/aat_reader.py` lets you load saved analyses from a local file and visualize the AAT graph without any LM acces.
+
+### Working directly with the package
 
 - [USAGE.md](USAGE.md) -- running the pipeline, from the command line or from your own code
 - [TESTING.md](TESTING.md) -- running the offline test suite
 - [OPTIMIZING.md](OPTIMIZING.md) -- tuning `AgentActionTarget`'s prompt with GEPA
 - [DEVELOPMENT.md](DEVELOPMENT.md) -- how the above fit together into one development loop
-- `marimo/aat_graph.py` -- an interactive marimo notebook: enter a passage, submit, see its AAT graph as a Mermaid diagram and highlighted text, and optionally save the analysis to a local file
-- `marimo/aat_reader.py` -- the same display, loaded from a file `aat_graph.py` saved (pick it with a file picker) -- no LM access needed
-- API documentation -- published automatically to GitHub Pages on every push to `main` (see `.github/workflows/docs.yml`); once enabled for this repo, it's at `https://neelsmith.github.io/aat/`
 
-See the [project issue tracker](https://github.com/neelsmith/aat/issues) for known gaps and work in progress.
+- API documentation for the current `main` branch is pushed [https://neelsmith.github.io/aat/](https://neelsmith.github.io/aat/)
+
+See the [project issue tracker](https://github.com/neelsmith/aat/issues) for known gaps and work in progress or to submit an issue.
 
 
-## The model
-
-`aat-model.md` documents the AAT model itself: how a citable passage of text tokenizes, and how a selection of those tokens becomes a graph of `agent`/`action`/`target` nodes. `aat.core` implements that graph shape and its referential-integrity checks; it says nothing about *how* to decide which tokens get which role in a given language -- that's `aat.english`'s job (see `AgentActionTarget`'s docstring in `aat/english/dspy_signatures.py` for the English-specific rules it follows).
