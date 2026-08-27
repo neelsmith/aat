@@ -1,6 +1,6 @@
 # aat
 
-> *See release history*
+> *See [release history](https://github.com/neelsmith/aat/blob/main/releases.md)*.
 
 
 `aat` is a python package leveraging LMs with `dspy` to apply a reductive model of natural-language syntax called Agent-Action-Target (AAT) to citable text in English. The AAT model is documented in [`aat-model.md`](https://github.com/neelsmith/aat/blob/main/aat-model.md).
@@ -45,10 +45,10 @@ pip install "aat[english] @ git+https://github.com/neelsmith/aat.git@v0.1.0`
 
 ### Working directly with the package
 
-- [USAGE.md](USAGE.md) -- running the pipeline, from the command line or from your own code
-- [TESTING.md](TESTING.md) -- running the offline test suite
-- [OPTIMIZING.md](OPTIMIZING.md) -- tuning `AgentActionTarget`'s prompt with GEPA
-- [DEVELOPMENT.md](DEVELOPMENT.md) -- how the above fit together into one development loop
+- [USAGE.md](https://github.com/neelsmith/aat/blob/main/USAGE.md) -- running the pipeline, from the command line or from your own code
+- [TESTING.md](https://github.com/neelsmith/aat/blob/main/TESTING.md) -- running the offline test suite
+- [OPTIMIZING.md](https://github.com/neelsmith/aat/blob/main/OPTIMIZING.md) -- tuning `AgentActionTarget`'s prompt with GEPA
+- [DEVELOPMENT.md](https://github.com/neelsmith/aat/blob/main/DEVELOPMENT.md) -- how the above fit together into one development loop
 
 - API documentation for the current `main` branch is pushed [https://neelsmith.github.io/aat/](https://neelsmith.github.io/aat/)
 
