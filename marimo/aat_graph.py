@@ -11,7 +11,7 @@ def _():
     return (mo,)
 
 
-@app.cell(hide_code=True)
+@app.cell
 def _(mo):
     mo.md("""
     # Build an Agent-Action-Target graph
@@ -24,6 +24,41 @@ def _(mo):
     Needs a working `.env` in the repo root (see `../.env.example` and
     `USAGE.md`) -- the LM is configured as soon as this notebook loads,
     before you submit anything.
+    """)
+    return
+
+
+@app.cell
+def _(mo):
+    mo.md("""
+    Prerequisites: access to a LM configured in`.env` in the root of this repository (see `../.env.example` and
+    `USAGE.md`)
+    """)
+    return
+
+
+@app.cell
+def _(passage_form):
+    passage_form
+    return
+
+
+@app.cell(hide_code=True)
+def _(diagram_warnings, mo):
+    mo.callout(mo.md("\n".join(f"- {w}" for w in diagram_warnings)), kind="warn") if diagram_warnings else None
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.Html("<hr/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/>")
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md("""
+    ## Implementation
     """)
     return
 
@@ -127,7 +162,7 @@ def _():
 @app.cell(hide_code=True)
 def _(mo):
     mo.md("""
-    ## Enter a passage
+    ## UI
     """)
     return
 
@@ -171,15 +206,9 @@ def _(context_input, mo, passage_input):
 
 
 @app.cell(hide_code=True)
-def _(passage_form):
-    passage_form
-    return
-
-
-@app.cell(hide_code=True)
 def _(mo):
     mo.md("""
-    ## AAT graph
+    ## Tokenize text and build graph
     """)
     return
 
@@ -203,19 +232,7 @@ def _(graph, graph_to_mermaid):
     diagram, diagram_warnings = None, []
     if graph is not None:
         diagram, diagram_warnings = graph_to_mermaid(graph)
-    return diagram, diagram_warnings
-
-
-@app.cell(hide_code=True)
-def _(diagram, mo):
-    mo.mermaid(diagram) if diagram else mo.md("*Submit the form above to build a diagram.*")
-    return
-
-
-@app.cell(hide_code=True)
-def _(diagram_warnings, mo):
-    mo.callout(mo.md("\n".join(f"- {w}" for w in diagram_warnings)), kind="warn") if diagram_warnings else None
-    return
+    return (diagram_warnings,)
 
 
 if __name__ == "__main__":
