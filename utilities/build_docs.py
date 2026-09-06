@@ -4,16 +4,17 @@ aat.english both included (aat's two-subpackage split is exactly what's
 worth surfacing as its own pages here) -- using pdoc, straight from the
 package's own docstrings and type hints.
 
-Run from anywhere:
-    python docs/build_docs.py
+Run from the repo root (so REPO_ROOT below resolves correctly):
+    python utilities/build_docs.py
 
 Requires pdoc (`pip install pdoc --break-system-packages`, or install the
 'dev' extra: `pip install -e ".[dev]"`).
 
 .github/workflows/docs.yml runs this same script on every push to `main`
-and publishes docs/site/ to GitHub Pages -- see DEVELOPMENT.md. The output
-directory (docs/site/) is gitignored, not committed -- it's rebuilt by CI
-on every push, not carried in the repo history.
+and publishes the output directory (REPO_ROOT/docs/) to GitHub Pages --
+see notes/DEVELOPMENT.md. That directory is rebuilt from scratch on every
+run (see build()'s shutil.rmtree() below) -- keep the workflow's own
+artifact `path:` in sync with OUTPUT_DIR if this ever changes again.
 """
 
 import shutil
