@@ -1,8 +1,10 @@
 # Release history
 
-Current release: *0.1.2*
+Current release: *0.1.3*
 
-**O.1.2**, *Sept. 6, 2026*: fixed a bug in github workflow.
+**O.1.3**, *Sept. 6, 2026*: fixed a bug in github workflow.
+
+**O.1.2**: tagged but not released.
 
 **O.1.1**, *Sept. 5, 2026*: improved documentation; fixed a bug in github workdflow; no changes in functionality.
 
