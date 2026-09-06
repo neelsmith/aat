@@ -21,7 +21,7 @@ import sys
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
-OUTPUT_DIR = Path(__file__).resolve().parent / "site"
+OUTPUT_DIR = REPO_ROOT / "docs"
 
 # So `import aat` below works no matter what directory this script is
 # invoked from.
