@@ -1,0 +1,34 @@
+project:
+  type: website
+  output-dir: quarto-build
+
+version: "0.2.0"  
+  
+
+website:
+  title: "aat"
+  page-footer:
+    center: "Documentation for release version **{{< meta version >}}**"
+
+  navbar:
+    left:
+      - href: index.qmd
+        text: Home
+
+            
+    right:   
+      - icon: github
+        href: https://github.com/neelsmith/aat
+        aria-label: GitHub
+
+
+format:
+  html:
+    theme:
+      - cosmo
+      - brand
+    css: styles.css
+    toc: true
+
+
+

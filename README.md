@@ -36,21 +36,6 @@ pip install "aat[english] @ git+https://github.com/neelsmith/aat.git@v0.1.0`
 
 
 
-## Using `aat`
-
-### marimo notebooks
-
-- `marimo/aat_graph.py` lets you enter a passage, analyze it with the configured LM, and visualize the resulting AAT graph. Optionally, save the analysis to a local file.
-- `marimo/aat_reader.py` lets you load saved analyses from a local file and visualize the AAT graph without any LM acces.
-
-### Working directly with the package
-
-- [USAGE.md](https://github.com/neelsmith/aat/blob/main/USAGE.md) -- running the pipeline, from the command line or from your own code
-- [TESTING.md](https://github.com/neelsmith/aat/blob/main/TESTING.md) -- running the offline test suite
-- [OPTIMIZING.md](https://github.com/neelsmith/aat/blob/main/OPTIMIZING.md) -- tuning `AgentActionTarget`'s prompt with GEPA
-- [DEVELOPMENT.md](https://github.com/neelsmith/aat/blob/main/DEVELOPMENT.md) -- how the above fit together into one development loop
-
-- API documentation for the current `main` branch is pushed [https://neelsmith.github.io/aat/](https://neelsmith.github.io/aat/)
 
 See the [project issue tracker](https://github.com/neelsmith/aat/issues) for known gaps and work in progress or to submit an issue.
 

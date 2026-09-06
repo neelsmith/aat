@@ -1,0 +1,6 @@
+---
+title: Marimo notebooks
+---
+
+- `marimo/aat_graph.py` lets you enter a passage, analyze it with the configured LM, and visualize the resulting AAT graph. Optionally, save the analysis to a local file.
+- `marimo/aat_reader.py` lets you load saved analyses from a local file and visualize the AAT graph without any LM acces.
