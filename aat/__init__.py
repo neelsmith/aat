@@ -61,5 +61,4 @@ __all__ = [
     "graph_to_mermaid",
     "save_mermaid",
     "assign_action_colors",
-    "__version__",
 ]

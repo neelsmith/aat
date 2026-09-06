@@ -481,7 +481,7 @@ order convenient for display.</p>
 <div class="attr function">
             
         <span class="def">def</span>
-        <span class="name">by_id</span><span class="signature pdoc-code condensed">(<span class="param"><span class="bp">self</span>, </span><span class="param"><span class="n">context</span><span class="p">:</span> <span class="nb">str</span>, </span><span class="param"><span class="nb">id</span><span class="p">:</span> <span class="nb">str</span></span><span class="return-annotation">) -> <span class="n"><a href="#AATNode">AATNode</a></span> <span class="o">|</span> <span class="kc">None</span>:</span></span>
+        <span class="name">by_id</span><span class="signature pdoc-code condensed">(<span class="param"><span class="bp">self</span>, </span><span class="param"><span class="n">context</span><span class="p">:</span> <span class="nb">str</span>, </span><span class="param"><span class="nb">id</span><span class="p">:</span> <span class="nb">str</span></span><span class="return-annotation">) -> <span class="n">Optional</span><span class="p">[</span><span class="n"><a href="#AATNode">AATNode</a></span><span class="p">]</span>:</span></span>
 
                 <label class="view-source-button" for="AATGraph.by_id-view-source"><span>View Source</span></label>
 
@@ -632,7 +632,7 @@ within the same context.</p>
 <div class="attr function">
             
         <span class="def">def</span>
-        <span class="name">governing_action</span><span class="signature pdoc-code condensed">(<span class="param"><span class="bp">self</span>, </span><span class="param"><span class="n">action</span><span class="p">:</span> <span class="n"><a href="#AATNode">AATNode</a></span></span><span class="return-annotation">) -> <span class="n"><a href="#AATNode">AATNode</a></span> <span class="o">|</span> <span class="kc">None</span>:</span></span>
+        <span class="name">governing_action</span><span class="signature pdoc-code condensed">(<span class="param"><span class="bp">self</span>, </span><span class="param"><span class="n">action</span><span class="p">:</span> <span class="n"><a href="#AATNode">AATNode</a></span></span><span class="return-annotation">) -> <span class="n">Optional</span><span class="p">[</span><span class="n"><a href="#AATNode">AATNode</a></span><span class="p">]</span>:</span></span>
 
                 <label class="view-source-button" for="AATGraph.governing_action-view-source"><span>View Source</span></label>
 
@@ -800,7 +800,7 @@ can be <code>None</code>.</li>
                             </div>
                             <div id="AATNode.related_node" class="classattr">
                                 <div class="attr variable">
-            <span class="name">related_node</span><span class="annotation">: str | None</span>        =
+            <span class="name">related_node</span><span class="annotation">: Optional[str]</span>        =
 <span class="default_value">None</span>
 
         

@@ -151,9 +151,6 @@
             <li>
                     <a class="function" href="#assign_action_colors">assign_action_colors</a>
             </li>
-            <li>
-                    <a class="variable" href="#__version__">__version__</a>
-            </li>
     </ul>
 
 
@@ -255,8 +252,7 @@ worked examples of both.</p>
 </span><span id="L-61"><a href="#L-61"><span class="linenos">61</span></a>    <span class="s2">"graph_to_mermaid"</span><span class="p">,</span>
 </span><span id="L-62"><a href="#L-62"><span class="linenos">62</span></a>    <span class="s2">"save_mermaid"</span><span class="p">,</span>
 </span><span id="L-63"><a href="#L-63"><span class="linenos">63</span></a>    <span class="s2">"assign_action_colors"</span><span class="p">,</span>
-</span><span id="L-64"><a href="#L-64"><span class="linenos">64</span></a>    <span class="s2">"__version__"</span><span class="p">,</span>
-</span><span id="L-65"><a href="#L-65"><span class="linenos">65</span></a><span class="p">]</span>
+</span><span id="L-64"><a href="#L-64"><span class="linenos">64</span></a><span class="p">]</span>
 </span></pre></div>
 
 
@@ -492,7 +488,7 @@ order convenient for display.</p>
 <div class="attr function">
             
         <span class="def">def</span>
-        <span class="name">by_id</span><span class="signature pdoc-code condensed">(<span class="param"><span class="bp">self</span>, </span><span class="param"><span class="n">context</span><span class="p">:</span> <span class="nb">str</span>, </span><span class="param"><span class="nb">id</span><span class="p">:</span> <span class="nb">str</span></span><span class="return-annotation">) -> <span class="n"><a href="#AATNode">AATNode</a></span> <span class="o">|</span> <span class="kc">None</span>:</span></span>
+        <span class="name">by_id</span><span class="signature pdoc-code condensed">(<span class="param"><span class="bp">self</span>, </span><span class="param"><span class="n">context</span><span class="p">:</span> <span class="nb">str</span>, </span><span class="param"><span class="nb">id</span><span class="p">:</span> <span class="nb">str</span></span><span class="return-annotation">) -> <span class="n">Optional</span><span class="p">[</span><span class="n"><a href="#AATNode">AATNode</a></span><span class="p">]</span>:</span></span>
 
                 <label class="view-source-button" for="AATGraph.by_id-view-source"><span>View Source</span></label>
 
@@ -643,7 +639,7 @@ within the same context.</p>
 <div class="attr function">
             
         <span class="def">def</span>
-        <span class="name">governing_action</span><span class="signature pdoc-code condensed">(<span class="param"><span class="bp">self</span>, </span><span class="param"><span class="n">action</span><span class="p">:</span> <span class="n"><a href="#AATNode">AATNode</a></span></span><span class="return-annotation">) -> <span class="n"><a href="#AATNode">AATNode</a></span> <span class="o">|</span> <span class="kc">None</span>:</span></span>
+        <span class="name">governing_action</span><span class="signature pdoc-code condensed">(<span class="param"><span class="bp">self</span>, </span><span class="param"><span class="n">action</span><span class="p">:</span> <span class="n"><a href="#AATNode">AATNode</a></span></span><span class="return-annotation">) -> <span class="n">Optional</span><span class="p">[</span><span class="n"><a href="#AATNode">AATNode</a></span><span class="p">]</span>:</span></span>
 
                 <label class="view-source-button" for="AATGraph.governing_action-view-source"><span>View Source</span></label>
 
@@ -811,7 +807,7 @@ can be <code>None</code>.</li>
                             </div>
                             <div id="AATNode.related_node" class="classattr">
                                 <div class="attr variable">
-            <span class="name">related_node</span><span class="annotation">: str | None</span>        =
+            <span class="name">related_node</span><span class="annotation">: Optional[str]</span>        =
 <span class="default_value">None</span>
 
         
@@ -1516,18 +1512,6 @@ identical color. <code>warnings</code> has one entry naming this when it happens
 otherwise it's empty.</p>
 </div>
 
-
-                </section>
-                <section id="__version__">
-                    <div class="attr variable">
-            <span class="name">__version__</span>        =
-<span class="default_value">&#39;0.1.0&#39;</span>
-
-        
-    </div>
-    <a class="headerlink" href="#__version__"></a>
-    
-    
 
                 </section>
     </main>
