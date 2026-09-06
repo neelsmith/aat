@@ -1,11 +1,10 @@
-# aat -- Usage Guide
+# Usage Guide
 
-A dspy program that analyzes an English passage into an Agent-Action-Target graph. The analytic scheme itself is documented in `aat-model.md`; the English-specific extraction rules are documented in `AgentActionTarget`'s own docstring (`aat/english/dspy_signatures.py`).
 
 
 ## Running an analysis from the command line
 
-You can run an analysis from the command line with the wrapper script `aat_main.py`. It needs an `.env` file in this folder with your LM credentials -- copy `.env.example` to `.env` and fill in real values:
+*Prerequisite*: an `.env` file in this folder with your LM credentials. Copy `.env.example` to `.env` and fill in real values: 
 
 ```
 API_BASE=https://localmodel/api
@@ -13,29 +12,19 @@ MODEL=litellm/modelname
 API_KEY=your-key-here
 ```
 
-Then:
+Run an analysis from the command line:
 
 ```bash
 python3 aat_main.py --passage "The dog ate my homework."
 ```
 
-`--context` is an optional argument giving a context reference for the passage (e.g. a CTS URN), recorded on every resulting token via `CitableToken.context`; it defaults to an empty string if omitted:
+Include a citable reference for the passage (such as a CTS URN) with the `--context` argument:
 
 ```bash
 python3 aat_main.py --passage "The homework was eaten by the dog." --context "urn:cite2:aat:examples.v1:ex1"
 ```
 
-`aat_main.py` reads `API_BASE`/`MODEL`/`API_KEY` from `.env`, configures the LM, and prints the resulting tokens and AAT nodes.
-
-For a local, unauthenticated model (e.g. Ollama), leave `API_KEY` present but empty:
-
-```
-API_BASE=http://localhost:11434
-MODEL=ollama_chat/llama3
-API_KEY=
-```
-
-`aat_main.py` only raises "Missing API key" when `API_KEY` isn't in `.env` at all; an empty value is treated as "this model doesn't need one" and is left out of the LM call entirely, rather than sent through as an empty credential.
+`aat_main.py` just prints the resulting tokens and AAT nodes.
 
 
 ## Using `aat` in a script

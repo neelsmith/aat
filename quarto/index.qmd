@@ -1,0 +1,13 @@
+---
+title: Agent-Action-Target in Python
+---
+
+
+
+- About the package
+- [Marimo notebooks](./nbs.qmd)
+- [API documentation](https://neelsmith.github.io/aat/)
+
+---
+
+[AI slop](./aislop.qmd) to clean up.
