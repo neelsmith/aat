@@ -1,0 +1,25 @@
+---
+title: Testing
+---
+
+```bash
+pytest
+```
+
+Runs the whole suite against `tests/` using dspy's `DummyLM` in place of a real LM call. Tests that call the configured LM are marked `live` and skipped by default. Run them explicitly with:
+
+```bash
+pytest -m live
+```
+
+To run `live` tests, you must [configure a model](../bg/conf.qmd) in an `.env` file. The tests skip gracefully if `API_KEY` is not set.
+
+
+
+Some standard `pytest` shorthands:
+
+- `pytest` to run all.
+- `pytest -v` for per-test names instead of dots.
+- `pytest tests/test_gold_examples.py` to run just one file.
+- `pytest -k tokenize` to run only tests matching a substring.
+- `pytest --collect-only` if you just want to see what it discovered without running anything.

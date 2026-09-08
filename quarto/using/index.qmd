@@ -1,0 +1,11 @@
+---
+title: Using `aat`
+---
+
+
+- [Marimo notebooks](./nbs.qmd)
+- Command-line scripts:
+    - [Analyze a passage](./analysis.qmd)
+    - Format a [dot graph](./dot.qmd) of an analysis
+    - [Piping options together](./piping.qmd)
+

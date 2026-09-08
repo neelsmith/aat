@@ -1,0 +1,17 @@
+---
+title: Analyze a passage from the command line
+---
+
+
+Run an analysis from the command line:
+
+```bash
+python3 aat_main.py --passage "Four score and seven years ago our fathers brought forth, upon this continent, a new nation, conceived in Liberty, and dedicated to the proposition that all men are created equal."
+```
+
+Include a citable reference for the passage (such as a CTS URN) with the `--context` argument:
+
+```bash
+python3 aat_main.py --passage "Four score and seven years ago our fathers brought forth, upon this continent, a new nation, conceived in Liberty, and dedicated to the proposition that all men are created equal." --context "urn:cts:aat:examples.gettysburg.hay:1"
+```
+

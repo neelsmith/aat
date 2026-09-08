@@ -24,7 +24,21 @@ Include a citable reference for the passage (such as a CTS URN) with the `--cont
 python3 aat_main.py --passage "The homework was eaten by the dog." --context "urn:cite2:aat:examples.v1:ex1"
 ```
 
-`aat_main.py` just prints the resulting tokens and AAT nodes.
+`aat_main.py` writes the analysis to stdout as a plain-text serialized analysis -- the same `#!passages`/`#!aatnodes` format `aat.core.serialize_analysis()`/`write_analysis()` produce (see "Saving and loading a graph" below), and nothing else -- so it can be redirected straight to a file and reloaded later, with no separate save step:
+
+```bash
+python3 aat_main.py --passage "The homework was eaten by the dog." --context "urn:cite2:aat:examples.v1:ex1" > analysis.txt
+```
+
+```python
+from aat.core import read_analysis
+
+passages, graph = read_analysis("analysis.txt")
+```
+
+(A referential problem `validate()` catches along the way is reported on *stderr*, not stdout, so it never corrupts the redirected file -- see "Analyzing multiple citable passages" below.)
+
+Pipe that output straight into `aat_to_dot.py` to render it as a Graphviz digraph without a second LM call -- see "Rendering a graph as Graphviz dot" below.
 
 
 ## Using `aat` in a script
@@ -74,6 +88,30 @@ tokens, graph = analyze_passages(passages)
 
 Each passage's own tokens are numbered from `t1` within its own context (`CitableToken.id` is only unique *within* one context, not globally -- see its docstring), so `graph.by_id(context, id)` always needs both.
 
+## Analyzing a whole corpus from a CEX file
+
+`aat_corpus.py` is the corpus-level version of `aat_main.py`: it reads every passage from a [CEX (CITE Exchange)](https://cite-architecture.github.io/citedx/CEX-spec-3.0.1/) file's `#!ctsdata` block -- an external plain-text interchange format, not this project's own `#!passages`/`#!aatnodes` serialization -- analyzes all of them, and writes ONE combined serialized analysis to stdout, in the same `#!passages`/`#!aatnodes` format `aat_main.py` uses for a single passage:
+
+```bash
+python3 aat_corpus.py corpus.cex > analysis.txt
+```
+
+A `#!ctsdata` row is two fields -- a CTS URN, then that node's own text -- separated by a delimiter the file's own author chose; CEX never declares its delimiter inside the file itself. `"#"` is the common convention and this script's own default:
+
+```
+#!ctsdata
+urn:cite2:aat:examples.v1:ex1#The dog ate my homework.
+urn:cite2:aat:examples.v1:ex2#The homework was eaten by the dog.
+```
+
+Pass `--delimiter` if a particular corpus uses something else (e.g. `--delimiter "|"`). Every other CEX block type (`#!citelibrary`, `#!ctscatalog`, ...) is ignored, so a full CEX file -- not just a bare `#!ctsdata` block -- works as input; `aat.core.cex.read_cex_passages()`/`parse_cex_ctsdata()` are the underlying functions, if you want to read a CEX corpus into a list of `CitedPassage` yourself without also running the LM pipeline. Use `-` instead of a filename to read the same format from stdin:
+
+```bash
+cat corpus.cex | python3 aat_corpus.py - > analysis.txt
+```
+
+Every passage gets its own separate LM call (via `analyze_passages()`), so a large corpus means real API cost and real wall-clock time -- there's no batching or parallelism. As with `aat_main.py`, any referential problem `validate()` catches is reported on stderr, never stdout, so it never corrupts the redirected file; and the output pipes straight into `aat_to_dot.py` (see "Rendering a graph as Graphviz dot" below) exactly like `aat_main.py`'s does.
+
 
 ## Saving and loading a graph
 
@@ -97,7 +135,7 @@ write_analysis([CitedPassage(context=context, text=text)], graph, "analysis.txt"
 passages, reloaded_graph = read_analysis("analysis.txt")
 ```
 
-Call `serialize_analysis()` directly (no `path` argument) when you want the text itself rather than a file -- this is what powers `aat_graph.py`'s "Save analysis to file" button, which writes the string wherever the user's own directory picker points, not to a fixed path. `aat_reader.py` is the matching file-loading notebook -- see "Interactive notebook" below. The file has a `#!passages` block (header `context|text`) alongside the `#!aatnodes` block; each is read independently by its own function (`read_passages()`/`read_nodes()`), so the two block types can coexist in one file without interfering with each other.
+Call `serialize_analysis()` directly (no `path` argument) when you want the text itself rather than a file -- this is what powers `aat_graph.py`'s "Save analysis to file" button, which writes the string wherever the user's own directory picker points, not to a fixed path. `aat_reader.py` is the matching file-loading notebook -- see "Interactive notebook" below. The file has a `#!passages` block (header `context|text`) alongside the `#!aatnodes` block; each is read independently by its own function (`read_passages()`/`read_nodes()`), so the two block types can coexist in one file without interfering with each other. `aat_main.py` (see "Running an analysis from the command line" above) is a third way to get this same text: it writes `serialize_analysis()`'s output straight to stdout instead of a file, so redirecting it (`> analysis.txt`) is equivalent to calling `write_analysis()` yourself.
 
 
 ## Rendering a graph as Mermaid
@@ -123,6 +161,43 @@ Pass `color_by_action=False` for a plain, uncolored diagram. `save_mermaid(graph
 
 `warnings` lists any node whose `related_node` doesn't resolve to another node actually present in `graph` -- normally a sign the graph failed `validate()` upstream (see "Analyzing multiple citable passages" above), worth checking there first -- plus, if the graph has more distinct actions than the color palette has slots (currently 8), one warning that colors repeat.
 
+
+## Rendering a graph as Graphviz dot
+
+`graph_to_dot()` (in `aat/core/graphviz.py`) renders the same `AATGraph` as a [Graphviz](https://graphviz.org) DOT digraph -- the same node/edge/coloring model as `graph_to_mermaid()`, just in Graphviz's own syntax. An action is `shape=box`, an agent is `shape=box, style=rounded`, and a target is `shape=ellipse` (Graphviz has no shape literally called "stadium", so the fully-rounded ellipse is the closest analogue to Mermaid's stadium shape). Every node with a `related_node` becomes a labelled edge pointing at it, exactly as in the Mermaid diagram. By default every node is colored by the same action-cluster assignment `graph_to_mermaid()` uses (`aat.core.coloring.assign_action_colors()`), applied as inline `fillcolor`/`color`/`fontcolor`/`style` attributes on each node's own line rather than Mermaid's separate `classDef`/`class` mechanism -- DOT has no equivalent grouping construct.
+
+```python
+from aat.core import graph_to_dot
+
+dot, warnings = graph_to_dot(graph)
+print(dot)
+for w in warnings:
+    print(f"Warning: {w}")
+```
+
+`orientation` takes the same four codes as `graph_to_mermaid()` (`"BT"`, `"TB"`/`"TD"`, `"LR"`, `"RL"` -- validated the same way, case-insensitively, by the shared `aat.core.orientation` module) and is written out as Graphviz's own `rankdir` graph attribute. Graphviz's `rankdir` has no `"TD"` synonym of its own, so `"TD"` is mapped to `"TB"` (the same direction, just Graphviz's own name for it) -- every other value is used verbatim:
+
+```python
+dot, warnings = graph_to_dot(graph, orientation="LR")
+```
+
+Pass `color_by_action=False` for a plain, uncolored digraph. `save_dot(graph, path, ...)` takes the same `orientation`/`color_by_action` arguments and writes the digraph straight to a file (e.g. `analysis.dot`), which the `dot` command-line tool (or any other Graphviz frontend) can render directly: `dot -Tsvg analysis.dot -o analysis.svg`.
+
+`warnings` has the same two cases as `graph_to_mermaid()`'s: a node whose `related_node` doesn't resolve to another node actually present in `graph`, and, if the graph has more distinct actions than the color palette has slots, one warning that colors repeat.
+
+`aat_to_dot.py` is the command-line version of this: it reads a serialized analysis from stdin (the same `#!aatnodes` plain-text format -- a `#!passages` block alongside it, if present, is ignored) and writes the DOT digraph to stdout, so you can pipe `aat_main.py`'s own output straight into it:
+
+```bash
+python3 aat_main.py --passage "The dog ate my homework." | python3 aat_to_dot.py > analysis.dot
+```
+
+or render a file saved earlier:
+
+```bash
+python3 aat_to_dot.py --orientation LR --no-color < analysis.txt > analysis.dot
+```
+
+`--orientation` and `--no-color` mirror `graph_to_dot()`'s own `orientation`/`color_by_action` arguments; warnings go to stderr, never stdout, so stdout stays exactly the DOT text -- pipe it straight into Graphviz's own `dot` CLI: `python3 aat_to_dot.py < analysis.txt | dot -Tsvg -o analysis.svg`.
 
 ## Rendering tokens as highlighted HTML
 
@@ -162,7 +237,7 @@ marimo edit marimo/aat_reader.py
 
 ## Using an optimized prompt
 
-If you've run `optimize_gepa.py` (see OPTIMIZING.md) and saved an optimized program, load it into `analyze` before calling `analyze_passage()`/`analyze_passages()`:
+If you've run `utilities/optimize_gepa.py` (see OPTIMIZING.md) and saved an optimized program, load it into `analyze` before calling `analyze_passage()`/`analyze_passages()`:
 
 ```python
 from aat.english.dspy_signatures import analyze

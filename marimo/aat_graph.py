@@ -206,7 +206,7 @@ def _(mo):
 @app.cell
 def _(mo):
     context_input = mo.ui.text(
-        placeholder="urn:cite2:aat:examples.v1:ex1",
+        placeholder="urn:cts:aat:examples.gettysburg.hay:1",
         label="*Context ID*:",
     )
     return (context_input,)
@@ -215,7 +215,7 @@ def _(mo):
 @app.cell
 def _(mo):
     passage_input = mo.ui.text_area(
-        value="The dog ate my homework.",
+        value="Four score and seven years ago our fathers brought forth, upon this continent, a new nation, conceived in Liberty, and dedicated to the proposition that all men are created equal.",
         full_width=True,
         label="*Passage*:",
     )

@@ -1,0 +1,20 @@
+---
+title: Rendering tokens as highlighted HTML
+---
+
+`tokens_to_html()` (in `aat/english/html.py`) renders a passage's tokens as one continuous HTML string, reconstructing normal reading spacing (punctuation attaches to the preceding word; opening brackets and the first of a paired quote attach to what follows) rather than putting a space before every token. Pass the same `AATGraph` you'd hand to `graph_to_mermaid()` and every token that's also an AAT graph node is highlighted using the *same* color that node gets in the Mermaid diagram (`aat.core.coloring.assign_action_colors()` -- one shared assignment behind both renderers), with a border style keyed on the node's role: a box around an `action` token, a rounded box around an `agent` token, and an underline under a `target` token.
+
+```python
+from aat.english import tokenize, tokens_to_html
+from aat.core import CitedPassage
+
+
+tokens, graph = analyze_passage("Four score and seven years ago our fathers brought forth, upon this continent, a new nation, conceived in Liberty, and dedicated to the proposition that all men are created equal.", context="urn:cts:aat:examples.gettysburg.hay:1")
+html = tokens_to_html(tokens, graph=graph)
+```
+
+Omit `graph` (or pass `graph=None`) for plain, unhighlighted text -- still with the same spacing reconstruction.
+
+Every token's text is HTML-escaped before being emitted (`&`, `<`, `>`, and quote characters), so passage text containing any of those characters round-trips safely rather than being mistaken for markup.
+
+Note: for a *compound* action (e.g. "was eating"), only the principal-verb token is highlighted, since that's the only token id the `AATNode` itself records -- see the module's own docstring.

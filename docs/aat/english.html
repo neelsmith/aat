@@ -414,12 +414,12 @@ import from <a href="core.html">aat.core</a> just for this.</p>
 
     </div>
     <a class="headerlink" href="#analyze_passage"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="analyze_passage-48"><a href="#analyze_passage-48"><span class="linenos">48</span></a><span class="k">def</span><span class="w"> </span><span class="nf">analyze_passage</span><span class="p">(</span><span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">context</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">CitableToken</span><span class="p">],</span> <span class="n">AATGraph</span><span class="p">]:</span>
-</span><span id="analyze_passage-49"><a href="#analyze_passage-49"><span class="linenos">49</span></a><span class="w">    </span><span class="sd">"""Convenience wrapper for the common case of a single string rather</span>
-</span><span id="analyze_passage-50"><a href="#analyze_passage-50"><span class="linenos">50</span></a><span class="sd">    than a list of CitedPassage. Wraps `text` as one CitedPassage (using</span>
-</span><span id="analyze_passage-51"><a href="#analyze_passage-51"><span class="linenos">51</span></a><span class="sd">    `context` if given, else an empty string) and runs it through</span>
-</span><span id="analyze_passage-52"><a href="#analyze_passage-52"><span class="linenos">52</span></a><span class="sd">    analyze_passages()."""</span>
-</span><span id="analyze_passage-53"><a href="#analyze_passage-53"><span class="linenos">53</span></a>    <span class="k">return</span> <span class="n">analyze_passages</span><span class="p">([</span><span class="n">CitedPassage</span><span class="p">(</span><span class="n">context</span><span class="o">=</span><span class="n">context</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="n">text</span><span class="p">)])</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="analyze_passage-51"><a href="#analyze_passage-51"><span class="linenos">51</span></a><span class="k">def</span><span class="w"> </span><span class="nf">analyze_passage</span><span class="p">(</span><span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">context</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">CitableToken</span><span class="p">],</span> <span class="n">AATGraph</span><span class="p">]:</span>
+</span><span id="analyze_passage-52"><a href="#analyze_passage-52"><span class="linenos">52</span></a><span class="w">    </span><span class="sd">"""Convenience wrapper for the common case of a single string rather</span>
+</span><span id="analyze_passage-53"><a href="#analyze_passage-53"><span class="linenos">53</span></a><span class="sd">    than a list of CitedPassage. Wraps `text` as one CitedPassage (using</span>
+</span><span id="analyze_passage-54"><a href="#analyze_passage-54"><span class="linenos">54</span></a><span class="sd">    `context` if given, else an empty string) and runs it through</span>
+</span><span id="analyze_passage-55"><a href="#analyze_passage-55"><span class="linenos">55</span></a><span class="sd">    analyze_passages()."""</span>
+</span><span id="analyze_passage-56"><a href="#analyze_passage-56"><span class="linenos">56</span></a>    <span class="k">return</span> <span class="n">analyze_passages</span><span class="p">([</span><span class="n">CitedPassage</span><span class="p">(</span><span class="n">context</span><span class="o">=</span><span class="n">context</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="n">text</span><span class="p">)])</span>
 </span></pre></div>
 
 
@@ -442,36 +442,38 @@ analyze_passages().</p>
 
     </div>
     <a class="headerlink" href="#analyze_passages"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="analyze_passages-16"><a href="#analyze_passages-16"><span class="linenos">16</span></a><span class="k">def</span><span class="w"> </span><span class="nf">analyze_passages</span><span class="p">(</span><span class="n">passages</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">CitedPassage</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">CitableToken</span><span class="p">],</span> <span class="n">AATGraph</span><span class="p">]:</span>
-</span><span id="analyze_passages-17"><a href="#analyze_passages-17"><span class="linenos">17</span></a><span class="w">    </span><span class="sd">"""Tokenize and analyze every passage in `passages`, independently</span>
-</span><span id="analyze_passages-18"><a href="#analyze_passages-18"><span class="linenos">18</span></a><span class="sd">    (each passage's tokens are numbered from 't1' within its own context</span>
-</span><span id="analyze_passages-19"><a href="#analyze_passages-19"><span class="linenos">19</span></a><span class="sd">    -- see CitableToken's docstring), and return (tokens, graph): `tokens`</span>
-</span><span id="analyze_passages-20"><a href="#analyze_passages-20"><span class="linenos">20</span></a><span class="sd">    is every passage's tokens concatenated in order, `graph` is one</span>
-</span><span id="analyze_passages-21"><a href="#analyze_passages-21"><span class="linenos">21</span></a><span class="sd">    AATGraph combining every passage's nodes.</span>
-</span><span id="analyze_passages-22"><a href="#analyze_passages-22"><span class="linenos">22</span></a>
-</span><span id="analyze_passages-23"><a href="#analyze_passages-23"><span class="linenos">23</span></a><span class="sd">    Prints a warning for any passage whose analysis fails validate() (a</span>
-</span><span id="analyze_passages-24"><a href="#analyze_passages-24"><span class="linenos">24</span></a><span class="sd">    referential problem -- see aat.core.validate.validate); it does not</span>
-</span><span id="analyze_passages-25"><a href="#analyze_passages-25"><span class="linenos">25</span></a><span class="sd">    raise, since a referential problem is a sign the LM's output needs a</span>
-</span><span id="analyze_passages-26"><a href="#analyze_passages-26"><span class="linenos">26</span></a><span class="sd">    re-run or a prompt tweak, not necessarily that the caller's own code</span>
-</span><span id="analyze_passages-27"><a href="#analyze_passages-27"><span class="linenos">27</span></a><span class="sd">    is broken.</span>
-</span><span id="analyze_passages-28"><a href="#analyze_passages-28"><span class="linenos">28</span></a><span class="sd">    """</span>
-</span><span id="analyze_passages-29"><a href="#analyze_passages-29"><span class="linenos">29</span></a>    <span class="n">all_tokens</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">CitableToken</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
-</span><span id="analyze_passages-30"><a href="#analyze_passages-30"><span class="linenos">30</span></a>    <span class="n">all_nodes</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">AATNode</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
-</span><span id="analyze_passages-31"><a href="#analyze_passages-31"><span class="linenos">31</span></a>
-</span><span id="analyze_passages-32"><a href="#analyze_passages-32"><span class="linenos">32</span></a>    <span class="k">for</span> <span class="n">passage</span> <span class="ow">in</span> <span class="n">passages</span><span class="p">:</span>
-</span><span id="analyze_passages-33"><a href="#analyze_passages-33"><span class="linenos">33</span></a>        <span class="n">tokens</span> <span class="o">=</span> <span class="n">tokenize</span><span class="p">(</span><span class="n">passage</span><span class="p">)</span>
-</span><span id="analyze_passages-34"><a href="#analyze_passages-34"><span class="linenos">34</span></a>        <span class="n">result</span> <span class="o">=</span> <span class="n">analyze</span><span class="p">(</span><span class="n">passage</span><span class="o">=</span><span class="n">passage</span><span class="o">.</span><span class="n">text</span><span class="p">,</span> <span class="n">tokens</span><span class="o">=</span><span class="n">tokens</span><span class="p">)</span>
-</span><span id="analyze_passages-35"><a href="#analyze_passages-35"><span class="linenos">35</span></a>
-</span><span id="analyze_passages-36"><a href="#analyze_passages-36"><span class="linenos">36</span></a>        <span class="n">problems</span> <span class="o">=</span> <span class="n">validate</span><span class="p">(</span><span class="n">tokens</span><span class="p">,</span> <span class="n">result</span><span class="p">)</span>
-</span><span id="analyze_passages-37"><a href="#analyze_passages-37"><span class="linenos">37</span></a>        <span class="k">if</span> <span class="n">problems</span><span class="p">:</span>
-</span><span id="analyze_passages-38"><a href="#analyze_passages-38"><span class="linenos">38</span></a>            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Validation warnings (context </span><span class="si">{</span><span class="n">passage</span><span class="o">.</span><span class="n">context</span><span class="si">!r}</span><span class="s2">):"</span><span class="p">)</span>
-</span><span id="analyze_passages-39"><a href="#analyze_passages-39"><span class="linenos">39</span></a>            <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">problems</span><span class="p">:</span>
-</span><span id="analyze_passages-40"><a href="#analyze_passages-40"><span class="linenos">40</span></a>                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  - </span><span class="si">{</span><span class="n">p</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
-</span><span id="analyze_passages-41"><a href="#analyze_passages-41"><span class="linenos">41</span></a>
-</span><span id="analyze_passages-42"><a href="#analyze_passages-42"><span class="linenos">42</span></a>        <span class="n">all_tokens</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">tokens</span><span class="p">)</span>
-</span><span id="analyze_passages-43"><a href="#analyze_passages-43"><span class="linenos">43</span></a>        <span class="n">all_nodes</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">nodes</span><span class="p">)</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="analyze_passages-17"><a href="#analyze_passages-17"><span class="linenos">17</span></a><span class="k">def</span><span class="w"> </span><span class="nf">analyze_passages</span><span class="p">(</span><span class="n">passages</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">CitedPassage</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">CitableToken</span><span class="p">],</span> <span class="n">AATGraph</span><span class="p">]:</span>
+</span><span id="analyze_passages-18"><a href="#analyze_passages-18"><span class="linenos">18</span></a><span class="w">    </span><span class="sd">"""Tokenize and analyze every passage in `passages`, independently</span>
+</span><span id="analyze_passages-19"><a href="#analyze_passages-19"><span class="linenos">19</span></a><span class="sd">    (each passage's tokens are numbered from 't1' within its own context</span>
+</span><span id="analyze_passages-20"><a href="#analyze_passages-20"><span class="linenos">20</span></a><span class="sd">    -- see CitableToken's docstring), and return (tokens, graph): `tokens`</span>
+</span><span id="analyze_passages-21"><a href="#analyze_passages-21"><span class="linenos">21</span></a><span class="sd">    is every passage's tokens concatenated in order, `graph` is one</span>
+</span><span id="analyze_passages-22"><a href="#analyze_passages-22"><span class="linenos">22</span></a><span class="sd">    AATGraph combining every passage's nodes.</span>
+</span><span id="analyze_passages-23"><a href="#analyze_passages-23"><span class="linenos">23</span></a>
+</span><span id="analyze_passages-24"><a href="#analyze_passages-24"><span class="linenos">24</span></a><span class="sd">    Prints a warning to stderr (not stdout -- callers such as aat_main.py</span>
+</span><span id="analyze_passages-25"><a href="#analyze_passages-25"><span class="linenos">25</span></a><span class="sd">    write a plain-text serialized analysis to stdout, and a stray print()</span>
+</span><span id="analyze_passages-26"><a href="#analyze_passages-26"><span class="linenos">26</span></a><span class="sd">    there would corrupt it) for any passage whose analysis fails</span>
+</span><span id="analyze_passages-27"><a href="#analyze_passages-27"><span class="linenos">27</span></a><span class="sd">    validate() (a referential problem -- see aat.core.validate.validate);</span>
+</span><span id="analyze_passages-28"><a href="#analyze_passages-28"><span class="linenos">28</span></a><span class="sd">    it does not raise, since a referential problem is a sign the LM's</span>
+</span><span id="analyze_passages-29"><a href="#analyze_passages-29"><span class="linenos">29</span></a><span class="sd">    output needs a re-run or a prompt tweak, not necessarily that the</span>
+</span><span id="analyze_passages-30"><a href="#analyze_passages-30"><span class="linenos">30</span></a><span class="sd">    caller's own code is broken.</span>
+</span><span id="analyze_passages-31"><a href="#analyze_passages-31"><span class="linenos">31</span></a><span class="sd">    """</span>
+</span><span id="analyze_passages-32"><a href="#analyze_passages-32"><span class="linenos">32</span></a>    <span class="n">all_tokens</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">CitableToken</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+</span><span id="analyze_passages-33"><a href="#analyze_passages-33"><span class="linenos">33</span></a>    <span class="n">all_nodes</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">AATNode</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+</span><span id="analyze_passages-34"><a href="#analyze_passages-34"><span class="linenos">34</span></a>
+</span><span id="analyze_passages-35"><a href="#analyze_passages-35"><span class="linenos">35</span></a>    <span class="k">for</span> <span class="n">passage</span> <span class="ow">in</span> <span class="n">passages</span><span class="p">:</span>
+</span><span id="analyze_passages-36"><a href="#analyze_passages-36"><span class="linenos">36</span></a>        <span class="n">tokens</span> <span class="o">=</span> <span class="n">tokenize</span><span class="p">(</span><span class="n">passage</span><span class="p">)</span>
+</span><span id="analyze_passages-37"><a href="#analyze_passages-37"><span class="linenos">37</span></a>        <span class="n">result</span> <span class="o">=</span> <span class="n">analyze</span><span class="p">(</span><span class="n">passage</span><span class="o">=</span><span class="n">passage</span><span class="o">.</span><span class="n">text</span><span class="p">,</span> <span class="n">tokens</span><span class="o">=</span><span class="n">tokens</span><span class="p">)</span>
+</span><span id="analyze_passages-38"><a href="#analyze_passages-38"><span class="linenos">38</span></a>
+</span><span id="analyze_passages-39"><a href="#analyze_passages-39"><span class="linenos">39</span></a>        <span class="n">problems</span> <span class="o">=</span> <span class="n">validate</span><span class="p">(</span><span class="n">tokens</span><span class="p">,</span> <span class="n">result</span><span class="p">)</span>
+</span><span id="analyze_passages-40"><a href="#analyze_passages-40"><span class="linenos">40</span></a>        <span class="k">if</span> <span class="n">problems</span><span class="p">:</span>
+</span><span id="analyze_passages-41"><a href="#analyze_passages-41"><span class="linenos">41</span></a>            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Validation warnings (context </span><span class="si">{</span><span class="n">passage</span><span class="o">.</span><span class="n">context</span><span class="si">!r}</span><span class="s2">):"</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
+</span><span id="analyze_passages-42"><a href="#analyze_passages-42"><span class="linenos">42</span></a>            <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">problems</span><span class="p">:</span>
+</span><span id="analyze_passages-43"><a href="#analyze_passages-43"><span class="linenos">43</span></a>                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  - </span><span class="si">{</span><span class="n">p</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
 </span><span id="analyze_passages-44"><a href="#analyze_passages-44"><span class="linenos">44</span></a>
-</span><span id="analyze_passages-45"><a href="#analyze_passages-45"><span class="linenos">45</span></a>    <span class="k">return</span> <span class="n">all_tokens</span><span class="p">,</span> <span class="n">AATGraph</span><span class="p">(</span><span class="n">nodes</span><span class="o">=</span><span class="n">all_nodes</span><span class="p">)</span>
+</span><span id="analyze_passages-45"><a href="#analyze_passages-45"><span class="linenos">45</span></a>        <span class="n">all_tokens</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">tokens</span><span class="p">)</span>
+</span><span id="analyze_passages-46"><a href="#analyze_passages-46"><span class="linenos">46</span></a>        <span class="n">all_nodes</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">nodes</span><span class="p">)</span>
+</span><span id="analyze_passages-47"><a href="#analyze_passages-47"><span class="linenos">47</span></a>
+</span><span id="analyze_passages-48"><a href="#analyze_passages-48"><span class="linenos">48</span></a>    <span class="k">return</span> <span class="n">all_tokens</span><span class="p">,</span> <span class="n">AATGraph</span><span class="p">(</span><span class="n">nodes</span><span class="o">=</span><span class="n">all_nodes</span><span class="p">)</span>
 </span></pre></div>
 
 
@@ -481,11 +483,13 @@ analyze_passages().</p>
 is every passage's tokens concatenated in order, <code>graph</code> is one
 AATGraph combining every passage's nodes.</p>
 
-<p>Prints a warning for any passage whose analysis fails validate() (a
-referential problem -- see <a href="../aat.html#validate">aat.core.validate.validate</a>); it does not
-raise, since a referential problem is a sign the LM's output needs a
-re-run or a prompt tweak, not necessarily that the caller's own code
-is broken.</p>
+<p>Prints a warning to stderr (not stdout -- callers such as aat_main.py
+write a plain-text serialized analysis to stdout, and a stray print()
+there would corrupt it) for any passage whose analysis fails
+validate() (a referential problem -- see <a href="../aat.html#validate">aat.core.validate.validate</a>);
+it does not raise, since a referential problem is a sign the LM's
+output needs a re-run or a prompt tweak, not necessarily that the
+caller's own code is broken.</p>
 </div>
 
 

@@ -7,8 +7,8 @@ renders an AAT graph; nothing here knows how to *produce* one from real
 text -- that's aat.english's job (or, eventually, another language-
 specific sibling subpackage). Keeping this boundary means aat.core can be
 imported and reused on its own by any downstream project that just wants
-the data model, the file format, and the Mermaid renderer, without
-pulling in dspy at all.
+the data model, the file format, and the Mermaid/Graphviz renderers,
+without pulling in dspy at all.
 """
 
 from .tokens import CitableToken, CitedPassage
@@ -27,7 +27,9 @@ from .serialization import (
     read_analysis,
 )
 from .mermaid import graph_to_mermaid, save_mermaid
+from .graphviz import graph_to_dot, save_dot
 from .coloring import assign_action_colors
+from .cex import parse_cex_ctsdata, read_cex_passages
 
 __all__ = [
     "CitableToken",
@@ -49,5 +51,9 @@ __all__ = [
     "read_analysis",
     "graph_to_mermaid",
     "save_mermaid",
+    "graph_to_dot",
+    "save_dot",
     "assign_action_colors",
+    "parse_cex_ctsdata",
+    "read_cex_passages",
 ]

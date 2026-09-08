@@ -35,7 +35,11 @@ from .core import (
     read_analysis,
     graph_to_mermaid,
     save_mermaid,
+    graph_to_dot,
+    save_dot,
     assign_action_colors,
+    parse_cex_ctsdata,
+    read_cex_passages,
 )
 
 __version__ = "0.1.0"
@@ -60,6 +64,9 @@ __all__ = [
     "read_analysis",
     "graph_to_mermaid",
     "save_mermaid",
+    "graph_to_dot",
+    "save_dot",
     "assign_action_colors",
-    "__version__",
+    "parse_cex_ctsdata",
+    "read_cex_passages",
 ]

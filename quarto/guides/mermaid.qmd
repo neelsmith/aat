@@ -1,0 +1,25 @@
+---
+title: Visualizing a graph with Mermaid
+---
+
+
+`graph_to_mermaid()` (in `aat/core/mermaid.py`) renders an `AATGraph` as a [Mermaid](https://mermaid.js.org) flowchart: an action is a rectangle, an agent is rounded, a target is a stadium shape, and every node with a `related_node` becomes a labelled edge pointing at it. By default every node is also colored by which action it clusters with, so the separate clauses in a multi-action passage are visually distinguishable.
+
+```python
+from aat.core import graph_to_mermaid
+
+diagram, warnings = graph_to_mermaid(graph)
+print(diagram)
+for w in warnings:
+    print(f"Warning: {w}")
+```
+
+`orientation` controls the diagram's layout direction -- Mermaid's own flowchart direction codes: `"BT"` (bottom-to-top, the default), `"TB"`/`"TD"` (top-down, synonyms), `"LR"`, or `"RL"`. Matched case-insensitively (`"lr"` works the same as `"LR"`); anything else raises `ValueError` naming the valid options, rather than silently producing invalid Mermaid syntax:
+
+```python
+diagram, warnings = graph_to_mermaid(graph, orientation="LR")
+```
+
+Pass `color_by_action=False` for a plain, uncolored diagram. `save_mermaid(graph, path, ...)` takes the same `orientation`/`color_by_action` arguments and writes the diagram straight to a file (e.g. `analysis.mmd`).
+
+`warnings` lists any node whose `related_node` doesn't resolve to another node actually present in `graph` -- normally a sign the graph failed `validate()` upstream (see "Analyzing multiple citable passages" above), worth checking there first -- plus, if the graph has more distinct actions than the color palette has slots (currently 8), one warning that colors repeat.

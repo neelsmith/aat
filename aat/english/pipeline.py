@@ -4,6 +4,7 @@ convenience layer most callers should use instead of calling
 tokenize.py/dspy_signatures.py directly.
 """
 
+import sys
 from typing import List, Tuple
 
 from aat.core import AATGraph, AATNode, CitableToken, CitedPassage
@@ -19,11 +20,13 @@ def analyze_passages(passages: List[CitedPassage]) -> Tuple[List[CitableToken], 
     is every passage's tokens concatenated in order, `graph` is one
     AATGraph combining every passage's nodes.
 
-    Prints a warning for any passage whose analysis fails validate() (a
-    referential problem -- see aat.core.validate.validate); it does not
-    raise, since a referential problem is a sign the LM's output needs a
-    re-run or a prompt tweak, not necessarily that the caller's own code
-    is broken.
+    Prints a warning to stderr (not stdout -- callers such as aat_main.py
+    write a plain-text serialized analysis to stdout, and a stray print()
+    there would corrupt it) for any passage whose analysis fails
+    validate() (a referential problem -- see aat.core.validate.validate);
+    it does not raise, since a referential problem is a sign the LM's
+    output needs a re-run or a prompt tweak, not necessarily that the
+    caller's own code is broken.
     """
     all_tokens: List[CitableToken] = []
     all_nodes: List[AATNode] = []
@@ -34,9 +37,9 @@ def analyze_passages(passages: List[CitedPassage]) -> Tuple[List[CitableToken], 
 
         problems = validate(tokens, result)
         if problems:
-            print(f"Validation warnings (context {passage.context!r}):")
+            print(f"Validation warnings (context {passage.context!r}):", file=sys.stderr)
             for p in problems:
-                print(f"  - {p}")
+                print(f"  - {p}", file=sys.stderr)
 
         all_tokens.extend(tokens)
         all_nodes.extend(result.nodes)

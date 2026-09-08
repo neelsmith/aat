@@ -6,7 +6,7 @@ title: AI slop to clean up
 
 ### Working directly with the package
 
-- [USAGE.md](https://github.com/neelsmith/aat/blob/main/USAGE.md) -- running the pipeline, from the command line or from your own code
-- [TESTING.md](https://github.com/neelsmith/aat/blob/main/TESTING.md) -- running the offline test suite
-- [OPTIMIZING.md](https://github.com/neelsmith/aat/blob/main/OPTIMIZING.md) -- tuning `AgentActionTarget`'s prompt with GEPA
-- [DEVELOPMENT.md](https://github.com/neelsmith/aat/blob/main/DEVELOPMENT.md) -- how the above fit together into one development loop
+- [ ] [USAGE.md](https://github.com/neelsmith/aat/blob/main/USAGE.md) -- running the pipeline, from the command line or from your own code
+- [ ] [TESTING.md](https://github.com/neelsmith/aat/blob/main/TESTING.md) -- running the offline test suite
+- [ ] [OPTIMIZING.md](https://github.com/neelsmith/aat/blob/main/OPTIMIZING.md) -- tuning `AgentActionTarget`'s prompt with GEPA
+- [ ] [DEVELOPMENT.md](https://github.com/neelsmith/aat/blob/main/DEVELOPMENT.md) -- how the above fit together into one development loop

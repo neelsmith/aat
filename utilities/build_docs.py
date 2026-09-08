@@ -10,11 +10,15 @@ Run from the repo root (so REPO_ROOT below resolves correctly):
 Requires pdoc (`pip install pdoc --break-system-packages`, or install the
 'dev' extra: `pip install -e ".[dev]"`).
 
-.github/workflows/docs.yml runs this same script on every push to `main`
-and publishes the output directory (REPO_ROOT/docs/) to GitHub Pages --
-see notes/DEVELOPMENT.md. That directory is rebuilt from scratch on every
-run (see build()'s shutil.rmtree() below) -- keep the workflow's own
-artifact `path:` in sync with OUTPUT_DIR if this ever changes again.
+Docs are published to GitHub Pages by hand, not by CI: run this script,
+then separately `quarto render` inside quarto/ whenever you decide to
+refresh that site too -- see notes/DEVELOPMENT.md and
+notes/CLAUDE_WORKFLOW.md. The output directory (REPO_ROOT/docs/) is wiped
+from scratch on every run (see build()'s shutil.rmtree() below), which
+also destroys anything Quarto has rendered into docs/ since the last
+time you ran it -- re-run `quarto render` afterward if this script's own
+run followed a Quarto publish, rather than assuming docs/ only holds
+pdoc's own pages.
 """
 
 import shutil

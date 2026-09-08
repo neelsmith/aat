@@ -7,6 +7,7 @@ Needs an `.env` file in this folder with your LM credentials -- see
 
 import argparse
 import os
+import sys
 from pathlib import Path
 
 import dspy
@@ -55,18 +56,23 @@ def _configure_lm():
     return lm
 
 
+from aat.core import AATGraph, CitedPassage, serialize_analysis  # noqa: E402
 from aat.english import analyze_passage  # noqa: E402
 
 
-def _print_graph(tokens, graph):
-    print(f"\nTokens ({len(tokens)}):")
-    for t in tokens:
-        print(f"  {t.id}\t{t.value}")
+def _write_serialized_analysis(passage: CitedPassage, graph: AATGraph) -> None:
+    """Write the analysis to stdout in the same plain-text format
+    aat.core.serialize_analysis()/write_analysis() use: a `#!passages`
+    block (this passage's own context/text) followed by a `#!aatnodes`
+    block (the resulting AATGraph). Prints nothing else to stdout, so the
+    output can be redirected straight to a file --
 
-    print(f"\nNodes ({len(graph.nodes)}):")
-    for n in graph.nodes:
-        related = f" -> {n.related_node}" if n.related_node else ""
-        print(f"  {n.role:<8} {n.id}\t{n.value!r}{related}")
+        python3 aat_main.py --passage "..." > analysis.txt
+
+    -- and reloaded later with aat.core.read_analysis() (or the
+    aat_reader.py notebook), with no separate save step needed.
+    """
+    sys.stdout.write(serialize_analysis([passage], graph))
 
 
 if __name__ == "__main__":
@@ -75,7 +81,7 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--passage",
-        default="The dog ate my homework.",
+        default="Four score and seven years ago our fathers brought forth, upon this continent, a new nation, conceived in Liberty, and dedicated to the proposition that all men are created equal.",
         help="English passage to analyze (defaults to the built-in sample).",
     )
     parser.add_argument(
@@ -86,5 +92,5 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     _configure_lm()
-    tokens, graph = analyze_passage(args.passage, context=args.context)
-    _print_graph(tokens, graph)
+    _tokens, graph = analyze_passage(args.passage, context=args.context)
+    _write_serialized_analysis(CitedPassage(context=args.context, text=args.passage), graph)

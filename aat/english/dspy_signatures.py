@@ -8,7 +8,7 @@ This module covers only the extraction stage:
      AATGraph's worth of AATNode, using the ids handed to it.
   2. analyze -- the dspy.ChainOfThought instance built from that
      signature; the same module-level instance every pipeline call and
-     every GEPA run uses (see pipeline.py, optimize_gepa.py).
+     every GEPA run uses (see pipeline.py, utilities/optimize_gepa.py).
   3. validate() -- a thin wrapper around aat.core.validate.validate,
      checking that analyze()'s output is referentially sound given the
      input tokens.

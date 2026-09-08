@@ -1,0 +1,17 @@
+---
+title: Saving and loading a graph
+---
+
+ing for the exact format. Multiple blocks in one file are concatenated, in file order, into the list `read_nodes()` returns, so simply concatenating several `write_nodes()` outputs together and reading the result back gives you one combined graph.
+
+`serialize_analysis()`/`write_analysis()` (a thin wrapper that writes `serialize_analysis()`'s string to a file) and `read_analysis()` save and reload a *complete, re-displayable* analysis -- the graph AND its source passage(s) -- so a later reader can recover tokens (via `aat.english.tokenize()`, which needs no LM) and pair them back up with the graph, without ever calling an LM again:
+
+```python
+from aat.core import CitedPassage, write_analysis, read_analysis
+
+write_analysis([CitedPassage(context=context, text=text)], graph, "analysis.txt")
+passages, reloaded_graph = read_analysis("analysis.txt")
+```
+
+Call `serialize_analysis()` directly (no `path` argument) when you want the text itself rather than a file -- this is what powers `aat_graph.py`'s "Save analysis to file" button, which writes the string wherever the user's own directory picker points, not to a fixed path. `aat_reader.py` is the matching file-loading notebook -- see "Interactive notebook" below. The file has a `#!passages` block (header `context|text`) alongside the `#!aatnodes` block; each is read independently by its own function (`read_passages()`/`read_nodes()`), so the two block types can coexist in one file without interfering with each other.
+

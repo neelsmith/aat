@@ -1,0 +1,7 @@
+---
+title: Background and requirements
+---
+
+- [About `aat`](./about.qmd)
+- [Installing `aat`](./install.qmd)
+- [Configuring a language model](./conf.qmd)
