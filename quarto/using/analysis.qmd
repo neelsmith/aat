@@ -1,5 +1,5 @@
 ---
-title: Analyze from the command line
+title: Analyze a passage from the command line
 ---
 
 

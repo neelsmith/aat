@@ -2,12 +2,11 @@
 title: Agent-Action-Target in Python
 ---
 
-- [**About** the A-A-T model](./about.qmd)
-- **Using** `aat`:
-    - [Marimo notebooks](./nbs.qmd)
-    - [Recipes](./guides/index.qmd) in Python
-- **Reference**:
-    - [Technical notes](./reference/index.qmd) (including API documentation)
+- [About the A-A-T model](./about.qmd)
+- [Installing `aat`](./install.qmd)
+- [Using `aat`](./using/index.qmd)
+- [Python recipes](./guides/index.qmd)
+- [Technical notes](./reference/index.qmd) (including API documentation)
 
 
 

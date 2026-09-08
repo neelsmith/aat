@@ -1,0 +1,33 @@
+---
+title: Installing `aat`
+---
+
+
+The package is deliberately split into two independent modules:
+
+- **`aat.core`** implements the AAT model with classes for input (`CitableToken`/`CitedPassage`) and output (`AATNode`/`AATGraph`). It includes functions to validate and serialize analyses to a plain-text format.
+- **`aat.english`** uses an LM  configured with `dspy` to tokenize English text and compose an `AATGraph`.
+
+Released under the [GNU General Public License v3 or later](LICENSE).
+
+
+## Installing
+
+To use the `aat` model from another project, install the core module directly from this repository:
+
+```sh
+pip install git+https://github.com/neelsmith/aat.git
+```
+
+To include `aat.english` (the dspy-based English pipeline):
+
+```sh
+pip install "aat[english] @ git+https://github.com/neelsmith/aat.git"
+```
+
+To pin to a specific branch, tag, or commit  appending `@<ref>` to the URL, e.g.
+
+```sh
+pip install "aat[english] @ git+https://github.com/neelsmith/aat.git@v0.1.0`
+```
+
