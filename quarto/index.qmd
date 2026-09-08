@@ -4,9 +4,9 @@ title: Agent-Action-Target in Python
 
 Background:
 
-- [About `aat`](./about.qmd)
-- [Installing `aat`](./install.qmd)
-- [Configuring a langauge model](./conf.qmd)
+- [About `aat`](./bg/about.qmd)
+- [Installing `aat`](./bg/install.qmd)
+- [Configuring a langauge model](./bg/conf.qmd)
 
 
 The `aat` package:

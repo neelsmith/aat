@@ -1,9 +1,9 @@
 # Release history
 
-Current release: *0.1.3*
+Current release: *0.2.0*
 
 
-**0.2.0**, *??*: Adds functions for working with AAT graphs using `graphviz`. Adds initial web site on github pages.
+**0.2.0**, *Sept. 8, 2026*: Adds functions and scripts for working with AAT graphs using `graphviz`; for anlayzing entire corpora; initial web site on github pages.
 
 
 

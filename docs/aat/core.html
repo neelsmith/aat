@@ -166,6 +166,12 @@
             <li>
                     <a class="function" href="#assign_action_colors">assign_action_colors</a>
             </li>
+            <li>
+                    <a class="function" href="#parse_cex_ctsdata">parse_cex_ctsdata</a>
+            </li>
+            <li>
+                    <a class="function" href="#read_cex_passages">read_cex_passages</a>
+            </li>
     </ul>
 
 
@@ -230,31 +236,34 @@ without pulling in dspy at all.</p>
 </span><span id="L-29"><a href="#L-29"><span class="linenos">29</span></a><span class="kn">from</span><span class="w"> </span><span class="nn">.mermaid</span><span class="w"> </span><span class="kn">import</span> <span class="n">graph_to_mermaid</span><span class="p">,</span> <span class="n">save_mermaid</span>
 </span><span id="L-30"><a href="#L-30"><span class="linenos">30</span></a><span class="kn">from</span><span class="w"> </span><span class="nn">.graphviz</span><span class="w"> </span><span class="kn">import</span> <span class="n">graph_to_dot</span><span class="p">,</span> <span class="n">save_dot</span>
 </span><span id="L-31"><a href="#L-31"><span class="linenos">31</span></a><span class="kn">from</span><span class="w"> </span><span class="nn">.coloring</span><span class="w"> </span><span class="kn">import</span> <span class="n">assign_action_colors</span>
-</span><span id="L-32"><a href="#L-32"><span class="linenos">32</span></a>
-</span><span id="L-33"><a href="#L-33"><span class="linenos">33</span></a><span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
-</span><span id="L-34"><a href="#L-34"><span class="linenos">34</span></a>    <span class="s2">"CitableToken"</span><span class="p">,</span>
-</span><span id="L-35"><a href="#L-35"><span class="linenos">35</span></a>    <span class="s2">"CitedPassage"</span><span class="p">,</span>
-</span><span id="L-36"><a href="#L-36"><span class="linenos">36</span></a>    <span class="s2">"AATGraph"</span><span class="p">,</span>
-</span><span id="L-37"><a href="#L-37"><span class="linenos">37</span></a>    <span class="s2">"AATNode"</span><span class="p">,</span>
-</span><span id="L-38"><a href="#L-38"><span class="linenos">38</span></a>    <span class="s2">"Role"</span><span class="p">,</span>
-</span><span id="L-39"><a href="#L-39"><span class="linenos">39</span></a>    <span class="s2">"ROLES"</span><span class="p">,</span>
-</span><span id="L-40"><a href="#L-40"><span class="linenos">40</span></a>    <span class="s2">"validate"</span><span class="p">,</span>
-</span><span id="L-41"><a href="#L-41"><span class="linenos">41</span></a>    <span class="s2">"serialize_nodes"</span><span class="p">,</span>
-</span><span id="L-42"><a href="#L-42"><span class="linenos">42</span></a>    <span class="s2">"write_nodes"</span><span class="p">,</span>
-</span><span id="L-43"><a href="#L-43"><span class="linenos">43</span></a>    <span class="s2">"read_nodes"</span><span class="p">,</span>
-</span><span id="L-44"><a href="#L-44"><span class="linenos">44</span></a>    <span class="s2">"read_graph"</span><span class="p">,</span>
-</span><span id="L-45"><a href="#L-45"><span class="linenos">45</span></a>    <span class="s2">"serialize_passages"</span><span class="p">,</span>
-</span><span id="L-46"><a href="#L-46"><span class="linenos">46</span></a>    <span class="s2">"write_passages"</span><span class="p">,</span>
-</span><span id="L-47"><a href="#L-47"><span class="linenos">47</span></a>    <span class="s2">"read_passages"</span><span class="p">,</span>
-</span><span id="L-48"><a href="#L-48"><span class="linenos">48</span></a>    <span class="s2">"serialize_analysis"</span><span class="p">,</span>
-</span><span id="L-49"><a href="#L-49"><span class="linenos">49</span></a>    <span class="s2">"write_analysis"</span><span class="p">,</span>
-</span><span id="L-50"><a href="#L-50"><span class="linenos">50</span></a>    <span class="s2">"read_analysis"</span><span class="p">,</span>
-</span><span id="L-51"><a href="#L-51"><span class="linenos">51</span></a>    <span class="s2">"graph_to_mermaid"</span><span class="p">,</span>
-</span><span id="L-52"><a href="#L-52"><span class="linenos">52</span></a>    <span class="s2">"save_mermaid"</span><span class="p">,</span>
-</span><span id="L-53"><a href="#L-53"><span class="linenos">53</span></a>    <span class="s2">"graph_to_dot"</span><span class="p">,</span>
-</span><span id="L-54"><a href="#L-54"><span class="linenos">54</span></a>    <span class="s2">"save_dot"</span><span class="p">,</span>
-</span><span id="L-55"><a href="#L-55"><span class="linenos">55</span></a>    <span class="s2">"assign_action_colors"</span><span class="p">,</span>
-</span><span id="L-56"><a href="#L-56"><span class="linenos">56</span></a><span class="p">]</span>
+</span><span id="L-32"><a href="#L-32"><span class="linenos">32</span></a><span class="kn">from</span><span class="w"> </span><span class="nn">.cex</span><span class="w"> </span><span class="kn">import</span> <span class="n">parse_cex_ctsdata</span><span class="p">,</span> <span class="n">read_cex_passages</span>
+</span><span id="L-33"><a href="#L-33"><span class="linenos">33</span></a>
+</span><span id="L-34"><a href="#L-34"><span class="linenos">34</span></a><span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
+</span><span id="L-35"><a href="#L-35"><span class="linenos">35</span></a>    <span class="s2">"CitableToken"</span><span class="p">,</span>
+</span><span id="L-36"><a href="#L-36"><span class="linenos">36</span></a>    <span class="s2">"CitedPassage"</span><span class="p">,</span>
+</span><span id="L-37"><a href="#L-37"><span class="linenos">37</span></a>    <span class="s2">"AATGraph"</span><span class="p">,</span>
+</span><span id="L-38"><a href="#L-38"><span class="linenos">38</span></a>    <span class="s2">"AATNode"</span><span class="p">,</span>
+</span><span id="L-39"><a href="#L-39"><span class="linenos">39</span></a>    <span class="s2">"Role"</span><span class="p">,</span>
+</span><span id="L-40"><a href="#L-40"><span class="linenos">40</span></a>    <span class="s2">"ROLES"</span><span class="p">,</span>
+</span><span id="L-41"><a href="#L-41"><span class="linenos">41</span></a>    <span class="s2">"validate"</span><span class="p">,</span>
+</span><span id="L-42"><a href="#L-42"><span class="linenos">42</span></a>    <span class="s2">"serialize_nodes"</span><span class="p">,</span>
+</span><span id="L-43"><a href="#L-43"><span class="linenos">43</span></a>    <span class="s2">"write_nodes"</span><span class="p">,</span>
+</span><span id="L-44"><a href="#L-44"><span class="linenos">44</span></a>    <span class="s2">"read_nodes"</span><span class="p">,</span>
+</span><span id="L-45"><a href="#L-45"><span class="linenos">45</span></a>    <span class="s2">"read_graph"</span><span class="p">,</span>
+</span><span id="L-46"><a href="#L-46"><span class="linenos">46</span></a>    <span class="s2">"serialize_passages"</span><span class="p">,</span>
+</span><span id="L-47"><a href="#L-47"><span class="linenos">47</span></a>    <span class="s2">"write_passages"</span><span class="p">,</span>
+</span><span id="L-48"><a href="#L-48"><span class="linenos">48</span></a>    <span class="s2">"read_passages"</span><span class="p">,</span>
+</span><span id="L-49"><a href="#L-49"><span class="linenos">49</span></a>    <span class="s2">"serialize_analysis"</span><span class="p">,</span>
+</span><span id="L-50"><a href="#L-50"><span class="linenos">50</span></a>    <span class="s2">"write_analysis"</span><span class="p">,</span>
+</span><span id="L-51"><a href="#L-51"><span class="linenos">51</span></a>    <span class="s2">"read_analysis"</span><span class="p">,</span>
+</span><span id="L-52"><a href="#L-52"><span class="linenos">52</span></a>    <span class="s2">"graph_to_mermaid"</span><span class="p">,</span>
+</span><span id="L-53"><a href="#L-53"><span class="linenos">53</span></a>    <span class="s2">"save_mermaid"</span><span class="p">,</span>
+</span><span id="L-54"><a href="#L-54"><span class="linenos">54</span></a>    <span class="s2">"graph_to_dot"</span><span class="p">,</span>
+</span><span id="L-55"><a href="#L-55"><span class="linenos">55</span></a>    <span class="s2">"save_dot"</span><span class="p">,</span>
+</span><span id="L-56"><a href="#L-56"><span class="linenos">56</span></a>    <span class="s2">"assign_action_colors"</span><span class="p">,</span>
+</span><span id="L-57"><a href="#L-57"><span class="linenos">57</span></a>    <span class="s2">"parse_cex_ctsdata"</span><span class="p">,</span>
+</span><span id="L-58"><a href="#L-58"><span class="linenos">58</span></a>    <span class="s2">"read_cex_passages"</span><span class="p">,</span>
+</span><span id="L-59"><a href="#L-59"><span class="linenos">59</span></a><span class="p">]</span>
 </span></pre></div>
 
 
@@ -490,7 +499,7 @@ order convenient for display.</p>
 <div class="attr function">
             
         <span class="def">def</span>
-        <span class="name">by_id</span><span class="signature pdoc-code condensed">(<span class="param"><span class="bp">self</span>, </span><span class="param"><span class="n">context</span><span class="p">:</span> <span class="nb">str</span>, </span><span class="param"><span class="nb">id</span><span class="p">:</span> <span class="nb">str</span></span><span class="return-annotation">) -> <span class="n">Optional</span><span class="p">[</span><span class="n"><a href="#AATNode">AATNode</a></span><span class="p">]</span>:</span></span>
+        <span class="name">by_id</span><span class="signature pdoc-code condensed">(<span class="param"><span class="bp">self</span>, </span><span class="param"><span class="n">context</span><span class="p">:</span> <span class="nb">str</span>, </span><span class="param"><span class="nb">id</span><span class="p">:</span> <span class="nb">str</span></span><span class="return-annotation">) -> <span class="n"><a href="#AATNode">AATNode</a></span> <span class="o">|</span> <span class="kc">None</span>:</span></span>
 
                 <label class="view-source-button" for="AATGraph.by_id-view-source"><span>View Source</span></label>
 
@@ -641,7 +650,7 @@ within the same context.</p>
 <div class="attr function">
             
         <span class="def">def</span>
-        <span class="name">governing_action</span><span class="signature pdoc-code condensed">(<span class="param"><span class="bp">self</span>, </span><span class="param"><span class="n">action</span><span class="p">:</span> <span class="n"><a href="#AATNode">AATNode</a></span></span><span class="return-annotation">) -> <span class="n">Optional</span><span class="p">[</span><span class="n"><a href="#AATNode">AATNode</a></span><span class="p">]</span>:</span></span>
+        <span class="name">governing_action</span><span class="signature pdoc-code condensed">(<span class="param"><span class="bp">self</span>, </span><span class="param"><span class="n">action</span><span class="p">:</span> <span class="n"><a href="#AATNode">AATNode</a></span></span><span class="return-annotation">) -> <span class="n"><a href="#AATNode">AATNode</a></span> <span class="o">|</span> <span class="kc">None</span>:</span></span>
 
                 <label class="view-source-button" for="AATGraph.governing_action-view-source"><span>View Source</span></label>
 
@@ -809,7 +818,7 @@ can be <code>None</code>.</li>
                             </div>
                             <div id="AATNode.related_node" class="classattr">
                                 <div class="attr variable">
-            <span class="name">related_node</span><span class="annotation">: Optional[str]</span>        =
+            <span class="name">related_node</span><span class="annotation">: str | None</span>        =
 <span class="default_value">None</span>
 
         
@@ -1664,6 +1673,114 @@ there are more distinct actions than that -- in which case two
 distinct actions (and their own agent/target nodes) end up sharing the
 identical color. <code>warnings</code> has one entry naming this when it happens;
 otherwise it's empty.</p>
+</div>
+
+
+                </section>
+                <section id="parse_cex_ctsdata">
+                            <input id="parse_cex_ctsdata-view-source" class="view-source-toggle-state" type="checkbox" aria-hidden="true" tabindex="-1">
+<div class="attr function">
+            
+        <span class="def">def</span>
+        <span class="name">parse_cex_ctsdata</span><span class="signature pdoc-code condensed">(<span class="param"><span class="n">text</span><span class="p">:</span> <span class="nb">str</span>, </span><span class="param"><span class="n">delimiter</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">'#'</span></span><span class="return-annotation">) -> <span class="n">List</span><span class="p">[</span><span class="n"><a href="#CitedPassage">CitedPassage</a></span><span class="p">]</span>:</span></span>
+
+                <label class="view-source-button" for="parse_cex_ctsdata-view-source"><span>View Source</span></label>
+
+    </div>
+    <a class="headerlink" href="#parse_cex_ctsdata"></a>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="parse_cex_ctsdata-39"><a href="#parse_cex_ctsdata-39"><span class="linenos">39</span></a><span class="k">def</span><span class="w"> </span><span class="nf">parse_cex_ctsdata</span><span class="p">(</span><span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">delimiter</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"#"</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">CitedPassage</span><span class="p">]:</span>
+</span><span id="parse_cex_ctsdata-40"><a href="#parse_cex_ctsdata-40"><span class="linenos">40</span></a><span class="w">    </span><span class="sd">"""Parse every '#!ctsdata' block in `text` (a CEX file's own full</span>
+</span><span id="parse_cex_ctsdata-41"><a href="#parse_cex_ctsdata-41"><span class="linenos">41</span></a><span class="sd">    contents, already read into a string) and return its rows,</span>
+</span><span id="parse_cex_ctsdata-42"><a href="#parse_cex_ctsdata-42"><span class="linenos">42</span></a><span class="sd">    concatenated in file order, as a list of CitedPassage -- `context` is</span>
+</span><span id="parse_cex_ctsdata-43"><a href="#parse_cex_ctsdata-43"><span class="linenos">43</span></a><span class="sd">    each row's own CTS URN, `text` is its citable text. Every other CEX</span>
+</span><span id="parse_cex_ctsdata-44"><a href="#parse_cex_ctsdata-44"><span class="linenos">44</span></a><span class="sd">    block type is ignored entirely, whether it appears before, between,</span>
+</span><span id="parse_cex_ctsdata-45"><a href="#parse_cex_ctsdata-45"><span class="linenos">45</span></a><span class="sd">    or after the '#!ctsdata' block(s); multiple '#!ctsdata' blocks in one</span>
+</span><span id="parse_cex_ctsdata-46"><a href="#parse_cex_ctsdata-46"><span class="linenos">46</span></a><span class="sd">    file are concatenated, in file order, same as</span>
+</span><span id="parse_cex_ctsdata-47"><a href="#parse_cex_ctsdata-47"><span class="linenos">47</span></a><span class="sd">    aat.core.serialization's own multi-block handling.</span>
+</span><span id="parse_cex_ctsdata-48"><a href="#parse_cex_ctsdata-48"><span class="linenos">48</span></a>
+</span><span id="parse_cex_ctsdata-49"><a href="#parse_cex_ctsdata-49"><span class="linenos">49</span></a><span class="sd">    Raises ValueError, naming the offending line, for a '#!ctsdata' row</span>
+</span><span id="parse_cex_ctsdata-50"><a href="#parse_cex_ctsdata-50"><span class="linenos">50</span></a><span class="sd">    that has no `delimiter` in it at all -- most often a sign `delimiter`</span>
+</span><span id="parse_cex_ctsdata-51"><a href="#parse_cex_ctsdata-51"><span class="linenos">51</span></a><span class="sd">    is wrong for this particular file. Raises ValueError (not returning</span>
+</span><span id="parse_cex_ctsdata-52"><a href="#parse_cex_ctsdata-52"><span class="linenos">52</span></a><span class="sd">    an empty list) if the file has no '#!ctsdata' block at all, so a</span>
+</span><span id="parse_cex_ctsdata-53"><a href="#parse_cex_ctsdata-53"><span class="linenos">53</span></a><span class="sd">    caller can't mistake "wrong file" for "file with zero passages" --</span>
+</span><span id="parse_cex_ctsdata-54"><a href="#parse_cex_ctsdata-54"><span class="linenos">54</span></a><span class="sd">    same reasoning as aat.core.serialization.read_nodes()/read_passages().</span>
+</span><span id="parse_cex_ctsdata-55"><a href="#parse_cex_ctsdata-55"><span class="linenos">55</span></a><span class="sd">    """</span>
+</span><span id="parse_cex_ctsdata-56"><a href="#parse_cex_ctsdata-56"><span class="linenos">56</span></a>    <span class="n">passages</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">CitedPassage</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+</span><span id="parse_cex_ctsdata-57"><a href="#parse_cex_ctsdata-57"><span class="linenos">57</span></a>    <span class="n">in_ctsdata</span> <span class="o">=</span> <span class="kc">False</span>
+</span><span id="parse_cex_ctsdata-58"><a href="#parse_cex_ctsdata-58"><span class="linenos">58</span></a>    <span class="n">seen</span> <span class="o">=</span> <span class="kc">False</span>
+</span><span id="parse_cex_ctsdata-59"><a href="#parse_cex_ctsdata-59"><span class="linenos">59</span></a>
+</span><span id="parse_cex_ctsdata-60"><a href="#parse_cex_ctsdata-60"><span class="linenos">60</span></a>    <span class="k">for</span> <span class="n">line_no</span><span class="p">,</span> <span class="n">raw_line</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">text</span><span class="o">.</span><span class="n">splitlines</span><span class="p">(),</span> <span class="n">start</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+</span><span id="parse_cex_ctsdata-61"><a href="#parse_cex_ctsdata-61"><span class="linenos">61</span></a>        <span class="n">line</span> <span class="o">=</span> <span class="n">raw_line</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s2">"</span><span class="se">\r\n</span><span class="s2">"</span><span class="p">)</span>
+</span><span id="parse_cex_ctsdata-62"><a href="#parse_cex_ctsdata-62"><span class="linenos">62</span></a>        <span class="k">if</span> <span class="n">line</span> <span class="o">==</span> <span class="s2">""</span> <span class="ow">or</span> <span class="n">line</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"//"</span><span class="p">):</span>
+</span><span id="parse_cex_ctsdata-63"><a href="#parse_cex_ctsdata-63"><span class="linenos">63</span></a>            <span class="k">continue</span>
+</span><span id="parse_cex_ctsdata-64"><a href="#parse_cex_ctsdata-64"><span class="linenos">64</span></a>
+</span><span id="parse_cex_ctsdata-65"><a href="#parse_cex_ctsdata-65"><span class="linenos">65</span></a>        <span class="k">if</span> <span class="n">line</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"#!"</span><span class="p">):</span>
+</span><span id="parse_cex_ctsdata-66"><a href="#parse_cex_ctsdata-66"><span class="linenos">66</span></a>            <span class="n">in_ctsdata</span> <span class="o">=</span> <span class="n">line</span> <span class="o">==</span> <span class="n">CTSDATA_LABEL</span>
+</span><span id="parse_cex_ctsdata-67"><a href="#parse_cex_ctsdata-67"><span class="linenos">67</span></a>            <span class="k">if</span> <span class="n">in_ctsdata</span><span class="p">:</span>
+</span><span id="parse_cex_ctsdata-68"><a href="#parse_cex_ctsdata-68"><span class="linenos">68</span></a>                <span class="n">seen</span> <span class="o">=</span> <span class="kc">True</span>
+</span><span id="parse_cex_ctsdata-69"><a href="#parse_cex_ctsdata-69"><span class="linenos">69</span></a>            <span class="k">continue</span>
+</span><span id="parse_cex_ctsdata-70"><a href="#parse_cex_ctsdata-70"><span class="linenos">70</span></a>
+</span><span id="parse_cex_ctsdata-71"><a href="#parse_cex_ctsdata-71"><span class="linenos">71</span></a>        <span class="k">if</span> <span class="ow">not</span> <span class="n">in_ctsdata</span><span class="p">:</span>
+</span><span id="parse_cex_ctsdata-72"><a href="#parse_cex_ctsdata-72"><span class="linenos">72</span></a>            <span class="k">continue</span>
+</span><span id="parse_cex_ctsdata-73"><a href="#parse_cex_ctsdata-73"><span class="linenos">73</span></a>
+</span><span id="parse_cex_ctsdata-74"><a href="#parse_cex_ctsdata-74"><span class="linenos">74</span></a>        <span class="n">urn</span><span class="p">,</span> <span class="n">sep</span><span class="p">,</span> <span class="n">passage_text</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">partition</span><span class="p">(</span><span class="n">delimiter</span><span class="p">)</span>
+</span><span id="parse_cex_ctsdata-75"><a href="#parse_cex_ctsdata-75"><span class="linenos">75</span></a>        <span class="k">if</span> <span class="ow">not</span> <span class="n">sep</span><span class="p">:</span>
+</span><span id="parse_cex_ctsdata-76"><a href="#parse_cex_ctsdata-76"><span class="linenos">76</span></a>            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+</span><span id="parse_cex_ctsdata-77"><a href="#parse_cex_ctsdata-77"><span class="linenos">77</span></a>                <span class="sa">f</span><span class="s2">"line </span><span class="si">{</span><span class="n">line_no</span><span class="si">}</span><span class="s2">: no </span><span class="si">{</span><span class="n">delimiter</span><span class="si">!r}</span><span class="s2"> delimiter found in a "</span>
+</span><span id="parse_cex_ctsdata-78"><a href="#parse_cex_ctsdata-78"><span class="linenos">78</span></a>                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">CTSDATA_LABEL</span><span class="si">!r}</span><span class="s2"> row -- wrong --delimiter for this file? </span><span class="si">{</span><span class="n">line</span><span class="si">!r}</span><span class="s2">"</span>
+</span><span id="parse_cex_ctsdata-79"><a href="#parse_cex_ctsdata-79"><span class="linenos">79</span></a>            <span class="p">)</span>
+</span><span id="parse_cex_ctsdata-80"><a href="#parse_cex_ctsdata-80"><span class="linenos">80</span></a>        <span class="n">passages</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">CitedPassage</span><span class="p">(</span><span class="n">context</span><span class="o">=</span><span class="n">urn</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="n">passage_text</span><span class="p">))</span>
+</span><span id="parse_cex_ctsdata-81"><a href="#parse_cex_ctsdata-81"><span class="linenos">81</span></a>
+</span><span id="parse_cex_ctsdata-82"><a href="#parse_cex_ctsdata-82"><span class="linenos">82</span></a>    <span class="k">if</span> <span class="ow">not</span> <span class="n">seen</span><span class="p">:</span>
+</span><span id="parse_cex_ctsdata-83"><a href="#parse_cex_ctsdata-83"><span class="linenos">83</span></a>        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"file has no </span><span class="si">{</span><span class="n">CTSDATA_LABEL</span><span class="si">!r}</span><span class="s2"> block"</span><span class="p">)</span>
+</span><span id="parse_cex_ctsdata-84"><a href="#parse_cex_ctsdata-84"><span class="linenos">84</span></a>
+</span><span id="parse_cex_ctsdata-85"><a href="#parse_cex_ctsdata-85"><span class="linenos">85</span></a>    <span class="k">return</span> <span class="n">passages</span>
+</span></pre></div>
+
+
+            <div class="docstring"><p>Parse every '#!ctsdata' block in <code>text</code> (a CEX file's own full
+contents, already read into a string) and return its rows,
+concatenated in file order, as a list of CitedPassage -- <code>context</code> is
+each row's own CTS URN, <code>text</code> is its citable text. Every other CEX
+block type is ignored entirely, whether it appears before, between,
+or after the '#!ctsdata' block(s); multiple '#!ctsdata' blocks in one
+file are concatenated, in file order, same as
+aat.core.serialization's own multi-block handling.</p>
+
+<p>Raises ValueError, naming the offending line, for a '#!ctsdata' row
+that has no <code>delimiter</code> in it at all -- most often a sign <code>delimiter</code>
+is wrong for this particular file. Raises ValueError (not returning
+an empty list) if the file has no '#!ctsdata' block at all, so a
+caller can't mistake "wrong file" for "file with zero passages" --
+same reasoning as aat.core.serialization.read_nodes()/read_passages().</p>
+</div>
+
+
+                </section>
+                <section id="read_cex_passages">
+                            <input id="read_cex_passages-view-source" class="view-source-toggle-state" type="checkbox" aria-hidden="true" tabindex="-1">
+<div class="attr function">
+            
+        <span class="def">def</span>
+        <span class="name">read_cex_passages</span><span class="signature pdoc-code condensed">(<span class="param"><span class="n">path</span><span class="p">:</span> <span class="nb">str</span>, </span><span class="param"><span class="n">delimiter</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">'#'</span></span><span class="return-annotation">) -> <span class="n">List</span><span class="p">[</span><span class="n"><a href="#CitedPassage">CitedPassage</a></span><span class="p">]</span>:</span></span>
+
+                <label class="view-source-button" for="read_cex_passages-view-source"><span>View Source</span></label>
+
+    </div>
+    <a class="headerlink" href="#read_cex_passages"></a>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="read_cex_passages-88"><a href="#read_cex_passages-88"><span class="linenos">88</span></a><span class="k">def</span><span class="w"> </span><span class="nf">read_cex_passages</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">delimiter</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"#"</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">CitedPassage</span><span class="p">]:</span>
+</span><span id="read_cex_passages-89"><a href="#read_cex_passages-89"><span class="linenos">89</span></a><span class="w">    </span><span class="sd">"""Read `path` as a CEX file and return parse_cex_ctsdata() of its</span>
+</span><span id="read_cex_passages-90"><a href="#read_cex_passages-90"><span class="linenos">90</span></a><span class="sd">    contents -- see that function's own docstring for the exact format</span>
+</span><span id="read_cex_passages-91"><a href="#read_cex_passages-91"><span class="linenos">91</span></a><span class="sd">    and error cases."""</span>
+</span><span id="read_cex_passages-92"><a href="#read_cex_passages-92"><span class="linenos">92</span></a>    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s2">"r"</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+</span><span id="read_cex_passages-93"><a href="#read_cex_passages-93"><span class="linenos">93</span></a>        <span class="n">text</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+</span><span id="read_cex_passages-94"><a href="#read_cex_passages-94"><span class="linenos">94</span></a>    <span class="k">return</span> <span class="n">parse_cex_ctsdata</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">delimiter</span><span class="o">=</span><span class="n">delimiter</span><span class="p">)</span>
+</span></pre></div>
+
+
+            <div class="docstring"><p>Read <code>path</code> as a CEX file and return parse_cex_ctsdata() of its
+contents -- see that function's own docstring for the exact format
+and error cases.</p>
 </div>
 
 

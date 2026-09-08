@@ -11,14 +11,174 @@
     ]
   },
   {
-    "objectID": "guides/configure.html",
-    "href": "guides/configure.html",
-    "title": "Configure a language model",
+    "objectID": "bg/about.html",
+    "href": "bg/about.html",
+    "title": "About AAT",
     "section": "",
-    "text": "Add an .env file in this folder with your LM credentials. Copy .env.example to .env and fill in real values:\nAPI_BASE=https://localmodel/api\nMODEL=litellm/modelname\nAPI_KEY=your-key-here",
+    "text": "TBA",
+    "crumbs": [
+      "Background",
+      "About AAT"
+    ]
+  },
+  {
+    "objectID": "bg/about.html#package-design",
+    "href": "bg/about.html#package-design",
+    "title": "About AAT",
+    "section": "Package design",
+    "text": "Package design\nThe package is deliberately split into two independent modules:\n\naat.core implements the AAT model with classes for input (CitableToken/CitedPassage) and output (AATNode/AATGraph). It includes functions to validate and serialize analyses to a plain-text format.\naat.english uses an LM configured with dspy to tokenize English text and compose an AATGraph.",
+    "crumbs": [
+      "Background",
+      "About AAT"
+    ]
+  },
+  {
+    "objectID": "bg/index.html",
+    "href": "bg/index.html",
+    "title": "Background and requirements",
+    "section": "",
+    "text": "About aat\nInstalling aat\nConfiguring a language model",
+    "crumbs": [
+      "Background",
+      "Background and requirements"
+    ]
+  },
+  {
+    "objectID": "guides/quick.html",
+    "href": "guides/quick.html",
+    "title": "Quick start: using aat in Python",
+    "section": "",
+    "text": "First configure a dspy.LM with the same information you would use to configure command-line programs or Marimo notebooks:\nYou can analyze a single string with the analyze_passage function. (If you include a --context citation with a value like a CTS URN, all results will be keyed to unique token IDs within the unique citation context.)\nanalyze_passage returns two values. tokens is a complete tokenization of the input. (In this example, the list has 35 tokens.)\ngraph is an AATGraph. This snippet illustrates the actions function, which returns a list of all the AATNodes in the graph with type action. The agents_for and targets_for functions return a (possibly empty) list of AATNodes related to a given action, with type agent and target respectively.\nHere is the output printed by the snippet above:"
+  },
+  {
+    "objectID": "guides/quick.html#analyzing-multiple-citable-passages",
+    "href": "guides/quick.html#analyzing-multiple-citable-passages",
+    "title": "Quick start: using aat in Python",
+    "section": "Analyzing multiple citable passages",
+    "text": "Analyzing multiple citable passages\nYou can also analyzed texts structured in CitedPassage objects organizing citation and text content with the analyze_passages (plural) function. It returns the same pair of (tokens, graph) as analyze_passage:\nfrom aat.core import CitedPassage\nfrom aat.english import analyze_passages\n\npassages = [\n    CitedPassage(context=\"urn:cts:aat:examples.gettysburg.hay:1\", text=\"Four score and seven years ago our fathers brought forth, upon this continent, a new nation, conceived in Liberty, and dedicated to the proposition that all men are created equal.\"),\n    CitedPassage(context=\"urn:cts:aat:examples.gettysburg.hay:2\", text=\"Now we are engaged in a great civil war, testing whether that nation, or any nation so conceived, and so dedicated, can long endure.\"),\n]\ntokens, graph = analyze_passages(passages)"
+  },
+  {
+    "objectID": "guides/index.html",
+    "href": "guides/index.html",
+    "title": "Recipes",
+    "section": "",
+    "text": "Some recipes:\n\nCLI\nQuick start to using AAT in Python\nSerialization\n\nVisualization:\n\nvisualization with Mermaid\nvisualization with graphviz\nAAT as highlighted text in HTML",
     "crumbs": [
       "Python recipes",
-      "Configure a language model"
+      "Recipes"
+    ]
+  },
+  {
+    "objectID": "guides/cli.html",
+    "href": "guides/cli.html",
+    "title": "Analyze from the command line",
+    "section": "",
+    "text": "Run an analysis from the command line:\npython3 aat_main.py --passage \"Four score and seven years ago our fathers brought forth, upon this continent, a new nation, conceived in Liberty, and dedicated to the proposition that all men are created equal.\"\nInclude a citable reference for the passage (such as a CTS URN) with the --context argument:\npython3 aat_main.py --passage \"Four score and seven years ago our fathers brought forth, upon this continent, a new nation, conceived in Liberty, and dedicated to the proposition that all men are created equal.\" --context \"urn:cts:aat:examples.gettysburg.hay:1\"",
+    "crumbs": [
+      "Python recipes",
+      "Analyze from the command line"
+    ]
+  },
+  {
+    "objectID": "guides/mermaid.html",
+    "href": "guides/mermaid.html",
+    "title": "Visualizing a graph with Mermaid",
+    "section": "",
+    "text": "graph_to_mermaid() (in aat/core/mermaid.py) renders an AATGraph as a Mermaid flowchart: an action is a rectangle, an agent is rounded, a target is a stadium shape, and every node with a related_node becomes a labelled edge pointing at it. By default every node is also colored by which action it clusters with, so the separate clauses in a multi-action passage are visually distinguishable.\nfrom aat.core import graph_to_mermaid\n\ndiagram, warnings = graph_to_mermaid(graph)\nprint(diagram)\nfor w in warnings:\n    print(f\"Warning: {w}\")\norientation controls the diagram’s layout direction – Mermaid’s own flowchart direction codes: \"BT\" (bottom-to-top, the default), \"TB\"/\"TD\" (top-down, synonyms), \"LR\", or \"RL\". Matched case-insensitively (\"lr\" works the same as \"LR\"); anything else raises ValueError naming the valid options, rather than silently producing invalid Mermaid syntax:\ndiagram, warnings = graph_to_mermaid(graph, orientation=\"LR\")\nPass color_by_action=False for a plain, uncolored diagram. save_mermaid(graph, path, ...) takes the same orientation/color_by_action arguments and writes the diagram straight to a file (e.g. analysis.mmd).\nwarnings lists any node whose related_node doesn’t resolve to another node actually present in graph – normally a sign the graph failed validate() upstream (see “Analyzing multiple citable passages” above), worth checking there first – plus, if the graph has more distinct actions than the color palette has slots (currently 8), one warning that colors repeat.",
+    "crumbs": [
+      "Python recipes",
+      "Visualizing a graph with Mermaid"
+    ]
+  },
+  {
+    "objectID": "using/nbs.html",
+    "href": "using/nbs.html",
+    "title": "Marimo notebooks",
+    "section": "",
+    "text": "marimo/aat_graph.py lets you enter a passage, analyze it with the configured LM, and visualize the resulting AAT graph. Optionally, save the analysis to a local file.\nmarimo/aat_reader.py lets you load saved analyses from a local file and visualize the AAT graph without any LM.",
+    "crumbs": [
+      "Using aat",
+      "Marimo notebooks"
+    ]
+  },
+  {
+    "objectID": "using/index.html",
+    "href": "using/index.html",
+    "title": "Using aat",
+    "section": "",
+    "text": "Marimo notebooks\nCommand-line scripts:\n\nAnalyze a passage\nFormat a dot graph of an analysis\nPiping options together",
+    "crumbs": [
+      "Using aat",
+      "Using `aat`"
+    ]
+  },
+  {
+    "objectID": "using/piping.html",
+    "href": "using/piping.html",
+    "title": "Piping scripts together",
+    "section": "",
+    "text": "TBA",
+    "crumbs": [
+      "Using aat",
+      "Piping scripts together"
+    ]
+  },
+  {
+    "objectID": "aislop.html",
+    "href": "aislop.html",
+    "title": "AI slop to clean up",
+    "section": "",
+    "text": "Working directly with the package\n\nUSAGE.md – running the pipeline, from the command line or from your own code\nTESTING.md – running the offline test suite\nOPTIMIZING.md – tuning AgentActionTarget’s prompt with GEPA\nDEVELOPMENT.md – how the above fit together into one development loop"
+  },
+  {
+    "objectID": "using/dot.html",
+    "href": "using/dot.html",
+    "title": "Format a dot graph of an analysis",
+    "section": "",
+    "text": "TBA",
+    "crumbs": [
+      "Using aat",
+      "Format a `dot` graph of an analysis"
+    ]
+  },
+  {
+    "objectID": "using/analysis.html",
+    "href": "using/analysis.html",
+    "title": "Analyze a passage from the command line",
+    "section": "",
+    "text": "Run an analysis from the command line:\npython3 aat_main.py --passage \"Four score and seven years ago our fathers brought forth, upon this continent, a new nation, conceived in Liberty, and dedicated to the proposition that all men are created equal.\"\nInclude a citable reference for the passage (such as a CTS URN) with the --context argument:\npython3 aat_main.py --passage \"Four score and seven years ago our fathers brought forth, upon this continent, a new nation, conceived in Liberty, and dedicated to the proposition that all men are created equal.\" --context \"urn:cts:aat:examples.gettysburg.hay:1\"",
+    "crumbs": [
+      "Using aat",
+      "Analyze a passage from the command line"
+    ]
+  },
+  {
+    "objectID": "index.html",
+    "href": "index.html",
+    "title": "Agent-Action-Target in Python",
+    "section": "",
+    "text": "Background:\n\nAbout aat\nInstalling aat\nConfiguring a langauge model\n\nThe aat package:\n\nUsing aat\nPython recipes\nTechnical reference (including API documentation)"
+  },
+  {
+    "objectID": "guides/saving-loading.html",
+    "href": "guides/saving-loading.html",
+    "title": "Saving and loading a graph",
+    "section": "",
+    "text": "ing for the exact format. Multiple blocks in one file are concatenated, in file order, into the list read_nodes() returns, so simply concatenating several write_nodes() outputs together and reading the result back gives you one combined graph.\nserialize_analysis()/write_analysis() (a thin wrapper that writes serialize_analysis()’s string to a file) and read_analysis() save and reload a complete, re-displayable analysis – the graph AND its source passage(s) – so a later reader can recover tokens (via aat.english.tokenize(), which needs no LM) and pair them back up with the graph, without ever calling an LM again:\nfrom aat.core import CitedPassage, write_analysis, read_analysis\n\nwrite_analysis([CitedPassage(context=context, text=text)], graph, \"analysis.txt\")\npassages, reloaded_graph = read_analysis(\"analysis.txt\")\nCall serialize_analysis() directly (no path argument) when you want the text itself rather than a file – this is what powers aat_graph.py’s “Save analysis to file” button, which writes the string wherever the user’s own directory picker points, not to a fixed path. aat_reader.py is the matching file-loading notebook – see “Interactive notebook” below. The file has a #!passages block (header context|text) alongside the #!aatnodes block; each is read independently by its own function (read_passages()/read_nodes()), so the two block types can coexist in one file without interfering with each other.",
+    "crumbs": [
+      "Python recipes",
+      "Saving and loading a graph"
+    ]
+  },
+  {
+    "objectID": "guides/texthiliting.html",
+    "href": "guides/texthiliting.html",
+    "title": "Rendering tokens as highlighted HTML",
+    "section": "",
+    "text": "tokens_to_html() (in aat/english/html.py) renders a passage’s tokens as one continuous HTML string, reconstructing normal reading spacing (punctuation attaches to the preceding word; opening brackets and the first of a paired quote attach to what follows) rather than putting a space before every token. Pass the same AATGraph you’d hand to graph_to_mermaid() and every token that’s also an AAT graph node is highlighted using the same color that node gets in the Mermaid diagram (aat.core.coloring.assign_action_colors() – one shared assignment behind both renderers), with a border style keyed on the node’s role: a box around an action token, a rounded box around an agent token, and an underline under a target token.\nfrom aat.english import tokenize, tokens_to_html\nfrom aat.core import CitedPassage\n\n\ntokens, graph = analyze_passage(\"Four score and seven years ago our fathers brought forth, upon this continent, a new nation, conceived in Liberty, and dedicated to the proposition that all men are created equal.\", context=\"urn:cts:aat:examples.gettysburg.hay:1\")\nhtml = tokens_to_html(tokens, graph=graph)\nOmit graph (or pass graph=None) for plain, unhighlighted text – still with the same spacing reconstruction.\nEvery token’s text is HTML-escaped before being emitted (&, &lt;, &gt;, and quote characters), so passage text containing any of those characters round-trips safely rather than being mistaken for markup.\nNote: for a compound action (e.g. “was eating”), only the principal-verb token is highlighted, since that’s the only token id the AATNode itself records – see the module’s own docstring.",
+    "crumbs": [
+      "Python recipes",
+      "Rendering tokens as highlighted HTML"
     ]
   },
   {
@@ -44,181 +204,55 @@
     ]
   },
   {
-    "objectID": "guides/texthiliting.html",
-    "href": "guides/texthiliting.html",
-    "title": "Rendering tokens as highlighted HTML",
+    "objectID": "bg/conf.html",
+    "href": "bg/conf.html",
+    "title": "Configuring a language model",
     "section": "",
-    "text": "tokens_to_html() (in aat/english/html.py) renders a passage’s tokens as one continuous HTML string, reconstructing normal reading spacing (punctuation attaches to the preceding word; opening brackets and the first of a paired quote attach to what follows) rather than putting a space before every token. Pass the same AATGraph you’d hand to graph_to_mermaid() and every token that’s also an AAT graph node is highlighted using the same color that node gets in the Mermaid diagram (aat.core.coloring.assign_action_colors() – one shared assignment behind both renderers), with a border style keyed on the node’s role: a box around an action token, a rounded box around an agent token, and an underline under a target token.\nfrom aat.english import tokenize, tokens_to_html\nfrom aat.core import CitedPassage\n\n\ntokens, graph = analyze_passage(\"Four score and seven years ago our fathers brought forth, upon this continent, a new nation, conceived in Liberty, and dedicated to the proposition that all men are created equal.\", context=\"urn:cts:aat:examples.gettysburg.hay:1\")\nhtml = tokens_to_html(tokens, graph=graph)\nOmit graph (or pass graph=None) for plain, unhighlighted text – still with the same spacing reconstruction.\nEvery token’s text is HTML-escaped before being emitted (&, &lt;, &gt;, and quote characters), so passage text containing any of those characters round-trips safely rather than being mistaken for markup.\nNote: for a compound action (e.g. “was eating”), only the principal-verb token is highlighted, since that’s the only token id the AATNode itself records – see the module’s own docstring.",
+    "text": "Create an .env file with your LM credentials. You can copy .env.example to .env and fill in real values:\nAPI_BASE=https://localmodel/api\nMODEL=litellm/modelname\nAPI_KEY=your-key-here",
     "crumbs": [
-      "Python recipes",
-      "Rendering tokens as highlighted HTML"
+      "Background",
+      "Configuring a language model"
     ]
   },
   {
-    "objectID": "guides/saving-loading.html",
-    "href": "guides/saving-loading.html",
-    "title": "Saving and loading a graph",
-    "section": "",
-    "text": "ing for the exact format. Multiple blocks in one file are concatenated, in file order, into the list read_nodes() returns, so simply concatenating several write_nodes() outputs together and reading the result back gives you one combined graph.\nserialize_analysis()/write_analysis() (a thin wrapper that writes serialize_analysis()’s string to a file) and read_analysis() save and reload a complete, re-displayable analysis – the graph AND its source passage(s) – so a later reader can recover tokens (via aat.english.tokenize(), which needs no LM) and pair them back up with the graph, without ever calling an LM again:\nfrom aat.core import CitedPassage, write_analysis, read_analysis\n\nwrite_analysis([CitedPassage(context=context, text=text)], graph, \"analysis.txt\")\npassages, reloaded_graph = read_analysis(\"analysis.txt\")\nCall serialize_analysis() directly (no path argument) when you want the text itself rather than a file – this is what powers aat_graph.py’s “Save analysis to file” button, which writes the string wherever the user’s own directory picker points, not to a fixed path. aat_reader.py is the matching file-loading notebook – see “Interactive notebook” below. The file has a #!passages block (header context|text) alongside the #!aatnodes block; each is read independently by its own function (read_passages()/read_nodes()), so the two block types can coexist in one file without interfering with each other.",
-    "crumbs": [
-      "Python recipes",
-      "Saving and loading a graph"
-    ]
-  },
-  {
-    "objectID": "about.html",
-    "href": "about.html",
-    "title": "About AAT",
-    "section": "",
-    "text": "TBA"
-  },
-  {
-    "objectID": "index.html",
-    "href": "index.html",
-    "title": "Agent-Action-Target in Python",
-    "section": "",
-    "text": "About the A-A-T model\nInstalling aat\nUsing aat\nPython recipes\nTechnical notes (including API documentation)\n\n\nAI slop to clean up."
-  },
-  {
-    "objectID": "using/analysis.html",
-    "href": "using/analysis.html",
-    "title": "Analyze a passage from the command line",
-    "section": "",
-    "text": "Run an analysis from the command line:\npython3 aat_main.py --passage \"Four score and seven years ago our fathers brought forth, upon this continent, a new nation, conceived in Liberty, and dedicated to the proposition that all men are created equal.\"\nInclude a citable reference for the passage (such as a CTS URN) with the --context argument:\npython3 aat_main.py --passage \"Four score and seven years ago our fathers brought forth, upon this continent, a new nation, conceived in Liberty, and dedicated to the proposition that all men are created equal.\" --context \"urn:cts:aat:examples.gettysburg.hay:1\"",
-    "crumbs": [
-      "Using aat",
-      "Analyze a passage from the command line"
-    ]
-  },
-  {
-    "objectID": "using/dot.html",
-    "href": "using/dot.html",
-    "title": "Format a dot graph of an analysis",
-    "section": "",
-    "text": "TBA",
-    "crumbs": [
-      "Using aat",
-      "Format a `dot` graph of an analysis"
-    ]
-  },
-  {
-    "objectID": "aislop.html",
-    "href": "aislop.html",
-    "title": "AI slop to clean up",
-    "section": "",
-    "text": "Working directly with the package\n\nUSAGE.md – running the pipeline, from the command line or from your own code\nTESTING.md – running the offline test suite\nOPTIMIZING.md – tuning AgentActionTarget’s prompt with GEPA\nDEVELOPMENT.md – how the above fit together into one development loop"
-  },
-  {
-    "objectID": "using/piping.html",
-    "href": "using/piping.html",
-    "title": "Piping scripts together",
-    "section": "",
-    "text": "TBA",
-    "crumbs": [
-      "Using aat",
-      "Piping scripts together"
-    ]
-  },
-  {
-    "objectID": "using/index.html",
-    "href": "using/index.html",
-    "title": "Using aat",
-    "section": "",
-    "text": "Marimo notebooks\nCommand-line scripts:\n\nAnalyze a passage\nFormat a dot graph of an analysis\nPiping options together",
-    "crumbs": [
-      "Using aat",
-      "Using `aat`"
-    ]
-  },
-  {
-    "objectID": "using/nbs.html",
-    "href": "using/nbs.html",
-    "title": "Marimo notebooks",
-    "section": "",
-    "text": "marimo/aat_graph.py lets you enter a passage, analyze it with the configured LM, and visualize the resulting AAT graph. Optionally, save the analysis to a local file.\nmarimo/aat_reader.py lets you load saved analyses from a local file and visualize the AAT graph without any LM.",
-    "crumbs": [
-      "Using aat",
-      "Marimo notebooks"
-    ]
-  },
-  {
-    "objectID": "install.html",
-    "href": "install.html",
+    "objectID": "bg/install.html",
+    "href": "bg/install.html",
     "title": "Installing aat",
     "section": "",
-    "text": "The package is deliberately split into two independent modules:\nReleased under the GNU General Public License v3 or later."
+    "text": "TBA",
+    "crumbs": [
+      "Background",
+      "Installing `aat`"
+    ]
   },
   {
-    "objectID": "install.html#installing",
-    "href": "install.html#installing",
+    "objectID": "bg/install.html#the-a-a-t-model",
+    "href": "bg/install.html#the-a-a-t-model",
+    "title": "Installing aat",
+    "section": "",
+    "text": "TBA",
+    "crumbs": [
+      "Background",
+      "Installing `aat`"
+    ]
+  },
+  {
+    "objectID": "bg/install.html#installing",
+    "href": "bg/install.html#installing",
     "title": "Installing aat",
     "section": "Installing",
-    "text": "Installing\nTo use the aat model from another project, install the core module directly from this repository:\npip install git+https://github.com/neelsmith/aat.git\nTo include aat.english (the dspy-based English pipeline):\npip install \"aat[english] @ git+https://github.com/neelsmith/aat.git\"\nTo pin to a specific branch, tag, or commit appending @&lt;ref&gt; to the URL, e.g.\npip install \"aat[english] @ git+https://github.com/neelsmith/aat.git@v0.1.0`"
-  },
-  {
-    "objectID": "guides/mermaid.html",
-    "href": "guides/mermaid.html",
-    "title": "Visualizing a graph with Mermaid",
-    "section": "",
-    "text": "graph_to_mermaid() (in aat/core/mermaid.py) renders an AATGraph as a Mermaid flowchart: an action is a rectangle, an agent is rounded, a target is a stadium shape, and every node with a related_node becomes a labelled edge pointing at it. By default every node is also colored by which action it clusters with, so the separate clauses in a multi-action passage are visually distinguishable.\nfrom aat.core import graph_to_mermaid\n\ndiagram, warnings = graph_to_mermaid(graph)\nprint(diagram)\nfor w in warnings:\n    print(f\"Warning: {w}\")\norientation controls the diagram’s layout direction – Mermaid’s own flowchart direction codes: \"BT\" (bottom-to-top, the default), \"TB\"/\"TD\" (top-down, synonyms), \"LR\", or \"RL\". Matched case-insensitively (\"lr\" works the same as \"LR\"); anything else raises ValueError naming the valid options, rather than silently producing invalid Mermaid syntax:\ndiagram, warnings = graph_to_mermaid(graph, orientation=\"LR\")\nPass color_by_action=False for a plain, uncolored diagram. save_mermaid(graph, path, ...) takes the same orientation/color_by_action arguments and writes the diagram straight to a file (e.g. analysis.mmd).\nwarnings lists any node whose related_node doesn’t resolve to another node actually present in graph – normally a sign the graph failed validate() upstream (see “Analyzing multiple citable passages” above), worth checking there first – plus, if the graph has more distinct actions than the color palette has slots (currently 8), one warning that colors repeat.",
+    "text": "Installing\nTo use the aat model from another project, install the core module directly from this repository:\npip install git+https://github.com/neelsmith/aat.git\nTo include aat.english (the dspy-based English pipeline):\npip install \"aat[english] @ git+https://github.com/neelsmith/aat.git\"\nTo pin to a specific branch, tag, or commit appending @&lt;ref&gt; to the URL, e.g.\npip install \"aat[english] @ git+https://github.com/neelsmith/aat.git@v0.1.0`",
     "crumbs": [
-      "Python recipes",
-      "Visualizing a graph with Mermaid"
+      "Background",
+      "Installing `aat`"
     ]
-  },
-  {
-    "objectID": "guides/cli.html",
-    "href": "guides/cli.html",
-    "title": "Analyze from the command line",
-    "section": "",
-    "text": "Run an analysis from the command line:\npython3 aat_main.py --passage \"Four score and seven years ago our fathers brought forth, upon this continent, a new nation, conceived in Liberty, and dedicated to the proposition that all men are created equal.\"\nInclude a citable reference for the passage (such as a CTS URN) with the --context argument:\npython3 aat_main.py --passage \"Four score and seven years ago our fathers brought forth, upon this continent, a new nation, conceived in Liberty, and dedicated to the proposition that all men are created equal.\" --context \"urn:cts:aat:examples.gettysburg.hay:1\"",
-    "crumbs": [
-      "Python recipes",
-      "Analyze from the command line"
-    ]
-  },
-  {
-    "objectID": "guides/index.html",
-    "href": "guides/index.html",
-    "title": "Recipes",
-    "section": "",
-    "text": "Some recipes:\n\nConfigure\nCLI\nQuick start to using AAT in Python\nSerialization\n\nVisualization:\n\nvisualization with Mermaid\nvisualization with graphviz\nAAT as highlighted text in HTML",
-    "crumbs": [
-      "Python recipes",
-      "Recipes"
-    ]
-  },
-  {
-    "objectID": "guides/quick.html",
-    "href": "guides/quick.html",
-    "title": "Quick start using aat in a script",
-    "section": "",
-    "text": "To call the pipeline from your own script or a REPL instead of the CLI, configure a dspy.LM yourself and use aat.english directly:"
-  },
-  {
-    "objectID": "guides/quick.html#analyzing-multiple-citable-passages",
-    "href": "guides/quick.html#analyzing-multiple-citable-passages",
-    "title": "Quick start using aat in a script",
-    "section": "Analyzing multiple citable passages",
-    "text": "Analyzing multiple citable passages\nanalyze_passage() is a convenience wrapper around analyze_passages(), which takes a list of CitedPassage (context + text) and returns one combined (tokens, graph):\nfrom aat.core import CitedPassage\nfrom aat.english import analyze_passages\n\npassages = [\n    CitedPassage(context=\"urn:cts:aat:examples.gettysburg.hay:1\", text=\"Four score and seven years ago our fathers brought forth, upon this continent, a new nation, conceived in Liberty, and dedicated to the proposition that all men are created equal.\"),\n    CitedPassage(context=\"urn:cts:aat:examples.gettysburg.hay:2\", text=\"Now we are engaged in a great civil war, testing whether that nation, or any nation so conceived, and so dedicated, can long endure.\"),\n]\ntokens, graph = analyze_passages(passages)"
   },
   {
     "objectID": "reference/testing.html",
     "href": "reference/testing.html",
     "title": "Testing",
     "section": "",
-    "text": "pytest\nRuns the whole suite against tests/, using dspy’s DummyLM in place of a real LM call – useful for confirming the models/signatures/pipeline still fit together after you change something, without spending API calls. Tests that call the actual configured LM are marked live and skipped by default (they’re the only way to check the LM itself gets a scenario right, not just that the code can represent a correct answer); run them explicitly with:\n(live tests need a working .env, same as aat_main.py; they skip gracefully if API_KEY isn’t set.)\nSome standard pytest shorthands:",
-    "crumbs": [
-      "Reference",
-      "Testing"
-    ]
-  },
-  {
-    "objectID": "reference/testing.html#whats-covered-where",
-    "href": "reference/testing.html#whats-covered-where",
-    "title": "Testing",
-    "section": "What’s covered where",
-    "text": "What’s covered where\n\ntests/test_core_*.py – aat.core (tokens, graph accessors, validate(), serialization). Pure pydantic/Python, no dspy involved at all.\ntests/test_english_tokenize.py – the deterministic English tokenizer.\ntests/test_english_pipeline.py – analyze_passage()/analyze_passages(), DummyLM-backed.\ntests/test_gold_examples.py – every entry in tests/fixtures/gold_examples.py’s GOLD_EXAMPLES, run through analyze() with DummyLM returning that example’s own hand-written canned_answer, checked against validate() and against the gold nodes exactly.\ntests/test_coverage.py – confirms GOLD_EXAMPLES collectively exercises every role, both related_node states for an action, both simple and compound actions, both voices, and both “no agent”/“no target” cases – so a change that silently breaks coverage of one of these is caught here rather than only showing up later as a gap in optimize_gepa.py’s trainset.\ntests/test_gepa_metric.py – aat.english.gepa_metric.aat_metric in isolation (missing/extra/mismatched nodes, perfect match), independent of GOLD_EXAMPLES or any LM.",
+    "text": "pytest\nRuns the whole suite against tests/ using dspy’s DummyLM in place of a real LM call. Tests that call the configured LM are marked live and skipped by default. Run them explicitly with:\npytest -m live\nTo run live tests, you must configure a model in an .env file. The tests skip gracefully if API_KEY is not set.\nSome standard pytest shorthands:\n\npytest to run all.\npytest -v for per-test names instead of dots.\npytest tests/test_gold_examples.py to run just one file.\npytest -k tokenize to run only tests matching a substring.\npytest --collect-only if you just want to see what it discovered without running anything.",
     "crumbs": [
       "Reference",
       "Testing"

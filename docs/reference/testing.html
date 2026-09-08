@@ -132,6 +132,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span class="menu-text">Home</span></a>
   </li>  
   <li class="nav-item">
+    <a class="nav-link" href="../bg/index.html"> 
+<span class="menu-text">Background</span></a>
+  </li>  
+  <li class="nav-item">
     <a class="nav-link" href="../using/index.html"> 
 <span class="menu-text">Using aat</span></a>
   </li>  
@@ -190,14 +194,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </nav>
 <div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
 <!-- margin-sidebar -->
-    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
-        <nav id="TOC" role="doc-toc" class="toc-active">
-    <h2 id="toc-title">On this page</h2>
-   
-  <ul>
-  <li><a href="#whats-covered-where" id="toc-whats-covered-where" class="nav-link active" data-scroll-target="#whats-covered-where">What’s covered where</a></li>
-  </ul>
-</nav>
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar zindex-bottom">
+        
     </div>
 <!-- main -->
 <main class="content" id="quarto-document-content">
@@ -222,9 +220,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">pytest</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Runs the whole suite against <code>tests/</code>, using dspy’s <code>DummyLM</code> in place of a real LM call – useful for confirming the models/signatures/pipeline still fit together after you change something, without spending API calls. Tests that call the actual configured LM are marked <code>live</code> and skipped by default (they’re the only way to check the LM itself gets a scenario right, not just that the code can represent a correct answer); run them explicitly with:</p>
+<p>Runs the whole suite against <code>tests/</code> using dspy’s <code>DummyLM</code> in place of a real LM call. Tests that call the configured LM are marked <code>live</code> and skipped by default. Run them explicitly with:</p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="ex">pytest</span> <span class="at">-m</span> live</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>(<code>live</code> tests need a working <code>.env</code>, same as <code>aat_main.py</code>; they skip gracefully if <code>API_KEY</code> isn’t set.)</p>
+<p>To run <code>live</code> tests, you must <a href="../bg/conf.html">configure a model</a> in an <code>.env</code> file. The tests skip gracefully if <code>API_KEY</code> is not set.</p>
 <p>Some standard <code>pytest</code> shorthands:</p>
 <ul>
 <li><code>pytest</code> to run all.</li>
@@ -233,19 +231,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li><code>pytest -k tokenize</code> to run only tests matching a substring.</li>
 <li><code>pytest --collect-only</code> if you just want to see what it discovered without running anything.</li>
 </ul>
-<section id="whats-covered-where" class="level2">
-<h2 class="anchored" data-anchor-id="whats-covered-where">What’s covered where</h2>
-<ul>
-<li><code>tests/test_core_*.py</code> – <code>aat.core</code> (tokens, graph accessors, <code>validate()</code>, serialization). Pure pydantic/Python, no dspy involved at all.</li>
-<li><code>tests/test_english_tokenize.py</code> – the deterministic English tokenizer.</li>
-<li><code>tests/test_english_pipeline.py</code> – <code>analyze_passage()</code>/<code>analyze_passages()</code>, DummyLM-backed.</li>
-<li><code>tests/test_gold_examples.py</code> – every entry in <code>tests/fixtures/gold_examples.py</code>’s <code>GOLD_EXAMPLES</code>, run through <code>analyze()</code> with DummyLM returning that example’s own hand-written <code>canned_answer</code>, checked against <code>validate()</code> and against the gold nodes exactly.</li>
-<li><code>tests/test_coverage.py</code> – confirms <code>GOLD_EXAMPLES</code> collectively exercises every role, both related_node states for an action, both simple and compound actions, both voices, and both “no agent”/“no target” cases – so a change that silently breaks coverage of one of these is caught here rather than only showing up later as a gap in <code>optimize_gepa.py</code>’s trainset.</li>
-<li><code>tests/test_gepa_metric.py</code> – <code>aat.english.gepa_metric.aat_metric</code> in isolation (missing/extra/mismatched nodes, perfect match), independent of <code>GOLD_EXAMPLES</code> or any LM.</li>
-</ul>
 
 
-</section>
 
 </main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">
