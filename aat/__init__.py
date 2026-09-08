@@ -38,6 +38,8 @@ from .core import (
     graph_to_dot,
     save_dot,
     assign_action_colors,
+    parse_cex_ctsdata,
+    read_cex_passages,
 )
 
 __version__ = "0.1.0"
@@ -65,4 +67,6 @@ __all__ = [
     "graph_to_dot",
     "save_dot",
     "assign_action_colors",
+    "parse_cex_ctsdata",
+    "read_cex_passages",
 ]

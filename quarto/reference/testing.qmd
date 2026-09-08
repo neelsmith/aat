@@ -12,7 +12,7 @@ Runs the whole suite against `tests/` using dspy's `DummyLM` in place of a real 
 pytest -m live
 ```
 
-To run `live` tests, you must [configure a model](../conf.qmd) in an `.env` file. The tests skip gracefully if `API_KEY` is not set.
+To run `live` tests, you must [configure a model](../bg/conf.qmd) in an `.env` file. The tests skip gracefully if `API_KEY` is not set.
 
 
 

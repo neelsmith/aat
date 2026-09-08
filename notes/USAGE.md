@@ -88,6 +88,30 @@ tokens, graph = analyze_passages(passages)
 
 Each passage's own tokens are numbered from `t1` within its own context (`CitableToken.id` is only unique *within* one context, not globally -- see its docstring), so `graph.by_id(context, id)` always needs both.
 
+## Analyzing a whole corpus from a CEX file
+
+`aat_corpus.py` is the corpus-level version of `aat_main.py`: it reads every passage from a [CEX (CITE Exchange)](https://cite-architecture.github.io/citedx/CEX-spec-3.0.1/) file's `#!ctsdata` block -- an external plain-text interchange format, not this project's own `#!passages`/`#!aatnodes` serialization -- analyzes all of them, and writes ONE combined serialized analysis to stdout, in the same `#!passages`/`#!aatnodes` format `aat_main.py` uses for a single passage:
+
+```bash
+python3 aat_corpus.py corpus.cex > analysis.txt
+```
+
+A `#!ctsdata` row is two fields -- a CTS URN, then that node's own text -- separated by a delimiter the file's own author chose; CEX never declares its delimiter inside the file itself. `"#"` is the common convention and this script's own default:
+
+```
+#!ctsdata
+urn:cite2:aat:examples.v1:ex1#The dog ate my homework.
+urn:cite2:aat:examples.v1:ex2#The homework was eaten by the dog.
+```
+
+Pass `--delimiter` if a particular corpus uses something else (e.g. `--delimiter "|"`). Every other CEX block type (`#!citelibrary`, `#!ctscatalog`, ...) is ignored, so a full CEX file -- not just a bare `#!ctsdata` block -- works as input; `aat.core.cex.read_cex_passages()`/`parse_cex_ctsdata()` are the underlying functions, if you want to read a CEX corpus into a list of `CitedPassage` yourself without also running the LM pipeline. Use `-` instead of a filename to read the same format from stdin:
+
+```bash
+cat corpus.cex | python3 aat_corpus.py - > analysis.txt
+```
+
+Every passage gets its own separate LM call (via `analyze_passages()`), so a large corpus means real API cost and real wall-clock time -- there's no batching or parallelism. As with `aat_main.py`, any referential problem `validate()` catches is reported on stderr, never stdout, so it never corrupts the redirected file; and the output pipes straight into `aat_to_dot.py` (see "Rendering a graph as Graphviz dot" below) exactly like `aat_main.py`'s does.
+
 
 ## Saving and loading a graph
 

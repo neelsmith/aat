@@ -29,6 +29,7 @@ from .serialization import (
 from .mermaid import graph_to_mermaid, save_mermaid
 from .graphviz import graph_to_dot, save_dot
 from .coloring import assign_action_colors
+from .cex import parse_cex_ctsdata, read_cex_passages
 
 __all__ = [
     "CitableToken",
@@ -53,4 +54,6 @@ __all__ = [
     "graph_to_dot",
     "save_dot",
     "assign_action_colors",
+    "parse_cex_ctsdata",
+    "read_cex_passages",
 ]

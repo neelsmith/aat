@@ -1,19 +1,29 @@
 ---
-title: Quick start using `aat` in a script
+title: Quick start: using `aat` in Python
 ---
 
-To call the pipeline from your own script or a REPL instead of the CLI, configure a `dspy.LM` yourself and use `aat.english` directly:
+
+First configure a `dspy.LM` with the same information you would use to [configure command-line programs or Marimo notebooks](../bg/conf.qmd): 
 
 ```python
 import dspy
-from aat.english import analyze_passage
-
 dspy.configure(lm=dspy.LM(model="litellm_proxy/anthropic/Claude Opus 5",
                            api_base="https://api_url/litellm",
                            api_key="your-key-here"))
+```
 
+You can analyze a single string with the  `analyze_passage` function. (If you include a `--context` citation with a value like a CTS URN, all results will be keyed to unique token IDs within the unique citation context.)
+
+```python
+from aat.english import analyze_passage
 tokens, graph = analyze_passage("Four score and seven years ago our fathers brought forth, upon this continent, a new nation, conceived in Liberty, and dedicated to the proposition that all men are created equal.")
+```
 
+`analyze_passage` returns two values. `tokens` is a complete tokenization of the input. (In this example, the list has 35 tokens.)
+
+`graph` is an `AATGraph`. This snippet illustrates the `actions` function, which returns a list of all the `AATNode`s in the graph with type `action`. The `agents_for`  and `targets_for` functions return a (possibly empty) list of `AATNode`s related to a given action, with type `agent` and `target` respectively.
+
+```python
 for action in graph.actions():
     agents = graph.agents_for(action)
     targets = graph.targets_for(action)
@@ -24,11 +34,25 @@ for action in graph.actions():
         print(f"  target: {t.value!r}")
 ```
 
+Here is the output printed by the snippet above:
+
+```
+'brought' (independent=True)
+  agent:  'fathers'
+  target: 'nation'
+'conceived' (independent=False)
+  target: 'nation'
+'dedicated' (independent=False)
+  target: 'nation'
+'are created' (independent=False)
+  target: 'men'
+```
 
 
 ## Analyzing multiple citable passages
 
-`analyze_passage()` is a convenience wrapper around `analyze_passages()`, which takes a list of `CitedPassage` (context + text) and returns one combined `(tokens, graph)`:
+
+You can also analyzed texts structured in `CitedPassage` objects organizing citation and text content with the `analyze_passages` (plural) function. It returns the same pair of `(tokens, graph)` as `analyze_passage`:
 
 ```python
 from aat.core import CitedPassage

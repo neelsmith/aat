@@ -31,9 +31,15 @@ website:
         aria-label: GitHub
 
   sidebar:
-    - title: "Home"
+    - title: "Background"
       contents:
-        - index.qmd
+        - bg/index.qmd
+        - "---"
+        - bg/about.qmd
+        - bg/install.qmd
+        - bg/conf.qmd
+
+
     - title: "Using aat"
       contents:
         - using/index.qmd
