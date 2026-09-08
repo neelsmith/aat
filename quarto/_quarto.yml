@@ -14,6 +14,8 @@ website:
     left:
       - href: index.qmd
         text: Home
+      - text: "Background" 
+        file: bg/index.qmd        
       - text: "Using aat" 
         file: using/index.qmd
       - text: "Python recipes"
@@ -29,6 +31,9 @@ website:
         aria-label: GitHub
 
   sidebar:
+    - title: "Home"
+      contents:
+        - index.qmd
     - title: "Using aat"
       contents:
         - using/index.qmd
@@ -42,7 +47,6 @@ website:
       contents: 
           - guides/index.qmd      
           - "---"
-          - guides/configure.qmd
           - guides/cli.qmd
           - guides/saving-loading.qmd
           - "---"        

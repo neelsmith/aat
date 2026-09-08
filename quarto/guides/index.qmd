@@ -5,7 +5,6 @@ title: Recipes
 
 Some recipes:
 
-- [Configure](./configure.qmd)
 - [CLI](./cli.qmd)
 - Quick start to [using AAT in Python](./quick.qmd)
 - [Serialization](./saving-loading.qmd)

@@ -11,6 +11,8 @@ Documentation is being added on the project's [github pages](https://neelsmith.g
 
 See the [project issue tracker](https://github.com/neelsmith/aat/issues) for known gaps and work in progress or to submit an issue.
 
+Released under the [GNU General Public License v3 or later](LICENSE).
+
 
 
 ## An example

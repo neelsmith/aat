@@ -2,14 +2,9 @@
 title: Installing `aat`
 ---
 
+## The A-A-T model
 
-The package is deliberately split into two independent modules:
-
-- **`aat.core`** implements the AAT model with classes for input (`CitableToken`/`CitedPassage`) and output (`AATNode`/`AATGraph`). It includes functions to validate and serialize analyses to a plain-text format.
-- **`aat.english`** uses an LM  configured with `dspy` to tokenize English text and compose an `AATGraph`.
-
-Released under the [GNU General Public License v3 or later](LICENSE).
-
+*TBA*
 
 ## Installing
 

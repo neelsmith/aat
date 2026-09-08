@@ -2,14 +2,18 @@
 title: Agent-Action-Target in Python
 ---
 
-- [About the A-A-T model](./about.qmd)
+Background:
+
+- [About `aat`](./about.qmd)
 - [Installing `aat`](./install.qmd)
+- [Configuring a langauge model](./conf.qmd)
+
+
+The `aat` package:
+
 - [Using `aat`](./using/index.qmd)
 - [Python recipes](./guides/index.qmd)
-- [Technical notes](./reference/index.qmd) (including API documentation)
+- [Technical reference](./reference/index.qmd) (including API documentation)
 
 
 
----
-
-[AI slop](./aislop.qmd) to clean up.
