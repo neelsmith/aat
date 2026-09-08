@@ -1,6 +1,8 @@
 ---
-title: Reference
+title: Technical notes
 ---
 
 
-- API documentation
+
+- [Testing](./testing.qmd)
+- [API documentation](https://neelsmith.github.io/aat/)

@@ -24,7 +24,21 @@ Include a citable reference for the passage (such as a CTS URN) with the `--cont
 python3 aat_main.py --passage "The homework was eaten by the dog." --context "urn:cite2:aat:examples.v1:ex1"
 ```
 
-`aat_main.py` just prints the resulting tokens and AAT nodes.
+`aat_main.py` writes the analysis to stdout as a plain-text serialized analysis -- the same `#!passages`/`#!aatnodes` format `aat.core.serialize_analysis()`/`write_analysis()` produce (see "Saving and loading a graph" below), and nothing else -- so it can be redirected straight to a file and reloaded later, with no separate save step:
+
+```bash
+python3 aat_main.py --passage "The homework was eaten by the dog." --context "urn:cite2:aat:examples.v1:ex1" > analysis.txt
+```
+
+```python
+from aat.core import read_analysis
+
+passages, graph = read_analysis("analysis.txt")
+```
+
+(A referential problem `validate()` catches along the way is reported on *stderr*, not stdout, so it never corrupts the redirected file -- see "Analyzing multiple citable passages" below.)
+
+Pipe that output straight into `aat_to_dot.py` to render it as a Graphviz digraph without a second LM call -- see "Rendering a graph as Graphviz dot" below.
 
 
 ## Using `aat` in a script
@@ -97,7 +111,7 @@ write_analysis([CitedPassage(context=context, text=text)], graph, "analysis.txt"
 passages, reloaded_graph = read_analysis("analysis.txt")
 ```
 
-Call `serialize_analysis()` directly (no `path` argument) when you want the text itself rather than a file -- this is what powers `aat_graph.py`'s "Save analysis to file" button, which writes the string wherever the user's own directory picker points, not to a fixed path. `aat_reader.py` is the matching file-loading notebook -- see "Interactive notebook" below. The file has a `#!passages` block (header `context|text`) alongside the `#!aatnodes` block; each is read independently by its own function (`read_passages()`/`read_nodes()`), so the two block types can coexist in one file without interfering with each other.
+Call `serialize_analysis()` directly (no `path` argument) when you want the text itself rather than a file -- this is what powers `aat_graph.py`'s "Save analysis to file" button, which writes the string wherever the user's own directory picker points, not to a fixed path. `aat_reader.py` is the matching file-loading notebook -- see "Interactive notebook" below. The file has a `#!passages` block (header `context|text`) alongside the `#!aatnodes` block; each is read independently by its own function (`read_passages()`/`read_nodes()`), so the two block types can coexist in one file without interfering with each other. `aat_main.py` (see "Running an analysis from the command line" above) is a third way to get this same text: it writes `serialize_analysis()`'s output straight to stdout instead of a file, so redirecting it (`> analysis.txt`) is equivalent to calling `write_analysis()` yourself.
 
 
 ## Rendering a graph as Mermaid
@@ -146,6 +160,20 @@ dot, warnings = graph_to_dot(graph, orientation="LR")
 Pass `color_by_action=False` for a plain, uncolored digraph. `save_dot(graph, path, ...)` takes the same `orientation`/`color_by_action` arguments and writes the digraph straight to a file (e.g. `analysis.dot`), which the `dot` command-line tool (or any other Graphviz frontend) can render directly: `dot -Tsvg analysis.dot -o analysis.svg`.
 
 `warnings` has the same two cases as `graph_to_mermaid()`'s: a node whose `related_node` doesn't resolve to another node actually present in `graph`, and, if the graph has more distinct actions than the color palette has slots, one warning that colors repeat.
+
+`aat_to_dot.py` is the command-line version of this: it reads a serialized analysis from stdin (the same `#!aatnodes` plain-text format -- a `#!passages` block alongside it, if present, is ignored) and writes the DOT digraph to stdout, so you can pipe `aat_main.py`'s own output straight into it:
+
+```bash
+python3 aat_main.py --passage "The dog ate my homework." | python3 aat_to_dot.py > analysis.dot
+```
+
+or render a file saved earlier:
+
+```bash
+python3 aat_to_dot.py --orientation LR --no-color < analysis.txt > analysis.dot
+```
+
+`--orientation` and `--no-color` mirror `graph_to_dot()`'s own `orientation`/`color_by_action` arguments; warnings go to stderr, never stdout, so stdout stays exactly the DOT text -- pipe it straight into Graphviz's own `dot` CLI: `python3 aat_to_dot.py < analysis.txt | dot -Tsvg -o analysis.svg`.
 
 ## Rendering tokens as highlighted HTML
 

@@ -41,6 +41,7 @@ website:
     - title: "Reference"
       contents: 
         - reference/index.qmd   
+        - reference/testing.qmd
     
         
 format:
