@@ -8,7 +8,7 @@ digraph on stdout, via aat.core.graph_to_dot().
 
 Typical use -- pipe aat_main.py's own output straight into this script:
 
-    python3 aat_main.py --passage "The dog ate my homework." | python3 aat_to_dot.py > analysis.dot
+    python3 aat_main.py --passage "Four score and seven years ago our fathers brought forth, upon this continent, a new nation, conceived in Liberty, and dedicated to the proposition that all men are created equal." | python3 aat_to_dot.py > analysis.dot
 
 Or reuse a file saved earlier (by aat_main.py, write_nodes(), or
 write_analysis()):

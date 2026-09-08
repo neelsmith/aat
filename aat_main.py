@@ -81,7 +81,7 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--passage",
-        default="The dog ate my homework.",
+        default="Four score and seven years ago our fathers brought forth, upon this continent, a new nation, conceived in Liberty, and dedicated to the proposition that all men are created equal.",
         help="English passage to analyze (defaults to the built-in sample).",
     )
     parser.add_argument(
