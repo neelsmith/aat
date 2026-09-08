@@ -1,0 +1,18 @@
+---
+title: Analyze from the command line
+---
+
+
+Run an analysis from the command line:
+
+```bash
+python3 aat_main.py --passage "The dog ate my homework."
+```
+
+Include a citable reference for the passage (such as a CTS URN) with the `--context` argument:
+
+```bash
+python3 aat_main.py --passage "The homework was eaten by the dog." --context "urn:cite2:aat:examples.v1:ex1"
+```
+
+`aat_main.py` just prints the resulting tokens and AAT nodes.

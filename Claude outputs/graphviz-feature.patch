@@ -1,0 +1,597 @@
+diff --git a/aat/__init__.py b/aat/__init__.py
+index 26509ad..3f21a66 100644
+--- a/aat/__init__.py
++++ b/aat/__init__.py
+@@ -35,6 +35,8 @@ from .core import (
+     read_analysis,
+     graph_to_mermaid,
+     save_mermaid,
++    graph_to_dot,
++    save_dot,
+     assign_action_colors,
+ )
+ 
+@@ -60,6 +62,8 @@ __all__ = [
+     "read_analysis",
+     "graph_to_mermaid",
+     "save_mermaid",
++    "graph_to_dot",
++    "save_dot",
+     "assign_action_colors",
+     "__version__",
+ ]
+diff --git a/aat/core/__init__.py b/aat/core/__init__.py
+index 8ec81b4..4ba3a99 100644
+--- a/aat/core/__init__.py
++++ b/aat/core/__init__.py
+@@ -7,8 +7,8 @@ renders an AAT graph; nothing here knows how to *produce* one from real
+ text -- that's aat.english's job (or, eventually, another language-
+ specific sibling subpackage). Keeping this boundary means aat.core can be
+ imported and reused on its own by any downstream project that just wants
+-the data model, the file format, and the Mermaid renderer, without
+-pulling in dspy at all.
++the data model, the file format, and the Mermaid/Graphviz renderers,
++without pulling in dspy at all.
+ """
+ 
+ from .tokens import CitableToken, CitedPassage
+@@ -27,6 +27,7 @@ from .serialization import (
+     read_analysis,
+ )
+ from .mermaid import graph_to_mermaid, save_mermaid
++from .graphviz import graph_to_dot, save_dot
+ from .coloring import assign_action_colors
+ 
+ __all__ = [
+@@ -49,5 +50,7 @@ __all__ = [
+     "read_analysis",
+     "graph_to_mermaid",
+     "save_mermaid",
++    "graph_to_dot",
++    "save_dot",
+     "assign_action_colors",
+ ]
+diff --git a/aat/core/graphviz.py b/aat/core/graphviz.py
+new file mode 100644
+index 0000000..8e89b83
+--- /dev/null
++++ b/aat/core/graphviz.py
+@@ -0,0 +1,171 @@
++"""
++Render an AATGraph as a Graphviz DOT digraph -- the same graph
++aat.core.mermaid.graph_to_mermaid() renders as a Mermaid flowchart,
++translated into Graphviz's own syntax instead. The underlying node/edge/
++coloring model is identical (see that module's own docstring); only the
++target syntax differs:
++
++- Every node becomes a DOT node, labelled with its own `value` and
++  shaped by its `role`. Graphviz has no shape literally called
++  "stadium", so target's shape is chosen as the closest visual analogue
++  to Mermaid's `([...])` (fully rounded, no square corners at all):
++    - action: `shape=box` (plain rectangle, matches Mermaid's `[...]`)
++    - agent: `shape=box, style=rounded` (rounded-corner rectangle,
++      matches Mermaid's `(...)`)
++    - target: `shape=ellipse` (fully rounded oval, matches Mermaid's
++      `([...])`)
++- Every node with a `related_node` becomes a labelled edge FROM that node
++  TO the node it relates to, exactly as graph_to_mermaid() describes.
++- By default (`color_by_action=True`), every node is colored by the same
++  action-cluster assignment graph_to_mermaid() uses
++  (aat.core.coloring.assign_action_colors()) -- but applied as inline
++  `style=filled, fillcolor=..., color=..., fontcolor=...` attributes
++  directly on each node's own line. DOT has no equivalent to Mermaid's
++  separate classDef/class mechanism, so there's no separate "class"
++  grouping step here; each node just carries its own color attributes.
++
++Multiple contexts in one `graph` are all drawn into a single digraph,
++with no special separation between them -- same caveat as
++graph_to_mermaid(); filter `graph.nodes` first for one digraph per
++context.
++
++`orientation` (default "BT", bottom-to-top) is validated the same way
++graph_to_mermaid() validates it (aat.core.orientation, shared between
++both renderers) -- but Graphviz's `rankdir` graph attribute has no "TD"
++synonym of its own, so an orientation of "TD" (top-down) is mapped to
++Graphviz's "TB" (top-to-bottom -- the same direction, just Graphviz's own
++spelling of it) when it's written out; see graph_to_dot()'s own
++docstring.
++"""
++
++from typing import Dict, List, Tuple
++
++from .coloring import ColorTriple, assign_action_colors
++from .graph import AATGraph, AATNode
++from .orientation import normalize_orientation
++
++# Graphviz node shape/style, keyed by AATNode.role -- see this module's
++# own docstring for why target maps to shape=ellipse rather than a
++# "stadium" Graphviz has no name for. A role this module doesn't
++# recognize (shouldn't happen -- Role is a Literal of exactly these
++# three -- but AATNode itself doesn't enforce that at the type level for
++# a hand-built or deserialized node) falls back to a plain box, same
++# fallback graph_to_mermaid() uses for an unrecognized role.
++_ROLE_SHAPE = {
++    "action": "box",
++    "agent": "box",
++    "target": "ellipse",
++}
++
++# Extra `style=` keywords layered on top of a node's own shape, keyed the
++# same way -- only agent needs one of its own (rounded corners); a
++# color_by_action fill (see graph_to_dot()) adds "filled" to whatever's
++# here rather than overwriting it, so a colored agent node still ends up
++# rounded (style="rounded,filled"), not a plain filled rectangle.
++_ROLE_EXTRA_STYLES: Dict[str, List[str]] = {
++    "agent": ["rounded"],
++}
++
++
++def _node_key(node: AATNode) -> Tuple[str, str]:
++    return (node.context, node.id)
++
++
++def _escape_label(text: str) -> str:
++    """Escape `text` for use inside a DOT double-quoted string literal --
++    backslash first (so escaping the quote below doesn't get re-escaped
++    itself), then the quote character."""
++    return text.replace("\\", "\\\\").replace('"', '\\"')
++
++
++def graph_to_dot(
++    graph: AATGraph,
++    orientation: str = "BT",
++    color_by_action: bool = True,
++) -> Tuple[str, List[str]]:
++    """Build a Graphviz DOT digraph from an AATGraph -- see this module's
++    own docstring for the node-shape/edge/coloring mapping, which mirrors
++    aat.core.mermaid.graph_to_mermaid() exactly except for the target
++    syntax.
++
++    `orientation` is validated exactly like graph_to_mermaid()'s (see
++    aat.core.orientation) -- `BT` (bottom-to-top, the default here),
++    `TB`/`TD` (top-down -- synonyms), `LR`, or `RL`. Written out as
++    Graphviz's own `rankdir` graph attribute; since `rankdir` has no
++    "TD" of its own, "TD" is mapped to "TB" here (same direction, just
++    Graphviz's own name for it) -- every other value is used verbatim.
++    Anything outside that vocabulary raises `ValueError` naming the
++    valid options, rather than silently producing invalid DOT syntax.
++
++    `color_by_action` (default True) -- see this module's own docstring.
++    Pass False for a plain, uncolored digraph.
++
++    Returns (dot_text, warnings) -- same warning cases as
++    graph_to_mermaid(): a node whose `related_node` doesn't resolve to
++    another node actually present in `graph` (same context) is still
++    drawn, but its edge is skipped and reported as a warning; and, if
++    `color_by_action` is True and the graph has more distinct actions
++    than the palette has colors (currently 8), one warning notes that
++    colors repeat.
++    """
++    orientation = normalize_orientation(orientation)
++    rankdir = "TB" if orientation == "TD" else orientation
++
++    by_key: Dict[Tuple[str, str], AATNode] = {_node_key(n): n for n in graph.nodes}
++
++    color_of_node: Dict[Tuple[str, str], ColorTriple] = {}
++    warnings: List[str] = []
++    if color_by_action:
++        color_of_node, color_warnings = assign_action_colors(graph)
++        warnings.extend(color_warnings)
++
++    lines = ["digraph aat {", f"    rankdir={rankdir};"]
++
++    for node in graph.nodes:
++        attrs = [f"shape={_ROLE_SHAPE.get(node.role, 'box')}"]
++        styles = list(_ROLE_EXTRA_STYLES.get(node.role, []))
++
++        color = color_of_node.get(_node_key(node))
++        if color is not None:
++            fill, stroke, text = color
++            styles.append("filled")
++            attrs.append(f'fillcolor="{fill}"')
++            attrs.append(f'color="{stroke}"')
++            attrs.append(f'fontcolor="{text}"')
++
++        if styles:
++            attrs.append(f'style="{",".join(styles)}"')
++        attrs.append(f'label="{_escape_label(node.value)}"')
++
++        lines.append(f'    {node.id} [{", ".join(attrs)}];')
++
++    for node in graph.nodes:
++        if node.related_node is None:
++            continue
++        target_key = (node.context, node.related_node)
++        if target_key not in by_key:
++            warnings.append(
++                f"skipped edge {node.id} -[{node.role}]-> {node.related_node}: "
++                "target is not a node in this graph"
++            )
++            continue
++        edge_label = "dependent" if node.role == "action" else node.role
++        lines.append(f'    {node.id} -> {node.related_node} [label="{edge_label}"];')
++
++    lines.append("}")
++    return "\n".join(lines), warnings
++
++
++def save_dot(
++    graph: AATGraph,
++    path: str,
++    orientation: str = "BT",
++    color_by_action: bool = True,
++) -> List[str]:
++    """Write the digraph to `path` (e.g. 'analysis.dot') and return any
++    warnings from graph_to_dot(). `orientation` is validated the same
++    way -- see graph_to_dot()'s own docstring."""
++    dot_text, warnings = graph_to_dot(graph, orientation=orientation, color_by_action=color_by_action)
++    with open(path, "w", encoding="utf-8") as f:
++        f.write(dot_text + "\n")
++    return warnings
+diff --git a/aat/core/mermaid.py b/aat/core/mermaid.py
+index b842b26..0a17e88 100644
+--- a/aat/core/mermaid.py
++++ b/aat/core/mermaid.py
+@@ -27,8 +27,9 @@ filter `graph.nodes` first (e.g. `AATGraph(nodes=[n for n in graph.nodes
+ if n.context == wanted])`).
+ 
+ `orientation` (default "BT", bottom-to-top) is validated against Mermaid's
+-own set of flowchart direction codes -- see `_VALID_ORIENTATIONS` and
+-`graph_to_mermaid()`'s own docstring.
++own set of flowchart direction codes -- see aat.core.orientation (shared
++with graph_to_dot(), which renders this same graph as a Graphviz digraph
++instead) and `graph_to_mermaid()`'s own docstring.
+ 
+ The action-cluster color assignment itself lives in aat.core.coloring
+ (assign_action_colors()), not here, so it can be reused wherever else a
+@@ -39,26 +40,7 @@ from typing import Dict, List, Tuple
+ 
+ from .coloring import ColorTriple, assign_action_colors
+ from .graph import AATGraph, AATNode
+-
+-# Mermaid's own flowchart direction codes (https://mermaid.js.org/syntax/
+-# flowchart.html#direction): TB and TD are synonyms (top-down); BT, RL, LR
+-# are the other three directions. graph_to_mermaid() checks `orientation`
+-# against this set (case-insensitively) rather than passing it through
+-# unchecked, so a typo becomes a clear ValueError here instead of silently
+-# invalid Mermaid syntax in the output.
+-_VALID_ORIENTATIONS = {"TB", "TD", "BT", "RL", "LR"}
+-
+-
+-def _normalize_orientation(orientation: str) -> str:
+-    normalized = orientation.strip().upper()
+-    if normalized not in _VALID_ORIENTATIONS:
+-        raise ValueError(
+-            f"invalid orientation {orientation!r} -- must be one of "
+-            f"{sorted(_VALID_ORIENTATIONS)} (Mermaid's flowchart direction "
+-            "codes: https://mermaid.js.org/syntax/flowchart.html#direction)"
+-        )
+-    return normalized
+-
++from .orientation import normalize_orientation
+ 
+ # Characters that need escaping inside a Mermaid quoted label.
+ _LABEL_ESCAPES = {
+@@ -100,9 +82,9 @@ def graph_to_mermaid(
+     (bottom-to-top, the default here), `TB`/`TD` (top-down -- synonyms),
+     `LR`, or `RL` -- used verbatim (uppercased) in the diagram's opening
+     line (`graph BT`, etc.). Matched case-insensitively against
+-    `_VALID_ORIENTATIONS`; anything else raises `ValueError` naming the
+-    valid options, rather than silently producing invalid Mermaid syntax.
+-    See https://mermaid.js.org/syntax/flowchart.html#direction.
++    aat.core.orientation.VALID_ORIENTATIONS; anything else raises
++    `ValueError` naming the valid options, rather than silently producing
++    invalid Mermaid syntax. See https://mermaid.js.org/syntax/flowchart.html#direction.
+ 
+     `color_by_action` (default True) -- see this module's own docstring.
+     Pass False for a plain, uncolored diagram.
+@@ -115,7 +97,7 @@ def graph_to_mermaid(
+     has more distinct actions than the palette has colors (currently 8),
+     one warning notes that colors repeat.
+     """
+-    orientation = _normalize_orientation(orientation)
++    orientation = normalize_orientation(orientation)
+ 
+     by_key: Dict[Tuple[str, str], AATNode] = {_node_key(n): n for n in graph.nodes}
+ 
+diff --git a/aat/core/orientation.py b/aat/core/orientation.py
+new file mode 100644
+index 0000000..b7d60bd
+--- /dev/null
++++ b/aat/core/orientation.py
+@@ -0,0 +1,38 @@
++"""
++Shared orientation validation for graph_to_mermaid() and graph_to_dot():
++both accept the same four-way diagram-direction vocabulary and render it
++as their own tool's own top-of-file direction attribute (Mermaid's
++`graph BT`, Graphviz's `rankdir=BT;`) -- see each renderer's own
++docstring for exactly how. Living in its own module keeps that one
++validation rule from being duplicated (and from drifting) across both.
++"""
++
++# Mermaid's own flowchart direction codes (https://mermaid.js.org/syntax/
++# flowchart.html#direction): TB and TD are synonyms (top-down); BT, RL, LR
++# are the other three directions. Graphviz's `rankdir` graph attribute
++# recognizes the same four *directions* but has no "TD" synonym of its
++# own -- graph_to_dot() maps "TD" to "TB" itself when it emits `rankdir`,
++# after normalize_orientation() here has already validated it.
++VALID_ORIENTATIONS = frozenset({"TB", "TD", "BT", "RL", "LR"})
++
++
++def normalize_orientation(orientation: str) -> str:
++    """Validate `orientation` against VALID_ORIENTATIONS, case-
++    insensitively and with surrounding whitespace stripped, and return
++    it stripped and uppercased (e.g. "lr" -> "LR"; "TD" is returned as
++    "TD", unchanged -- a caller whose own target syntax has no "TD" of
++    its own still has to map it further, see graph_to_dot()).
++
++    Raises ValueError naming the valid options if `orientation` doesn't
++    match one of them, rather than letting a typo become silently
++    invalid Mermaid or Graphviz syntax downstream.
++    """
++    normalized = orientation.strip().upper()
++    if normalized not in VALID_ORIENTATIONS:
++        raise ValueError(
++            f"invalid orientation {orientation!r} -- must be one of "
++            f"{sorted(VALID_ORIENTATIONS)} (Mermaid's flowchart direction "
++            "codes, also used here for Graphviz's rankdir -- see "
++            "https://mermaid.js.org/syntax/flowchart.html#direction)"
++        )
++    return normalized
+diff --git a/notes/USAGE.md b/notes/USAGE.md
+index ab5f0d1..d15c759 100644
+--- a/notes/USAGE.md
++++ b/notes/USAGE.md
+@@ -124,6 +124,30 @@ Pass `color_by_action=False` for a plain, uncolored diagram. `save_mermaid(graph
+ `warnings` lists any node whose `related_node` doesn't resolve to another node actually present in `graph` -- normally a sign the graph failed `validate()` upstream (see "Analyzing multiple citable passages" above), worth checking there first -- plus, if the graph has more distinct actions than the color palette has slots (currently 8), one warning that colors repeat.
+ 
+ 
++## Rendering a graph as Graphviz dot
++
++`graph_to_dot()` (in `aat/core/graphviz.py`) renders the same `AATGraph` as a [Graphviz](https://graphviz.org) DOT digraph -- the same node/edge/coloring model as `graph_to_mermaid()`, just in Graphviz's own syntax. An action is `shape=box`, an agent is `shape=box, style=rounded`, and a target is `shape=ellipse` (Graphviz has no shape literally called "stadium", so the fully-rounded ellipse is the closest analogue to Mermaid's stadium shape). Every node with a `related_node` becomes a labelled edge pointing at it, exactly as in the Mermaid diagram. By default every node is colored by the same action-cluster assignment `graph_to_mermaid()` uses (`aat.core.coloring.assign_action_colors()`), applied as inline `fillcolor`/`color`/`fontcolor`/`style` attributes on each node's own line rather than Mermaid's separate `classDef`/`class` mechanism -- DOT has no equivalent grouping construct.
++
++```python
++from aat.core import graph_to_dot
++
++dot, warnings = graph_to_dot(graph)
++print(dot)
++for w in warnings:
++    print(f"Warning: {w}")
++```
++
++`orientation` takes the same four codes as `graph_to_mermaid()` (`"BT"`, `"TB"`/`"TD"`, `"LR"`, `"RL"` -- validated the same way, case-insensitively, by the shared `aat.core.orientation` module) and is written out as Graphviz's own `rankdir` graph attribute. Graphviz's `rankdir` has no `"TD"` synonym of its own, so `"TD"` is mapped to `"TB"` (the same direction, just Graphviz's own name for it) -- every other value is used verbatim:
++
++```python
++dot, warnings = graph_to_dot(graph, orientation="LR")
++```
++
++Pass `color_by_action=False` for a plain, uncolored digraph. `save_dot(graph, path, ...)` takes the same `orientation`/`color_by_action` arguments and writes the digraph straight to a file (e.g. `analysis.dot`), which the `dot` command-line tool (or any other Graphviz frontend) can render directly: `dot -Tsvg analysis.dot -o analysis.svg`.
++
++`warnings` has the same two cases as `graph_to_mermaid()`'s: a node whose `related_node` doesn't resolve to another node actually present in `graph`, and, if the graph has more distinct actions than the color palette has slots, one warning that colors repeat.
++
++
+ ## Rendering tokens as highlighted HTML
+ 
+ `tokens_to_html()` (in `aat/english/html.py`) renders a passage's tokens as one continuous HTML string, reconstructing normal reading spacing (punctuation attaches to the preceding word; opening brackets and the first of a paired quote attach to what follows) rather than putting a space before every token. Pass the same `AATGraph` you'd hand to `graph_to_mermaid()` and every token that's also an AAT graph node is highlighted using the *same* color that node gets in the Mermaid diagram (`aat.core.coloring.assign_action_colors()` -- one shared assignment behind both renderers), with a border style keyed on the node's role: a box around an `action` token, a rounded box around an `agent` token, and an underline under a `target` token.
+diff --git a/tests/test_core_graphviz.py b/tests/test_core_graphviz.py
+new file mode 100644
+index 0000000..9fe906a
+--- /dev/null
++++ b/tests/test_core_graphviz.py
+@@ -0,0 +1,173 @@
++"""Offline tests for aat.core.graphviz -- no dspy or network needed.
++Mirrors tests/test_core_mermaid.py's structure and coverage, asserting
++Graphviz DOT syntax instead of Mermaid syntax for the same fixtures."""
++
++import pytest
++
++from aat.core import AATGraph, AATNode
++from aat.core.graphviz import graph_to_dot
++
++
++def _dog_ate_homework_graph():
++    return AATGraph(
++        nodes=[
++            AATNode(context="c1", id="t3", value="ate", role="action", related_node=None),
++            AATNode(context="c1", id="t2", value="dog", role="agent", related_node="t3"),
++            AATNode(context="c1", id="t5", value="homework", role="target", related_node="t3"),
++        ]
++    )
++
++
++def test_every_node_becomes_a_shaped_node_line():
++    dot, warnings = graph_to_dot(_dog_ate_homework_graph(), color_by_action=False)
++    assert warnings == []
++    assert '    t3 [shape=box, label="ate"];' in dot
++    assert '    t2 [shape=box, style="rounded", label="dog"];' in dot
++    assert '    t5 [shape=ellipse, label="homework"];' in dot
++
++
++def test_agent_and_target_edges_point_at_the_action():
++    dot, _warnings = graph_to_dot(_dog_ate_homework_graph())
++    assert '    t2 -> t3 [label="agent"];' in dot
++    assert '    t5 -> t3 [label="target"];' in dot
++
++
++def test_independent_action_has_no_outgoing_edge():
++    dot, _warnings = graph_to_dot(_dog_ate_homework_graph())
++    assert "    t3 ->" not in dot
++
++
++def test_dependent_action_edge_is_labelled_dependent():
++    graph = AATGraph(
++        nodes=[
++            AATNode(context="c1", id="t2", value="said", role="action", related_node=None),
++            AATNode(context="c1", id="t6", value="ate", role="action", related_node="t2"),
++        ]
++    )
++    dot, warnings = graph_to_dot(graph)
++    assert warnings == []
++    assert '    t6 -> t2 [label="dependent"];' in dot
++
++
++def test_default_orientation_is_bt():
++    dot, _warnings = graph_to_dot(_dog_ate_homework_graph())
++    assert "digraph aat {" in dot
++    assert "    rankdir=BT;" in dot
++
++
++@pytest.mark.parametrize("orientation", ["BT", "LR", "RL"])
++def test_orientations_with_no_graphviz_specific_mapping_are_used_verbatim(orientation):
++    dot, _warnings = graph_to_dot(_dog_ate_homework_graph(), orientation=orientation)
++    assert f"    rankdir={orientation};" in dot
++
++
++def test_td_orientation_is_mapped_to_graphviz_own_tb_spelling():
++    # Graphviz's rankdir has no "TD" synonym of its own -- unlike Mermaid,
++    # which uses "TD" verbatim, graph_to_dot() maps it to "TB" (same
++    # direction, Graphviz's own name for it).
++    dot, _warnings = graph_to_dot(_dog_ate_homework_graph(), orientation="TD")
++    assert "    rankdir=TB;" in dot
++
++
++def test_tb_orientation_is_also_used_verbatim():
++    dot, _warnings = graph_to_dot(_dog_ate_homework_graph(), orientation="TB")
++    assert "    rankdir=TB;" in dot
++
++
++def test_orientation_is_matched_case_insensitively_and_uppercased():
++    dot, _warnings = graph_to_dot(_dog_ate_homework_graph(), orientation="lr")
++    assert "    rankdir=LR;" in dot
++
++
++def test_orientation_surrounding_whitespace_is_stripped():
++    dot, _warnings = graph_to_dot(_dog_ate_homework_graph(), orientation=" TB ")
++    assert "    rankdir=TB;" in dot
++
++
++def test_invalid_orientation_raises_value_error_naming_valid_options():
++    with pytest.raises(ValueError) as excinfo:
++        graph_to_dot(_dog_ate_homework_graph(), orientation="sideways")
++    message = str(excinfo.value)
++    assert "sideways" in message
++    for valid in ("TB", "TD", "BT", "RL", "LR"):
++        assert valid in message
++
++
++def test_broken_related_node_is_skipped_and_warned_not_crashed():
++    graph = AATGraph(
++        nodes=[AATNode(context="c1", id="t5", value="homework", role="target", related_node="ghost")]
++    )
++    dot, warnings = graph_to_dot(graph)
++    assert "->" not in dot
++    assert any("ghost" in w for w in warnings)
++
++
++def test_color_by_action_gives_agent_and_target_the_same_fill_as_their_action():
++    dot, _warnings = graph_to_dot(_dog_ate_homework_graph(), color_by_action=True)
++    # Same (fill, stroke, text) triple as assign_action_colors()'s first
++    # palette entry -- see test_core_coloring.py.
++    for node_id in ("t3", "t2", "t5"):
++        assert f'fillcolor="#E3F2FD"' in dot
++    assert dot.count('fillcolor="#E3F2FD"') == 3
++    assert 'color="#1565C0"' in dot
++    assert 'fontcolor="#0D47A1"' in dot
++    assert 'style="filled"' in dot  # action and target: no role-extra style, just filled
++    assert 'style="rounded,filled"' in dot  # agent: rounded + filled
++
++
++def test_dependent_action_gets_its_own_color_not_its_governors():
++    graph = AATGraph(
++        nodes=[
++            AATNode(context="c1", id="t2", value="said", role="action", related_node=None),
++            AATNode(context="c1", id="t1", value="He", role="agent", related_node="t2"),
++            AATNode(context="c1", id="t6", value="ate", role="action", related_node="t2"),
++            AATNode(context="c1", id="t5", value="dog", role="agent", related_node="t6"),
++        ]
++    )
++    dot, _warnings = graph_to_dot(graph)
++    lines = {line.strip() for line in dot.splitlines()}
++    t2_line = next(line for line in lines if line.startswith("t2 ["))
++    t1_line = next(line for line in lines if line.startswith("t1 ["))
++    t6_line = next(line for line in lines if line.startswith("t6 ["))
++    t5_line = next(line for line in lines if line.startswith("t5 ["))
++    assert 'fillcolor="#E3F2FD"' in t2_line and 'fillcolor="#E3F2FD"' in t1_line
++    assert 'fillcolor="#FFF3E0"' in t6_line and 'fillcolor="#FFF3E0"' in t5_line
++
++
++def test_color_by_action_false_gives_plain_digraph():
++    dot, _warnings = graph_to_dot(_dog_ate_homework_graph(), color_by_action=False)
++    assert "fillcolor" not in dot
++    assert "fontcolor" not in dot
++    assert "filled" not in dot
++
++
++def test_more_actions_than_palette_slots_warns_but_still_renders():
++    nodes = [
++        AATNode(context="c1", id=f"t{i}", value=f"action{i}", role="action", related_node=None)
++        for i in range(10)
++    ]
++    dot, warnings = graph_to_dot(AATGraph(nodes=nodes))
++    assert any("only 8 palette" in w for w in warnings)
++    lines = {line.strip() for line in dot.splitlines()}
++    t0_line = next(line for line in lines if line.startswith("t0 ["))
++    t8_line = next(line for line in lines if line.startswith("t8 ["))
++    t1_line = next(line for line in lines if line.startswith("t1 ["))
++    t9_line = next(line for line in lines if line.startswith("t9 ["))
++    fill = lambda line: line.split('fillcolor="')[1].split('"')[0]  # noqa: E731
++    assert fill(t0_line) == fill(t8_line)
++    assert fill(t1_line) == fill(t9_line)
++    assert fill(t0_line) != fill(t1_line)
++
++
++def test_empty_graph_renders_header_only():
++    dot, warnings = graph_to_dot(AATGraph(nodes=[]))
++    assert dot == "digraph aat {\n    rankdir=BT;\n}"
++    assert warnings == []
++
++
++def test_label_with_quote_and_backslash_is_escaped():
++    graph = AATGraph(
++        nodes=[AATNode(context="c1", id="t1", value='say "hi"\\bye', role="action", related_node=None)]
++    )
++    dot, _warnings = graph_to_dot(graph, color_by_action=False)
++    assert '    t1 [shape=box, label="say \\"hi\\"\\\\bye"];' in dot
+diff --git a/tests/test_core_orientation.py b/tests/test_core_orientation.py
+new file mode 100644
+index 0000000..f90ff31
+--- /dev/null
++++ b/tests/test_core_orientation.py
+@@ -0,0 +1,37 @@
++"""Offline tests for aat.core.orientation.normalize_orientation() -- the
++validation shared by graph_to_mermaid() and graph_to_dot(). Each of those
++renderers has its own orientation tests too (default value, verbatim vs.
++mapped output), but this file covers the shared validation rule itself
++directly, mirroring how test_core_coloring.py tests assign_action_colors()
++directly rather than only through graph_to_mermaid()."""
++
++import pytest
++
++from aat.core.orientation import VALID_ORIENTATIONS, normalize_orientation
++
++
++def test_valid_orientations_is_the_expected_five_codes():
++    assert VALID_ORIENTATIONS == {"TB", "TD", "BT", "RL", "LR"}
++
++
++@pytest.mark.parametrize("orientation", ["TB", "TD", "BT", "RL", "LR"])
++def test_every_valid_orientation_round_trips_unchanged(orientation):
++    assert normalize_orientation(orientation) == orientation
++
++
++def test_normalization_is_case_insensitive():
++    assert normalize_orientation("lr") == "LR"
++    assert normalize_orientation("Bt") == "BT"
++
++
++def test_normalization_strips_surrounding_whitespace():
++    assert normalize_orientation("  TB  ") == "TB"
++
++
++def test_invalid_orientation_raises_value_error_naming_valid_options():
++    with pytest.raises(ValueError) as excinfo:
++        normalize_orientation("sideways")
++    message = str(excinfo.value)
++    assert "sideways" in message
++    for valid in ("TB", "TD", "BT", "RL", "LR"):
++        assert valid in message

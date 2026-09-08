@@ -1,0 +1,42 @@
+---
+title: Quick start using `aat` in a script
+---
+
+To call the pipeline from your own script or a REPL instead of the CLI, configure a `dspy.LM` yourself and use `aat.english` directly:
+
+```python
+import dspy
+from aat.english import analyze_passage
+
+dspy.configure(lm=dspy.LM(model="litellm_proxy/anthropic/Claude Opus 5",
+                           api_base="https://api_url/litellm",
+                           api_key="your-key-here"))
+
+tokens, graph = analyze_passage("The dog ate my homework.")
+
+for action in graph.actions():
+    agents = graph.agents_for(action)
+    targets = graph.targets_for(action)
+    print(f"{action.value!r} (independent={action.related_node is None})")
+    for a in agents:
+        print(f"  agent:  {a.value!r}")
+    for t in targets:
+        print(f"  target: {t.value!r}")
+```
+
+
+
+## Analyzing multiple citable passages
+
+`analyze_passage()` is a convenience wrapper around `analyze_passages()`, which takes a list of `CitedPassage` (context + text) and returns one combined `(tokens, graph)`:
+
+```python
+from aat.core import CitedPassage
+from aat.english import analyze_passages
+
+passages = [
+    CitedPassage(context="urn:cite2:aat:examples.v1:ex1", text="The dog ate my homework."),
+    CitedPassage(context="urn:cite2:aat:examples.v1:ex2", text="The homework was eaten by the dog."),
+]
+tokens, graph = analyze_passages(passages)
+```

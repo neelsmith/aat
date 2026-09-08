@@ -1,0 +1,12 @@
+---
+title: Configure
+---
+
+
+Add an `.env` file in this folder with your LM credentials. Copy `.env.example` to `.env` and fill in real values: 
+
+```
+API_BASE=https://localmodel/api
+MODEL=litellm/modelname
+API_KEY=your-key-here
+```

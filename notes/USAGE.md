@@ -124,6 +124,29 @@ Pass `color_by_action=False` for a plain, uncolored diagram. `save_mermaid(graph
 `warnings` lists any node whose `related_node` doesn't resolve to another node actually present in `graph` -- normally a sign the graph failed `validate()` upstream (see "Analyzing multiple citable passages" above), worth checking there first -- plus, if the graph has more distinct actions than the color palette has slots (currently 8), one warning that colors repeat.
 
 
+## Rendering a graph as Graphviz dot
+
+`graph_to_dot()` (in `aat/core/graphviz.py`) renders the same `AATGraph` as a [Graphviz](https://graphviz.org) DOT digraph -- the same node/edge/coloring model as `graph_to_mermaid()`, just in Graphviz's own syntax. An action is `shape=box`, an agent is `shape=box, style=rounded`, and a target is `shape=ellipse` (Graphviz has no shape literally called "stadium", so the fully-rounded ellipse is the closest analogue to Mermaid's stadium shape). Every node with a `related_node` becomes a labelled edge pointing at it, exactly as in the Mermaid diagram. By default every node is colored by the same action-cluster assignment `graph_to_mermaid()` uses (`aat.core.coloring.assign_action_colors()`), applied as inline `fillcolor`/`color`/`fontcolor`/`style` attributes on each node's own line rather than Mermaid's separate `classDef`/`class` mechanism -- DOT has no equivalent grouping construct.
+
+```python
+from aat.core import graph_to_dot
+
+dot, warnings = graph_to_dot(graph)
+print(dot)
+for w in warnings:
+    print(f"Warning: {w}")
+```
+
+`orientation` takes the same four codes as `graph_to_mermaid()` (`"BT"`, `"TB"`/`"TD"`, `"LR"`, `"RL"` -- validated the same way, case-insensitively, by the shared `aat.core.orientation` module) and is written out as Graphviz's own `rankdir` graph attribute. Graphviz's `rankdir` has no `"TD"` synonym of its own, so `"TD"` is mapped to `"TB"` (the same direction, just Graphviz's own name for it) -- every other value is used verbatim:
+
+```python
+dot, warnings = graph_to_dot(graph, orientation="LR")
+```
+
+Pass `color_by_action=False` for a plain, uncolored digraph. `save_dot(graph, path, ...)` takes the same `orientation`/`color_by_action` arguments and writes the digraph straight to a file (e.g. `analysis.dot`), which the `dot` command-line tool (or any other Graphviz frontend) can render directly: `dot -Tsvg analysis.dot -o analysis.svg`.
+
+`warnings` has the same two cases as `graph_to_mermaid()`'s: a node whose `related_node` doesn't resolve to another node actually present in `graph`, and, if the graph has more distinct actions than the color palette has slots, one warning that colors repeat.
+
 ## Rendering tokens as highlighted HTML
 
 `tokens_to_html()` (in `aat/english/html.py`) renders a passage's tokens as one continuous HTML string, reconstructing normal reading spacing (punctuation attaches to the preceding word; opening brackets and the first of a paired quote attach to what follows) rather than putting a space before every token. Pass the same `AATGraph` you'd hand to `graph_to_mermaid()` and every token that's also an AAT graph node is highlighted using the *same* color that node gets in the Mermaid diagram (`aat.core.coloring.assign_action_colors()` -- one shared assignment behind both renderers), with a border style keyed on the node's role: a box around an `action` token, a rounded box around an `agent` token, and an underline under a `target` token.

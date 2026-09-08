@@ -15,7 +15,7 @@ Released under the [GNU General Public License v3 or later](LICENSE).
 
 ## Installing
 
-To use the `aat` model froinm another project, install the core module directly from this repository:
+To use the `aat` model from another project, install the core module directly from this repository:
 
 ```sh
 pip install git+https://github.com/neelsmith/aat.git

@@ -4,9 +4,11 @@ title: Agent-Action-Target in Python
 
 
 
-- About the package
+- [About the package](./about.qmd)
 - [Marimo notebooks](./nbs.qmd)
 - [API documentation](https://neelsmith.github.io/aat/)
+
+
 
 ---
 

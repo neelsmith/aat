@@ -27,8 +27,9 @@ filter `graph.nodes` first (e.g. `AATGraph(nodes=[n for n in graph.nodes
 if n.context == wanted])`).
 
 `orientation` (default "BT", bottom-to-top) is validated against Mermaid's
-own set of flowchart direction codes -- see `_VALID_ORIENTATIONS` and
-`graph_to_mermaid()`'s own docstring.
+own set of flowchart direction codes -- see aat.core.orientation (shared
+with graph_to_dot(), which accepts the exact same vocabulary for
+Graphviz's own `rankdir`) and `graph_to_mermaid()`'s own docstring.
 
 The action-cluster color assignment itself lives in aat.core.coloring
 (assign_action_colors()), not here, so it can be reused wherever else a
@@ -39,25 +40,7 @@ from typing import Dict, List, Tuple
 
 from .coloring import ColorTriple, assign_action_colors
 from .graph import AATGraph, AATNode
-
-# Mermaid's own flowchart direction codes (https://mermaid.js.org/syntax/
-# flowchart.html#direction): TB and TD are synonyms (top-down); BT, RL, LR
-# are the other three directions. graph_to_mermaid() checks `orientation`
-# against this set (case-insensitively) rather than passing it through
-# unchecked, so a typo becomes a clear ValueError here instead of silently
-# invalid Mermaid syntax in the output.
-_VALID_ORIENTATIONS = {"TB", "TD", "BT", "RL", "LR"}
-
-
-def _normalize_orientation(orientation: str) -> str:
-    normalized = orientation.strip().upper()
-    if normalized not in _VALID_ORIENTATIONS:
-        raise ValueError(
-            f"invalid orientation {orientation!r} -- must be one of "
-            f"{sorted(_VALID_ORIENTATIONS)} (Mermaid's flowchart direction "
-            "codes: https://mermaid.js.org/syntax/flowchart.html#direction)"
-        )
-    return normalized
+from .orientation import normalize_orientation
 
 
 # Characters that need escaping inside a Mermaid quoted label.
@@ -99,8 +82,8 @@ def graph_to_mermaid(
     `orientation` is Mermaid's own flowchart direction code -- `BT`
     (bottom-to-top, the default here), `TB`/`TD` (top-down -- synonyms),
     `LR`, or `RL` -- used verbatim (uppercased) in the diagram's opening
-    line (`graph BT`, etc.). Matched case-insensitively against
-    `_VALID_ORIENTATIONS`; anything else raises `ValueError` naming the
+    line (`graph BT`, etc.). Validated by aat.core.orientation (shared
+    with graph_to_dot()); anything else raises `ValueError` naming the
     valid options, rather than silently producing invalid Mermaid syntax.
     See https://mermaid.js.org/syntax/flowchart.html#direction.
 
@@ -115,7 +98,7 @@ def graph_to_mermaid(
     has more distinct actions than the palette has colors (currently 8),
     one warning notes that colors repeat.
     """
-    orientation = _normalize_orientation(orientation)
+    orientation = normalize_orientation(orientation)
 
     by_key: Dict[Tuple[str, str], AATNode] = {_node_key(n): n for n in graph.nodes}
 
