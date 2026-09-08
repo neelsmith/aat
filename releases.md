@@ -2,6 +2,11 @@
 
 Current release: *0.1.3*
 
+
+**0.2.0**, *??*: Adds functions for working with AAT graphs using `graphviz`. Adds initial web site on github pages.
+
+
+
 **O.1.3**, *Sept. 6, 2026*: fixed a bug in github workflow.
 
 **O.1.2**: tagged but not released.

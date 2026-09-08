@@ -1,14 +1,16 @@
 # Optimizing with GEPA
 
-`optimize_gepa.py` uses [dspy.GEPA](https://dspy.ai) -- a reflective prompt optimizer -- to improve `AgentActionTarget`'s instructions against the gold examples in `tests/fixtures/gold_examples.py`. Unlike `pytest` (entirely `DummyLM`-backed), this is a **live-LM script**: every trial makes a real call to the configured task model, plus a reflection model GEPA uses to read scoring feedback and propose better instructions. Expect it to use real API usage against the configured proxy.
+`utilities/optimize_gepa.py` uses [dspy.GEPA](https://dspy.ai) -- a reflective prompt optimizer -- to improve `AgentActionTarget`'s instructions against the gold examples in `tests/fixtures/gold_examples.py`. Unlike `pytest` (entirely `DummyLM`-backed), this is a **live-LM script**: every trial makes a real call to the configured task model, plus a reflection model GEPA uses to read scoring feedback and propose better instructions. Expect it to use real API usage against the configured proxy.
 
 ```bash
-python optimize_gepa.py                    # --auto light (cheapest; default)
-python optimize_gepa.py --auto medium       # more thorough, more expensive
-python optimize_gepa.py --auto heavy        # most thorough, most expensive
-python optimize_gepa.py --max-metric-calls 40   # exact call budget instead of a preset
-python optimize_gepa.py --skip-baseline     # skip the pre-GEPA scoring pass (saves N calls)
+python utilities/optimize_gepa.py                    # --auto light (cheapest; default)
+python utilities/optimize_gepa.py --auto medium       # more thorough, more expensive
+python utilities/optimize_gepa.py --auto heavy        # most thorough, most expensive
+python utilities/optimize_gepa.py --max-metric-calls 40   # exact call budget instead of a preset
+python utilities/optimize_gepa.py --skip-baseline     # skip the pre-GEPA scoring pass (saves N calls)
 ```
+
+Run from the repo root, same as `aat_main.py` and `utilities/build_docs.py` -- `utilities/optimize_gepa.py` resolves its own repo root from `__file__`, but `--out`'s default path and `.env` are resolved relative to wherever you invoke it from.
 
 Needs the same `.env` as `aat_main.py` (`API_BASE`/`MODEL`/`API_KEY`). Optionally set `REFLECTION_MODEL` (and `REFLECTION_API_BASE`/`REFLECTION_API_KEY`, if they differ) to use a different model specifically for GEPA's reflective step -- GEPA's own docs recommend a strong reasoning model for this. Without `REFLECTION_MODEL` set, the task model doubles as the reflection model, a reasonable default for a first run.
 
@@ -16,7 +18,7 @@ Needs the same `.env` as `aat_main.py` (`API_BASE`/`MODEL`/`API_KEY`). Optionall
 
 **Scoring**: `aat/english/gepa_metric.py`'s `aat_metric` compares a prediction's `nodes` against the gold answer's `nodes` -- for each gold node, is there a predicted node at the same `(context, id, role)` with a matching `value` and `related_node`? -- and returns a score in `[0, 1]` plus specific, human-readable feedback naming every missing, extra, or mismatched node, for GEPA's reflection model to read. See `tests/test_gepa_metric.py` for fully offline tests of the metric itself.
 
-**Using the result**: `optimize_gepa.py` saves the optimized program's instructions to `optimized_agent_action_target.json` (configurable via `--out`).
+**Using the result**: `utilities/optimize_gepa.py` saves the optimized program's instructions to `optimized_agent_action_target.json` (configurable via `--out`).
 
 To use it:
 

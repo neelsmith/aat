@@ -5,38 +5,27 @@
 
 `aat` is a python package leveraging LMs with `dspy` to apply a reductive model of natural-language syntax called Agent-Action-Target (AAT) to citable text in English. The AAT model is documented in [`aat-model.md`](https://github.com/neelsmith/aat/blob/main/aat-model.md).
 
-The package is deliberately split into two independent modules:
-
-- **`aat.core`** implements the AAT model with classes for input (`CitableToken`/`CitedPassage`) and output (`AATNode`/`AATGraph`). It includes functions to validate and serialize analyses to a plain-text format.
-- **`aat.english`** uses an LM  configured with `dspy` to tokenize English text and compose an `AATGraph`.
-
-Released under the [GNU General Public License v3 or later](LICENSE).
 
 
-## Installing
-
-To use the `aat` model from another project, install the core module directly from this repository:
-
-```sh
-pip install git+https://github.com/neelsmith/aat.git
-```
-
-To include `aat.english` (the dspy-based English pipeline):
-
-```sh
-pip install "aat[english] @ git+https://github.com/neelsmith/aat.git"
-```
-
-To pin to a specific branch, tag, or commit  appending `@<ref>` to the URL, e.g.
-
-```sh
-pip install "aat[english] @ git+https://github.com/neelsmith/aat.git@v0.1.0`
-```
-
-
-
-
+Documentation is being added on the project's [github pages](https://neelsmith.github.io/aat/aat.html). (Currently includes several pages of AI slop that need to be edited.)
 
 See the [project issue tracker](https://github.com/neelsmith/aat/issues) for known gaps and work in progress or to submit an issue.
+
+
+
+## An example
+
+
+> Four score and seven years ago our fathers brought forth, upon this continent, a new nation, conceived in Liberty, and dedicated to the proposition that all men are created equal.
+
+
+**Analysis viewed with `graphviz`**:
+
+![AAT graph from opening of Lincoln's Gettysburg Address.](./quarto/imgs/4score.png)
+
+**The same analysis highlighted in its textual context**:
+
+![Input sentence and highlighting of AAT analysis.](./4score-hilites.png)
+
 
 

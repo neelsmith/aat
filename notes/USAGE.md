@@ -213,7 +213,7 @@ marimo edit marimo/aat_reader.py
 
 ## Using an optimized prompt
 
-If you've run `optimize_gepa.py` (see OPTIMIZING.md) and saved an optimized program, load it into `analyze` before calling `analyze_passage()`/`analyze_passages()`:
+If you've run `utilities/optimize_gepa.py` (see OPTIMIZING.md) and saved an optimized program, load it into `analyze` before calling `analyze_passage()`/`analyze_passages()`:
 
 ```python
 from aat.english.dspy_signatures import analyze

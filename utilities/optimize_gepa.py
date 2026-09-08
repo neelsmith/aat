@@ -17,14 +17,19 @@ Pareto-tracking set. That's a reasonable choice while the gold set is
 still small; revisit it (holding out a few examples as a valset) once
 there are enough gold examples to spare.
 
-Usage:
-    python optimize_gepa.py                       # --auto light (default)
-    python optimize_gepa.py --auto medium
-    python optimize_gepa.py --max-metric-calls 40
-    python optimize_gepa.py --skip-baseline        # skip the pre-GEPA scoring pass
+Run from the repo root (so REPO_ROOT below resolves correctly, matching
+utilities/build_docs.py's own convention):
+    python utilities/optimize_gepa.py               # --auto light (default)
+    python utilities/optimize_gepa.py --auto medium
+    python utilities/optimize_gepa.py --max-metric-calls 40
+    python utilities/optimize_gepa.py --skip-baseline   # skip the pre-GEPA scoring pass
 
-Needs the same .env as aat_main.py (API_BASE/MODEL/API_KEY). Optionally
-set REFLECTION_MODEL (and REFLECTION_API_BASE/REFLECTION_API_KEY, if they
+Needs the same .env as aat_main.py (API_BASE/MODEL/API_KEY) -- found via
+aat_main.py's own path (REPO_ROOT/.env), not this script's, so this still
+works run from anywhere as long as it's invoked as
+"python utilities/optimize_gepa.py" (or an equivalent full/relative path)
+rather than from inside utilities/ itself. Optionally set
+REFLECTION_MODEL (and REFLECTION_API_BASE/REFLECTION_API_KEY, if they
 differ) to use a different model for GEPA's own reflective step -- GEPA's
 own docs recommend a strong reasoning model specifically for reflection.
 """
@@ -35,16 +40,18 @@ from pathlib import Path
 
 import dspy
 
+REPO_ROOT = Path(__file__).resolve().parent.parent
+
 # Reuse aat_main.py's own .env-loading + LM-config helpers rather than
 # duplicating them.
-sys.path.insert(0, str(Path(__file__).parent))
+sys.path.insert(0, str(REPO_ROOT))
 from aat_main import _configure_lm, _env  # noqa: E402
 
 # tests/ isn't an installed package -- add it to sys.path the same way
 # pytest does (see pytest.ini's own comment about this) so
 # "from fixtures.gold_examples import GOLD_EXAMPLES" resolves the same way
 # it does under pytest, without duplicating the fixtures module here.
-sys.path.insert(0, str(Path(__file__).parent / "tests"))
+sys.path.insert(0, str(REPO_ROOT / "tests"))
 from fixtures.gold_examples import GOLD_EXAMPLES  # noqa: E402
 
 from aat.core import AATNode
@@ -148,7 +155,7 @@ def main():
         metric=aat_metric,
         reflection_lm=reflection_lm,
         track_stats=True,
-        log_dir=str(Path(__file__).parent / "gepa_logs"),
+        log_dir=str(REPO_ROOT / "gepa_logs"),
     )
     if args.max_metric_calls is not None:
         optimizer_kwargs["max_metric_calls"] = args.max_metric_calls

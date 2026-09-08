@@ -13,7 +13,7 @@ Scoring is a plain per-node comparison: for each gold node, does the
 predicted graph have a node at the same (context, id, role) with a
 matching `value` and `related_node`? This module has no dependency on
 tests/fixtures/gold_examples.py or dspy's GEPA machinery itself --
-optimize_gepa.py wires this metric, GOLD_EXAMPLES, and dspy.GEPA
+utilities/optimize_gepa.py wires this metric, GOLD_EXAMPLES, and dspy.GEPA
 together. Keeping the metric here, dependency-free, makes it importable
 and unit-testable (see tests/test_gepa_metric.py) without ever touching
 the network or the GOLD_EXAMPLES fixtures module.

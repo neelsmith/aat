@@ -5,7 +5,7 @@ aat-model.md's own worked examples.
 Each GoldExample pairs an English passage with a hand-written,
 aat-model.md-correct `canned_answer` -- the same dict shape
 dspy.utils.dummies.DummyLM expects, and the same shape a dspy.Example's
-outputs will eventually take when these feed optimize_gepa.py's trainset.
+outputs will eventually take when these feed utilities/optimize_gepa.py's trainset.
 `tags` names the construction(s) the example is meant to exercise.
 
 Unlike a language whose tokenization is itself ambiguous, aat.english's
@@ -43,7 +43,7 @@ class GoldExample:
     @property
     def canned_nodes(self) -> List[dict]:
         """Just the `nodes` list out of canned_answer -- e.g. for building
-        a GEPA trainset's gold outputs (optimize_gepa.py's
+        a GEPA trainset's gold outputs (utilities/optimize_gepa.py's
         build_trainset())."""
         return self.canned_answer["nodes"]
 

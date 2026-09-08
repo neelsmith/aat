@@ -48,15 +48,15 @@ Something is referentially broken (`validate()` caught it) or substantively wron
 
 ### Outcome B: a success against a rare or tricky construction
 
-The model got something genuinely uncommon or structurally hard right. Worth *reinforcing*: hand-write (or adapt from the real result) a `GoldExample` and add it to `GOLD_EXAMPLES` -- a correct demonstration of a rare case is precisely the kind of thing `optimize_gepa.py`'s trainset benefits from having more of.
+The model got something genuinely uncommon or structurally hard right. Worth *reinforcing*: hand-write (or adapt from the real result) a `GoldExample` and add it to `GOLD_EXAMPLES` -- a correct demonstration of a rare case is precisely the kind of thing `utilities/optimize_gepa.py`'s trainset benefits from having more of.
 
 ### Outcome C: a success against a common, ordinary construction
 
-The model got something right that it was already expected to get right. Real evidence, but low training value -- `optimize_gepa.py` has no held-out split today (see OPTIMIZING.md), so anything added to `GOLD_EXAMPLES` is immediately part of what GEPA both trains against and scores itself against, and an easy case the model already nails teaches the optimizer nothing new. Still worth harvesting as a regression check once the corpus is large enough to afford holding some examples out -- a known gap to revisit as `GOLD_EXAMPLES` grows past its current 4 entries.
+The model got something right that it was already expected to get right. Real evidence, but low training value -- `utilities/optimize_gepa.py` has no held-out split today (see OPTIMIZING.md), so anything added to `GOLD_EXAMPLES` is immediately part of what GEPA both trains against and scores itself against, and an easy case the model already nails teaches the optimizer nothing new. Still worth harvesting as a regression check once the corpus is large enough to afford holding some examples out -- a known gap to revisit as `GOLD_EXAMPLES` grows past its current 4 entries.
 
 
 ## Suggested cadence
 
 - After any batch of real-world testing, run `pytest` (TESTING.md) first -- it's fast and `DummyLM`-backed, and will immediately tell you if a new or corrected fixture doesn't actually validate or if `test_coverage.py` regressed.
-- Run `optimize_gepa.py` (OPTIMIZING.md) periodically to refresh the shipped, production prompt against whatever `GOLD_EXAMPLES` has grown into since the last run -- this is a live-LM script with real API cost, so batch it rather than running it after every single new fixture.
-- Docs (`docs/build_docs.py`) rebuild automatically on every push to `main` via `.github/workflows/docs.yml` -- no manual step needed there; run it locally (`python docs/build_docs.py`) only if you want to preview `docs/site/` before pushing.
+- Run `utilities/optimize_gepa.py` (OPTIMIZING.md) periodically to refresh the shipped, production prompt against whatever `GOLD_EXAMPLES` has grown into since the last run -- this is a live-LM script with real API cost, so batch it rather than running it after every single new fixture.
+- Docs (`utilities/build_docs.py`) rebuild automatically on every push to `main` via `.github/workflows/docs.yml` -- no manual step needed there; run it locally (`python utilities/build_docs.py`) only if you want to preview `docs/` before pushing.
