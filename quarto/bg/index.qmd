@@ -2,6 +2,12 @@
 title: Background and requirements
 ---
 
+Conceptual background:
+
 - [About `aat`](./about.qmd)
+
+
+Technical requirements:
+
 - [Installing `aat`](./install.qmd)
 - [Configuring a language model](./conf.qmd)

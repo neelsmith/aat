@@ -2,14 +2,14 @@
 title: About AAT
 ---
 
-*TBA*
+
+Agent-Action-Target (AAT) is a reductive model of natural-language syntax focused on verbal ideas (actions), with their immediate subjects and objects (actors and targets). 
+
+The intentional choice to ignore other syntactic features sets AAT apart from models like the [Universal Dependency](https://universaldependencies.org) scheme (UD). This stems from a conviction that at some level of detail, it becomes impossible to account for the syntax of a language using universal descriptors. By accounting solely for syntax identifying agents, actions and targets of actions, AAT tries to encode syntactic structures that can be recognized universally, or at least in a large number of numbers. AAT should be semantically compatible with language-specific parsers providing complete, fine-grained syntactic parsing for a single languiage. Language models like `arsgrammatica` for Latin, `grammatike` for ancient Greek and `diqduq` for Biblical Hebrew, for example, can all instantiate a reduced AAT graph from the fuller syntactic graphs their analyses produce. This can be a powerful aid to aligning and comparing versions of a text in multiple languages.
 
 
+## A graph-theoretic note
 
 
-## Package design
+AAT’s graph maintains coordinated or subordinated ranking of all actions elements. One side effect of this is that all AAT graphs are `trees`. 
 
-The package is deliberately split into two independent modules:
-
-- **`aat.core`** implements the AAT model with classes for input (`CitableToken`/`CitedPassage`) and output (`AATNode`/`AATGraph`). It includes functions to validate and serialize analyses to a plain-text format.
-- **`aat.english`** uses an LM  configured with `dspy` to tokenize English text and compose an `AATGraph`.
