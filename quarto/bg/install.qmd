@@ -2,13 +2,20 @@
 title: Installing `aat`
 ---
 
-## The A-A-T model
 
-*TBA*
+
+
+## Package design
+
+The `aat` package is deliberately split into two independent modules:
+
+- **`aat.core`** implements [the AAT model](./about.qmd) with classes for input of citable text (`CitableToken`/`CitedPassage`), and output of a syntax graph (`AATNode`/`AATGraph`). It includes functions to validate and serialize analyses to a plain-text format.
+- **`aat.english`** uses a language model configured with `dspy` to tokenize English text and compose an `AATGraph`.
+
 
 ## Installing
 
-To use the `aat` model from another project, install the core module directly from this repository:
+Install the core module directly from this repository:
 
 ```sh
 pip install git+https://github.com/neelsmith/aat.git

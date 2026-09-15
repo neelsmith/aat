@@ -2,7 +2,7 @@ project:
   type: website
   output-dir: quarto-build
 
-version: "0.2.0"  
+version: "0.2.1"  
   
 
 website:
@@ -27,8 +27,13 @@ website:
             
     right:   
       - icon: github
-        href: https://github.com/neelsmith/aat
-        aria-label: GitHub
+        menu:
+          - text: "aat on github"
+            href: https://github.com/neelsmith/aat
+          - text: "About me"
+            href: https://neelsmith.github.io
+          - text: "Other projects"
+            href: https://neelsmith.github.io/projects 
 
   sidebar:
     - title: "Background"
@@ -36,6 +41,7 @@ website:
         - bg/index.qmd
         - "---"
         - bg/about.qmd
+        - "---"
         - bg/install.qmd
         - bg/conf.qmd
 
