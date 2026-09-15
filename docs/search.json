@@ -15,18 +15,18 @@
     "href": "bg/about.html",
     "title": "About AAT",
     "section": "",
-    "text": "TBA",
+    "text": "Agent-Action-Target (AAT) is a reductive model of natural-language syntax focused on verbal ideas (actions), with their immediate subjects and objects (actors and targets).\nThe intentional choice to ignore other syntactic features sets AAT apart from models like the Universal Dependency scheme (UD). This stems from a conviction that at some level of detail, it becomes impossible to account for the syntax of a language using universal descriptors. By accounting solely for syntax identifying agents, actions and targets of actions, AAT tries to encode syntactic structures that can be recognized universally, or at least in a large number of numbers. AAT should be semantically compatible with language-specific parsers providing complete, fine-grained syntactic parsing for a single languiage. Language models like arsgrammatica for Latin, grammatike for ancient Greek and diqduq for Biblical Hebrew, for example, can all instantiate a reduced AAT graph from the fuller syntactic graphs their analyses produce. This can be a powerful aid to aligning and comparing versions of a text in multiple languages.",
     "crumbs": [
       "Background",
       "About AAT"
     ]
   },
   {
-    "objectID": "bg/about.html#package-design",
-    "href": "bg/about.html#package-design",
+    "objectID": "bg/about.html#a-graph-theoretic-note",
+    "href": "bg/about.html#a-graph-theoretic-note",
     "title": "About AAT",
-    "section": "Package design",
-    "text": "Package design\nThe package is deliberately split into two independent modules:\n\naat.core implements the AAT model with classes for input (CitableToken/CitedPassage) and output (AATNode/AATGraph). It includes functions to validate and serialize analyses to a plain-text format.\naat.english uses an LM configured with dspy to tokenize English text and compose an AATGraph.",
+    "section": "A graph-theoretic note",
+    "text": "A graph-theoretic note\nAAT’s graph maintains coordinated or subordinated ranking of all actions elements. One side effect of this is that all AAT graphs are trees.",
     "crumbs": [
       "Background",
       "About AAT"
@@ -37,7 +37,7 @@
     "href": "bg/index.html",
     "title": "Background and requirements",
     "section": "",
-    "text": "About aat\nInstalling aat\nConfiguring a language model",
+    "text": "Conceptual background:\n\nAbout aat\n\nTechnical requirements:\n\nInstalling aat\nConfiguring a language model",
     "crumbs": [
       "Background",
       "Background and requirements"
@@ -219,18 +219,18 @@
     "href": "bg/install.html",
     "title": "Installing aat",
     "section": "",
-    "text": "TBA",
+    "text": "The aat package is deliberately split into two independent modules:\n\naat.core implements the AAT model with classes for input of citable text (CitableToken/CitedPassage), and output of a syntax graph (AATNode/AATGraph). It includes functions to validate and serialize analyses to a plain-text format.\naat.english uses a language model configured with dspy to tokenize English text and compose an AATGraph.",
     "crumbs": [
       "Background",
       "Installing `aat`"
     ]
   },
   {
-    "objectID": "bg/install.html#the-a-a-t-model",
-    "href": "bg/install.html#the-a-a-t-model",
+    "objectID": "bg/install.html#package-design",
+    "href": "bg/install.html#package-design",
     "title": "Installing aat",
     "section": "",
-    "text": "TBA",
+    "text": "The aat package is deliberately split into two independent modules:\n\naat.core implements the AAT model with classes for input of citable text (CitableToken/CitedPassage), and output of a syntax graph (AATNode/AATGraph). It includes functions to validate and serialize analyses to a plain-text format.\naat.english uses a language model configured with dspy to tokenize English text and compose an AATGraph.",
     "crumbs": [
       "Background",
       "Installing `aat`"
@@ -241,7 +241,7 @@
     "href": "bg/install.html#installing",
     "title": "Installing aat",
     "section": "Installing",
-    "text": "Installing\nTo use the aat model from another project, install the core module directly from this repository:\npip install git+https://github.com/neelsmith/aat.git\nTo include aat.english (the dspy-based English pipeline):\npip install \"aat[english] @ git+https://github.com/neelsmith/aat.git\"\nTo pin to a specific branch, tag, or commit appending @&lt;ref&gt; to the URL, e.g.\npip install \"aat[english] @ git+https://github.com/neelsmith/aat.git@v0.1.0`",
+    "text": "Installing\nInstall the core module directly from this repository:\npip install git+https://github.com/neelsmith/aat.git\nTo include aat.english (the dspy-based English pipeline):\npip install \"aat[english] @ git+https://github.com/neelsmith/aat.git\"\nTo pin to a specific branch, tag, or commit appending @&lt;ref&gt; to the URL, e.g.\npip install \"aat[english] @ git+https://github.com/neelsmith/aat.git@v0.1.0`",
     "crumbs": [
       "Background",
       "Installing `aat`"

@@ -114,11 +114,27 @@ ul.task-list li input[type="checkbox"] {
   </li>  
 </ul>
             <ul class="navbar-nav navbar-nav-scroll ms-auto">
-  <li class="nav-item compact">
-    <a class="nav-link" href="https://github.com/neelsmith/aat"> <i class="bi bi-github" role="img" aria-label="GitHub">
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-bi-github" role="link" data-bs-toggle="dropdown" aria-expanded="false">
+      <i class="bi bi-github" role="img">
 </i> 
-<span class="menu-text"></span></a>
+ <span class="menu-text"></span>
+    </a>
+    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="nav-menu-bi-github">    
+        <li>
+    <a class="dropdown-item" href="https://github.com/neelsmith/aat">
+ <span class="dropdown-text">aat on github</span></a>
   </li>  
+        <li>
+    <a class="dropdown-item" href="https://neelsmith.github.io">
+ <span class="dropdown-text">About me</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="https://neelsmith.github.io/projects">
+ <span class="dropdown-text">Other projects</span></a>
+  </li>  
+    </ul>
+  </li>
 </ul>
           </div> <!-- /navcollapse -->
             <div class="quarto-navbar-tools">
@@ -155,6 +171,7 @@ ul.task-list li input[type="checkbox"] {
  <span class="menu-text">About AAT</span></a>
   </div>
 </li>
+        <li class="px-0"><hr class="sidebar-divider hi "></li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../bg/install.html" class="sidebar-item-text sidebar-link">
@@ -177,7 +194,7 @@ ul.task-list li input[type="checkbox"] {
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#package-design" id="toc-package-design" class="nav-link active" data-scroll-target="#package-design">Package design</a></li>
+  <li><a href="#a-graph-theoretic-note" id="toc-a-graph-theoretic-note" class="nav-link active" data-scroll-target="#a-graph-theoretic-note">A graph-theoretic note</a></li>
   </ul>
 </nav>
     </div>
@@ -203,14 +220,11 @@ ul.task-list li input[type="checkbox"] {
 </header>
 
 
-<p><em>TBA</em></p>
-<section id="package-design" class="level2">
-<h2 class="anchored" data-anchor-id="package-design">Package design</h2>
-<p>The package is deliberately split into two independent modules:</p>
-<ul>
-<li><strong><code>aat.core</code></strong> implements the AAT model with classes for input (<code>CitableToken</code>/<code>CitedPassage</code>) and output (<code>AATNode</code>/<code>AATGraph</code>). It includes functions to validate and serialize analyses to a plain-text format.</li>
-<li><strong><code>aat.english</code></strong> uses an LM configured with <code>dspy</code> to tokenize English text and compose an <code>AATGraph</code>.</li>
-</ul>
+<p>Agent-Action-Target (AAT) is a reductive model of natural-language syntax focused on verbal ideas (actions), with their immediate subjects and objects (actors and targets).</p>
+<p>The intentional choice to ignore other syntactic features sets AAT apart from models like the <a href="https://universaldependencies.org">Universal Dependency</a> scheme (UD). This stems from a conviction that at some level of detail, it becomes impossible to account for the syntax of a language using universal descriptors. By accounting solely for syntax identifying agents, actions and targets of actions, AAT tries to encode syntactic structures that can be recognized universally, or at least in a large number of numbers. AAT should be semantically compatible with language-specific parsers providing complete, fine-grained syntactic parsing for a single languiage. Language models like <code>arsgrammatica</code> for Latin, <code>grammatike</code> for ancient Greek and <code>diqduq</code> for Biblical Hebrew, for example, can all instantiate a reduced AAT graph from the fuller syntactic graphs their analyses produce. This can be a powerful aid to aligning and comparing versions of a text in multiple languages.</p>
+<section id="a-graph-theoretic-note" class="level2">
+<h2 class="anchored" data-anchor-id="a-graph-theoretic-note">A graph-theoretic note</h2>
+<p>AAT’s graph maintains coordinated or subordinated ranking of all actions elements. One side effect of this is that all AAT graphs are <code>trees</code>.</p>
 
 
 </section>
@@ -623,7 +637,7 @@ ul.task-list li input[type="checkbox"] {
       &nbsp;
     </div>   
     <div class="nav-footer-center">
-<p>Documentation for release version <strong>0.2.0</strong></p>
+<p>Documentation for release version <strong>0.2.1</strong></p>
 </div>
     <div class="nav-footer-right">
       &nbsp;
