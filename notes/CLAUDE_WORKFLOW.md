@@ -3,6 +3,16 @@
 This project gets ongoing help from Claude (Anthropic's assistant) across many separate sessions. Sessions don't share memory with each other except through whatever's written down -- conversation summaries carried forward by the tool are lossy and don't survive indefinitely, but this repo does. This file is where that continuity actually lives: how a session can reach this repo, what it delivers and how, and the standing constraints that apply regardless of which mode a given session is in. Read it at the start of any session picking this project back up, and add to it (see "Session log" below) at the end of any session that did something worth a future session -- or Neel -- knowing about.
 
 
+## Local checkouts across machines
+
+Neel works on this repo from more than one machine, each with its own independent local clone -- these are NOT synced automatically, so keep them in step with the usual `git pull`/`git push`, and don't assume one checkout's state (branch, working tree, uncommitted changes) matches another's without checking `git status`/`git log` fresh.
+
+- **`candidemini-local`** -- `~/Desktop/syntax-cowork-repos/aat`. Cowork-linked as of 2026-09-21, so a device-linked Claude session can read and write here directly (see "Device-linked" below).
+- **Neel's other laptop** -- `~/Desktop/syntax-cowork-repos/aat` (same relative path, for consistency). Not linked to Cowork as of 2026-09-21 -- a session reaches this machine's checkout only if it's separately linked in the future, or (from `candidemini-local` or cloud-only mode) via a delivered patch that Neel applies there himself.
+
+This repo previously also had a clone at `~/Desktop/syntax-repos/aat` on `candidemini-local`; that was moved to `~/Desktop/syntax-cowork-repos/aat` on 2026-09-21 and no longer exists at the old path.
+
+
 ## Two operating modes, and what changes because of them
 
 A Claude session's access to this repo varies from one session to the next, and isn't something either side chooses in advance -- it's a property of how the session happens to be connected when it starts, and it can change mid-session too.
