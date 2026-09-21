@@ -17,3 +17,16 @@ The `aat` package:
 
 
 
+## An example
+
+> Four score and seven years ago our fathers brought forth, upon this continent, a new nation, conceived in Liberty, and dedicated to the proposition that all men are created equal.
+
+
+**Analysis viewed with `graphviz`**:
+
+![AAT graph from opening of Lincoln's Gettysburg Address.](./imgs/4score.png)
+
+**The same analysis highlighted in its textual context**:
+
+![Input sentence and highlighting of AAT analysis.](./imgs/4score-hilites.png)
+
