@@ -195,12 +195,11 @@ def _(configure_lm):
 
 @app.cell
 def _():
-    from aat.core import CitedPassage, graph_to_mermaid, write_analysis
+    from aat.core import graph_to_mermaid, write_analysis
     from aat.english import DEFAULT_CEILING, analyze_passage, tokens_to_html
     from aat.lm_cost import format_lm_cost, summarize_lm_cost
 
     return (
-        CitedPassage,
         DEFAULT_CEILING,
         analyze_passage,
         format_lm_cost,
@@ -338,33 +337,19 @@ def _(mo):
 
 
 @app.cell
-def _(CitedPassage, passage_form):
-    # The passage last submitted, kept as a CitedPassage so it can be
-    # written back out (write_analysis()) alongside its graph -- built
-    # straight from the form's own value, so it's available for saving
-    # even independent of how the analysis cell below is implemented.
-    passage_for_save = None
-    if passage_form.value and passage_form.value.get("passage_input"):
-        passage_for_save = CitedPassage(
-            context=passage_form.value.get("context_input") or "",
-            text=passage_form.value["passage_input"],
-        )
-    return (passage_for_save,)
-
-
-@app.cell
-def _(passage_for_save):
+def _(tokens):
     # A safe filename base derived from the passage's own context
     # reference (e.g. a CTS/CITE URN like "urn:cite2:aat:examples.v1:ex1",
-    # full of ':' and '.') -- every run of characters that isn't a
-    # letter, digit, '_', or '-' collapses to a single '_', with
-    # leading/trailing '_' stripped. Falls back to "analysis" if that
-    # leaves nothing (e.g. no context was given).
+    # full of ':' and '.') -- taken from the first token's own context
+    # (every token in `tokens` shares one context here, since this
+    # notebook analyzes a single passage at a time). Every run of
+    # characters that isn't a letter, digit, '_', or '-' collapses to a
+    # single '_', with leading/trailing '_' stripped. Falls back to
+    # "analysis" if that leaves nothing (e.g. no context was given, or
+    # no analysis has run yet).
     filename_base = "analysis"
-    if passage_for_save is not None:
-        slug = "".join(
-            c if (c.isalnum() or c in "_-") else "_" for c in passage_for_save.context
-        )
+    if tokens:
+        slug = "".join(c if (c.isalnum() or c in "_-") else "_" for c in tokens[0].context)
         slug = slug.strip("_")
         filename_base = slug or "analysis"
     return (filename_base,)
@@ -376,9 +361,9 @@ def _(
     filename_base,
     graph,
     mo,
-    passage_for_save,
     save_button,
     save_dir_browser,
+    tokens,
     write_analysis,
 ):
     # Only runs (writes a file) when save_button is actually clicked --
@@ -386,10 +371,15 @@ def _(
     # that click, then resets to False, so this cell is a no-op on every
     # other reactive re-run (e.g. re-submitting the form, changing the
     # orientation control, or just browsing to a different directory
-    # without clicking Save).
+    # without clicking Save). write_analysis() gets `tokens` directly --
+    # the exact CitableToken list analyze_passage() produced, not a raw
+    # passage to be re-tokenized later -- so the saved file's own
+    # '#!tokens' block already IS the complete input, no re-derivation
+    # needed on reload (see aat.core.serialization's own module
+    # docstring).
     save_status = None
     if save_button.value:
-        if graph is None or passage_for_save is None:
+        if graph is None or not tokens:
             save_status = mo.callout(
                 mo.md("No analysis to save yet -- build a graph first."), kind="warn"
             )
@@ -403,7 +393,7 @@ def _(
                 else Path(__file__).parent.parent
             )
             save_path = Path(save_dir) / f"{filename_base}.txt"
-            write_analysis([passage_for_save], graph, str(save_path))
+            write_analysis(tokens, graph, str(save_path))
             save_status = mo.callout(
                 mo.md(f"Saved analysis to `{save_path}`."), kind="success"
             )

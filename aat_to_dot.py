@@ -1,7 +1,7 @@
 """
 A runnable script that reads a serialized AAT analysis from stdin -- the
 same plain-text format aat.core.write_nodes()/serialize_nodes() produce
-(a '#!aatnodes' block; a '#!passages' block, if also present -- e.g.
+(a '#!aatnodes' block; a '#!tokens' block, if also present -- e.g.
 piped straight from aat_main.py's own stdout -- is simply ignored, see
 aat.core.read_graph()) -- and writes it back out as a Graphviz DOT
 digraph on stdout, via aat.core.graph_to_dot().
@@ -54,7 +54,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description=(
             "Read a serialized AAT analysis from stdin (aat.core's plain-text "
-            "'#!aatnodes' format -- a '#!passages' block, if present, is "
+            "'#!aatnodes' format -- a '#!tokens' block, if present, is "
             "ignored) and write it out as a Graphviz DOT digraph on stdout."
         )
     )

@@ -3,7 +3,7 @@ A runnable script that reads an entire corpus of citable passages from a
 CEX (CITE Exchange) file's '#!ctsdata' block (see aat.core.cex for the
 format itself) and analyzes every passage through the aat.english
 pipeline, writing ONE combined serialized analysis to stdout -- the same
-'#!passages'/'#!aatnodes' plain-text format aat.core.serialize_analysis()/
+'#!tokens'/'#!aatnodes' plain-text format aat.core.serialize_analysis()/
 aat_main.py's own stdout use, just covering every passage in the corpus
 at once instead of a single `--passage` string.
 
@@ -75,5 +75,5 @@ if __name__ == "__main__":
         sys.exit(f"aat_corpus.py: {exc}")
 
     _configure_lm()
-    _tokens, graph = analyze_passages(passages)
-    sys.stdout.write(serialize_analysis(passages, graph))
+    tokens, graph = analyze_passages(passages)
+    sys.stdout.write(serialize_analysis(tokens, graph))

@@ -9,6 +9,7 @@ import argparse
 import os
 import sys
 from pathlib import Path
+from typing import List
 
 import dspy
 from dotenv import load_dotenv
@@ -68,23 +69,25 @@ def _configure_lm():
     return lm
 
 
-from aat.core import AATGraph, CitedPassage, serialize_analysis  # noqa: E402
+from aat.core import AATGraph, CitableToken, serialize_analysis  # noqa: E402
 from aat.english import DEFAULT_CEILING, analyze_passage  # noqa: E402
 
 
-def _write_serialized_analysis(passage: CitedPassage, graph: AATGraph) -> None:
+def _write_serialized_analysis(tokens: List[CitableToken], graph: AATGraph) -> None:
     """Write the analysis to stdout in the same plain-text format
-    aat.core.serialize_analysis()/write_analysis() use: a `#!passages`
-    block (this passage's own context/text) followed by a `#!aatnodes`
-    block (the resulting AATGraph). Prints nothing else to stdout, so the
-    output can be redirected straight to a file --
+    aat.core.serialize_analysis()/write_analysis() use: a `#!tokens`
+    block (this passage's own complete, already-tokenized input --
+    exactly what analyze_passage() below produced, not re-derived)
+    followed by a `#!aatnodes` block (the resulting AATGraph). Prints
+    nothing else to stdout, so the output can be redirected straight to
+    a file --
 
         python3 aat_main.py --passage "..." > analysis.txt
 
     -- and reloaded later with aat.core.read_analysis() (or the
     aat_reader.py notebook), with no separate save step needed.
     """
-    sys.stdout.write(serialize_analysis([passage], graph))
+    sys.stdout.write(serialize_analysis(tokens, graph))
 
 
 if __name__ == "__main__":
@@ -105,4 +108,4 @@ if __name__ == "__main__":
 
     _configure_lm()
     _tokens, graph = analyze_passage(args.passage, context=args.context)
-    _write_serialized_analysis(CitedPassage(context=args.context, text=args.passage), graph)
+    _write_serialized_analysis(_tokens, graph)

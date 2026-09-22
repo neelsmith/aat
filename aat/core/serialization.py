@@ -1,5 +1,5 @@
 """
-Plain-text, pipe-delimited persistence for AATGraph and CitedPassage,
+Plain-text, pipe-delimited persistence for AATGraph and CitableToken,
 independent of language or of how the graph was produced -- an analyzed
 passage can be saved, diffed, hand-edited, or reloaded without re-running
 any pipeline. There are two independent block types, either of which may
@@ -11,31 +11,55 @@ appear on its own or together in one file:
     homework1|t2|ate|action|
     homework1|t3|homework|target|t2
 
-    #!passages
-    context|text
-    homework1|The dog ate the homework.
+    #!tokens
+    context|id|value
+    homework1|t1|The
+    homework1|t2|dog
+    homework1|t3|ate
+    homework1|t4|my
+    homework1|t5|homework
+    homework1|t6|.
 
 `#!aatnodes` (read_nodes()/write_nodes()/read_graph()) is the AAT graph
-itself. `#!passages` (read_passages()/write_passages()) is the passage(s)
-the graph was built from -- context and raw text, nothing else -- so a
-caller with no LM access can still recover a passage's tokens
-deterministically (aat.english.tokenize() needs no LM, only the raw
-text) and pair them back up with the already-analyzed graph, without
-re-running the (LM-dependent) analysis step. serialize_analysis()/
-write_analysis() (a thin wrapper around it) and read_analysis() build/
-write/read both blocks together for exactly this use
-case -- see their own docstrings.
+itself. `#!tokens` (read_tokens()/write_tokens()) is the complete,
+already-tokenized input every node's `id` refers back to -- EVERY token
+of the passage(s) analyzed, not just the ones that became a node (a
+passage with six tokens and three nodes still has six rows here), in
+reading order (row order matters for this block, unlike `#!aatnodes`,
+where a node's position is meaningless and only its `id` and
+`related_node` are read). serialize_analysis()/write_analysis() (a thin
+wrapper around it) and read_analysis() build/write/read both blocks
+together for exactly this use case -- see their own docstrings.
 
-`related_node` is left blank (not the literal string 'None') for a node
-with no related_node -- currently only ever an independent action node,
-per AATNode's own docstring; agent/target nodes always have one.
+An earlier version of this format saved a `#!passages` block instead (a
+passage's raw context/text, not its tokens), on the theory that
+aat.english.tokenize() could deterministically re-derive the token list
+later with no LM access needed. That turned out to have two real
+problems worth recording here: a reload's correctness silently depended
+on the tokenizer staying byte-for-byte identical to whatever version
+produced the original analysis, forever, with nothing to catch a future
+drift; and it had no way at all to represent a token list
+aat.english.tokenize_corpus_by_sentence() produced (composite ids like
+"1.14.t3" spanning several citation units, per aat.english.sentences),
+so a file `aat_corpus_graph.py` saved couldn't be reloaded except by
+separately re-running that same clustering logic. Storing the actual
+resolved token list sidesteps both: reading a `#!tokens` block back is
+just data, never re-derived by re-running any particular version of any
+particular function, and it represents whatever token list the original
+analysis actually used, composite ids included, with no special-casing
+for how they were produced.
+
+`related_node` (in an `#!aatnodes` block) is left blank (not the literal
+string 'None') for a node with no related_node -- currently only ever an
+independent action node, per AATNode's own docstring; agent/target nodes
+always have one.
 
 Multiple blocks of the SAME type in one file are concatenated, in file
 order, into the one list their reader returns -- so simply concatenating
-several write_nodes()/serialize_nodes() (or write_passages()/
-serialize_passages()) outputs together and reading the result back gives
+several write_nodes()/serialize_nodes() (or write_tokens()/
+serialize_tokens()) outputs together and reading the result back gives
 one combined list. A file may freely mix block types (as write_analysis()
-does): each typed reader (read_nodes(), read_passages()) reads only the
+does): each typed reader (read_nodes(), read_tokens()) reads only the
 blocks matching its own label and skips over any other block's rows
 entirely, so the two block types never interfere with each other's
 parsing or validation.
@@ -44,17 +68,17 @@ parsing or validation.
 from typing import List, Optional, Tuple
 
 from .graph import AATGraph, AATNode
-from .tokens import CitedPassage
+from .tokens import CitableToken
 
 AATNODES_LABEL = "#!aatnodes"
 _AATNODES_HEADER = "context|id|value|role|related_node"
 
-PASSAGES_LABEL = "#!passages"
-_PASSAGES_HEADER = "context|text"
+TOKENS_LABEL = "#!tokens"
+_TOKENS_HEADER = "context|id|value"
 
 
 def _read_blocks(path: str, label: str, header: str) -> Tuple[List[List[str]], bool]:
-    """Shared block-parsing core behind read_nodes() and read_passages():
+    """Shared block-parsing core behind read_nodes() and read_tokens():
     scan every '#!'-labelled block in `path`, and return (rows, seen) --
     `rows` is the split (by '|') data rows from every block whose own
     label is exactly `label`, concatenated in file order; `seen` is
@@ -63,7 +87,7 @@ def _read_blocks(path: str, label: str, header: str) -> Tuple[List[List[str]], b
     rows", which `rows == []` alone can't).
 
     A block whose label is something OTHER than `label` (e.g. reading
-    for `AATNODES_LABEL` in a file that also has a `PASSAGES_LABEL`
+    for `AATNODES_LABEL` in a file that also has a `TOKENS_LABEL`
     block) is skipped entirely -- its header line is consumed but never
     checked against `header`, and its data rows are ignored without
     being column-count-validated -- so one file can hold both block
@@ -162,7 +186,7 @@ def write_nodes(nodes: List[AATNode], path: str) -> None:
 def read_nodes(path: str) -> List[AATNode]:
     """Read every '#!aatnodes' block in `path` and return their rows,
     concatenated in file order, as a list of AATNode -- other block
-    types in the same file (e.g. a '#!passages' block) are ignored, see
+    types in the same file (e.g. a '#!tokens' block) are ignored, see
     _read_blocks().
 
     Raises ValueError (via _read_blocks()) for a malformed file -- see
@@ -194,72 +218,82 @@ def read_graph(path: str) -> AATGraph:
     return AATGraph(nodes=read_nodes(path))
 
 
-def serialize_passages(passages: List[CitedPassage]) -> str:
-    """Render `passages` as one '#!passages' block, pipe-delimited, and
-    return it as a string. Same no-escaping caveat as serialize_nodes():
-    avoid '|' in `text` if you plan to round-trip through this format."""
-    lines = [PASSAGES_LABEL, _PASSAGES_HEADER]
-    for passage in passages:
-        lines.append(f"{passage.context}|{passage.text}")
+def serialize_tokens(tokens: List[CitableToken]) -> str:
+    """Render `tokens` as one '#!tokens' block, pipe-delimited, and
+    return it as a string, in `tokens`' own order -- unlike
+    serialize_nodes(), row order here is meaningful (it's the only thing
+    that records reading order; a token's `id` alone doesn't, especially
+    for a composite sentence-spanning id like "1.14.t3" -- see this
+    module's own top docstring). Same no-escaping caveat as
+    serialize_nodes(): avoid '|' in `value` if you plan to round-trip
+    through this format."""
+    lines = [TOKENS_LABEL, _TOKENS_HEADER]
+    for token in tokens:
+        lines.append(f"{token.context}|{token.id}|{token.value}")
     return "\n".join(lines) + "\n"
 
 
-def write_passages(passages: List[CitedPassage], path: str) -> None:
-    """Write serialize_passages(passages) to `path`."""
+def write_tokens(tokens: List[CitableToken], path: str) -> None:
+    """Write serialize_tokens(tokens) to `path`."""
     with open(path, "w", encoding="utf-8") as f:
-        f.write(serialize_passages(passages))
+        f.write(serialize_tokens(tokens))
 
 
-def read_passages(path: str) -> List[CitedPassage]:
-    """Read every '#!passages' block in `path` and return their rows,
-    concatenated in file order, as a list of CitedPassage -- other block
-    types in the same file (e.g. a '#!aatnodes' block) are ignored, see
-    _read_blocks().
+def read_tokens(path: str) -> List[CitableToken]:
+    """Read every '#!tokens' block in `path` and return their rows,
+    concatenated in file order (which is also reading order -- see
+    serialize_tokens()'s own docstring), as a list of CitableToken --
+    other block types in the same file (e.g. a '#!aatnodes' block) are
+    ignored, see _read_blocks().
 
     Raises ValueError (via _read_blocks()) for a malformed file. Also
-    raises ValueError if the file has no '#!passages' block at all, same
+    raises ValueError if the file has no '#!tokens' block at all, same
     reasoning as read_nodes()."""
-    rows, seen = _read_blocks(path, PASSAGES_LABEL, _PASSAGES_HEADER)
+    rows, seen = _read_blocks(path, TOKENS_LABEL, _TOKENS_HEADER)
     if not seen:
-        raise ValueError(f"file has no {PASSAGES_LABEL!r} block")
-    return [CitedPassage(context=context, text=text) for context, text in rows]
+        raise ValueError(f"file has no {TOKENS_LABEL!r} block")
+    return [CitableToken(context=context, id=id_, value=value) for context, id_, value in rows]
 
 
-def serialize_analysis(passages: List[CitedPassage], graph: AATGraph) -> str:
+def serialize_analysis(tokens: List[CitableToken], graph: AATGraph) -> str:
     """Render a complete, re-displayable analysis as one string: a
-    '#!passages' block (so aat.english.tokenize() can deterministically
-    rebuild tokens later with no LM access needed at all) followed by a
-    '#!aatnodes' block (the AAT graph an earlier, LM-dependent analysis
-    step produced). write_analysis() is a thin wrapper that writes this
-    same string to a file; call this directly instead when the text
-    itself is what's wanted -- e.g. to hand to a UI that writes the file
-    somewhere else (a chosen directory, a download, ...), or to embed
-    the analysis in something larger without touching disk here at all.
-    read_analysis() is the matching reader for a file written either
-    way -- see that function's own docstring for the intended round
-    trip."""
-    return serialize_passages(passages) + "\n" + serialize_nodes(graph.nodes)
+    '#!tokens' block (the complete, already-tokenized input every node
+    in `graph` refers back to -- no re-tokenization needed to reload it,
+    see this module's own top docstring) followed by a '#!aatnodes'
+    block (the AAT graph an earlier, LM-dependent analysis step
+    produced). write_analysis() is a thin wrapper that writes this same
+    string to a file; call this directly instead when the text itself is
+    what's wanted -- e.g. to hand to a UI that writes the file somewhere
+    else (a chosen directory, a download, ...), or to embed the analysis
+    in something larger without touching disk here at all. read_analysis()
+    is the matching reader for a file written either way -- see that
+    function's own docstring for the intended round trip."""
+    return serialize_tokens(tokens) + "\n" + serialize_nodes(graph.nodes)
 
 
-def write_analysis(passages: List[CitedPassage], graph: AATGraph, path: str) -> None:
-    """Write serialize_analysis(passages, graph) to `path`. See that
+def write_analysis(tokens: List[CitableToken], graph: AATGraph, path: str) -> None:
+    """Write serialize_analysis(tokens, graph) to `path`. See that
     function's own docstring for exactly what gets written, and
     read_analysis() for the matching reader."""
     with open(path, "w", encoding="utf-8") as f:
-        f.write(serialize_analysis(passages, graph))
+        f.write(serialize_analysis(tokens, graph))
 
 
-def read_analysis(path: str) -> Tuple[List[CitedPassage], AATGraph]:
-    """Read a file written by write_analysis(): both its '#!passages'
-    block (as a list of CitedPassage) and its '#!aatnodes' block (as an
-    AATGraph). Raises ValueError if either block is missing -- see
-    read_passages()/read_nodes().
+def read_analysis(path: str) -> Tuple[List[CitableToken], AATGraph]:
+    """Read a file written by write_analysis(): both its '#!tokens'
+    block (as a list of CitableToken, in reading order) and its
+    '#!aatnodes' block (as an AATGraph). Raises ValueError if either
+    block is missing -- see read_tokens()/read_nodes().
 
-    A caller that only has `path` and needs tokens to pair back up with
-    the returned graph (e.g. to highlight them with
-    aat.english.html.tokens_to_html()) re-tokenizes each returned
-    passage with aat.english.tokenize() -- deterministic and LM-free, so
-    this whole round trip needs no LM access at any point."""
-    passages = read_passages(path)
+    Unlike the earlier '#!passages'-based format this replaced, the
+    returned `tokens` are already exactly what the original analysis
+    used -- e.g. straight into aat.english.tokens_to_html(tokens,
+    graph=graph) -- no re-tokenization step, and so no dependency on
+    aat.english.tokenize() (or aat.english.tokenize_corpus_by_sentence()
+    for a sentence-spanning file) at all. This whole round trip still
+    needs no LM access at any point; it just no longer needs to re-run
+    any deterministic code either.
+    """
+    tokens = read_tokens(path)
     graph = read_graph(path)
-    return passages, graph
+    return tokens, graph

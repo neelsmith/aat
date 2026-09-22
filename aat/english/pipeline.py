@@ -88,13 +88,13 @@ def analyze_units_by_sentence(
     aat.english.tokens_to_html()/aat.core.graph_to_mermaid() exactly as
     it would analyze_passages()'s own return value.
 
-    To later serialize the *original*, unmodified citation units (not
-    the merged sentence groups) alongside the returned `graph` -- so a
-    reload needs no LM, only aat.english.sentences.
-    tokenize_corpus_by_sentence() run again on the same `units` -- pass
-    `units` itself (unchanged) as write_analysis()'s own `passages`
-    argument; nothing here needs to return them separately since the
-    caller already has the same list.
+    To later serialize this analysis (e.g. aat.core.write_analysis()),
+    pass this function's own returned `tokens` straight through -- they
+    already carry every composite sentence-spanning id (e.g.
+    "1.14.t3") this function assigned, in reading order, so a reload
+    needs no LM and no re-run of aat.english.sentences.
+    tokenize_corpus_by_sentence() (or any other tokenization step) at
+    all; see aat.core.serialization's own module docstring for why.
 
     Same validate()-and-warn-on-stderr behavior as analyze_passages(),
     once per sentence group rather than once per citation unit -- a

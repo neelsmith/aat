@@ -31,13 +31,15 @@ it came from.
 
 Every function here is pure and LM-free -- deterministic given the same
 ordered list of CitedPassage, the same way aat.english.tokenize() itself
-needs no LM access. That matters for re-display later without an LM (the
-same reasoning as aat.core.serialization's own docstring): a caller that
-only has the original citation units back (e.g. reloaded from a
-`#!passages` block) can call tokenize_corpus_by_sentence() again and get
-back the exact same contexts/ids an earlier, LM-dependent analysis run
-produced, letting the graph be paired back up with its tokens with no LM
-call at all.
+needs no LM access. That determinism is what makes the ids this module
+assigns (e.g. "1.14.t3") trustworthy in the first place: the same
+ordered `units` always produce the same combined contexts/token ids, no
+matter how many times or in what order analysis happens to run. A
+caller that later wants to redisplay an already-saved analysis doesn't
+need to re-run anything in this module at all, though -- write_analysis()
+(aat.core.serialization) saves the actual resolved tokens this module
+produced, composite ids included, so read_analysis() gets them straight
+back from the file's own `#!tokens` block.
 """
 
 from typing import List, Tuple

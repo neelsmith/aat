@@ -22,14 +22,16 @@ def _(mo):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md("""
-    *Browse to and select a file previously saved with `aat_graph.py`'s
-    "Save analysis to file" button (or written directly with
-    `aat.core.write_analysis()`). The passage is re-tokenized
-    (`aat.english.tokenize` -- deterministic, no LM call) and paired back
-    up with the graph the file already has, so this notebook needs no `.env`,
-    no configured LM, and makes no network access at all -- everything it
-    shows comes straight from the file. Once loaded, the diagram
-    orientation control updates it live.*
+    *Browse to and select a file previously saved with any of this
+    project's "Save analysis to file" buttons (`aat_graph.py`,
+    `aat_corpus_graph.py`) or written directly with
+    `aat.core.write_analysis()` -- `aat_main.py`'s and `aat_corpus.py`'s
+    own stdout included. The file's own `#!tokens` block already IS the
+    complete, already-tokenized passage(s) the graph was built from, so
+    this notebook just reads it and pairs it back up with the graph --
+    no re-tokenization, no `.env`, no configured LM, and no network
+    access at all -- everything it shows comes straight from the file.
+    Once loaded, the diagram orientation control updates it live.*
     """)
     return
 
@@ -113,9 +115,9 @@ def _(Path, sys):
 @app.cell
 def _():
     from aat.core import graph_to_mermaid, read_analysis
-    from aat.english import tokenize, tokens_to_html
+    from aat.english import tokens_to_html
 
-    return graph_to_mermaid, read_analysis, tokenize, tokens_to_html
+    return graph_to_mermaid, read_analysis, tokens_to_html
 
 
 @app.cell(hide_code=True)
@@ -161,38 +163,35 @@ def _(mo):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md("""
-    ## Read the file and re-tokenize its passage(s)
+    ## Read the file's tokens and graph
     """)
     return
 
 
 @app.cell
-def _(file_browser, read_analysis, tokenize):
+def _(file_browser, read_analysis):
     # Only (re-)reads the file once a selection has actually been made
     # (file_browser.value is empty until then), and only again when the
     # selection changes -- not on every directory the user browses
     # through on the way there.
     #
-    # A file can hold more than one '#!passages' row (see
-    # aat.core.serialization's own docstring); every passage found is
-    # re-tokenized and the token lists concatenated in file order, so a
-    # single-passage file (the common case -- what aat_graph.py's own
-    # "Save analysis to file" button writes) round-trips exactly like the
-    # original analyze_passage() call did. read_analysis() itself never
-    # touches an LM -- it just parses the file -- and neither does
-    # tokenize(), so nothing in this cell can make a network call.
+    # read_analysis() returns (tokens, graph) directly -- the file's own
+    # '#!tokens' block already is the complete, already-tokenized input,
+    # in reading order, with whatever ids (plain "t3", or a composite
+    # sentence-spanning "1.14.t3") the original analysis assigned -- so
+    # this works identically for a file any of this project's scripts or
+    # notebooks wrote, with no re-tokenization step and so no dependency
+    # on which one of them (or which version of aat.english.tokenize())
+    # produced it. read_analysis() itself never touches an LM or the
+    # network -- it just parses the file.
     tokens, graph, load_error = [], None, None
     if file_browser.value:
         path = file_browser.path(0)
         try:
-            passages, graph = read_analysis(str(path))
+            tokens, graph = read_analysis(str(path))
         except (OSError, ValueError) as exc:
             graph = None
             load_error = f"Couldn't load `{path}`: {exc}"
-        else:
-            tokens = []
-            for passage in passages:
-                tokens.extend(tokenize(passage))
     return graph, load_error, tokens
 
 

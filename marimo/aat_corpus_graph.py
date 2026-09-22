@@ -505,20 +505,23 @@ def _(
     mo,
     save_button,
     save_dir_browser,
-    units,
+    tokens,
     write_analysis,
 ):
-    # write_analysis() gets `units` -- the ORIGINAL, per-citation-unit
-    # passages exactly as read_cex_passages() returned them, not the
-    # merged per-sentence text -- so the saved file's own '#!passages'
-    # block round-trips through aat.english.sentences.
-    # tokenize_corpus_by_sentence() later with no LM access needed, the
-    # same reasoning aat.core.serialization's own docstring gives for
-    # the single-passage case. (aat_reader.py itself doesn't yet know to
-    # re-cluster on reload -- see this notebook's own session-log entry.)
+    # write_analysis() gets `tokens` -- the exact, already-clustered
+    # token list analyze_units_by_sentence() produced, composite
+    # sentence-spanning ids (e.g. "1.14.t3") and all -- rather than the
+    # original per-citation-unit `units`. The saved file's own '#!tokens'
+    # block IS that token list, so reloading it (aat_reader.py, or any
+    # other read_analysis() caller) needs no re-run of
+    # aat.english.sentences.tokenize_corpus_by_sentence() (or any other
+    # tokenizer) to pair tokens back up with the graph -- it works the
+    # same way for a file this notebook saved as for one aat_graph.py or
+    # aat_main.py saved, since a '#!tokens' block doesn't record which
+    # tokenizer produced it, only the result.
     save_status = None
     if save_button.value:
-        if graph is None or not units:
+        if graph is None or not tokens:
             save_status = mo.callout(
                 mo.md("No analysis to save yet -- analyze a corpus first."), kind="warn"
             )
@@ -529,7 +532,7 @@ def _(
                 else Path(__file__).parent.parent
             )
             save_path = Path(save_dir) / f"{filename_base}_analysis.txt"
-            write_analysis(units, graph, str(save_path))
+            write_analysis(tokens, graph, str(save_path))
             save_status = mo.callout(
                 mo.md(f"Saved analysis to `{save_path}`."), kind="success"
             )

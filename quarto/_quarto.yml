@@ -68,6 +68,7 @@ website:
     - title: "Reference"
       contents: 
         - reference/index.qmd   
+        - reference/serialization.qmd
         - reference/testing.qmd
     
         

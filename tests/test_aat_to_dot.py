@@ -9,7 +9,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-from aat.core import AATGraph, AATNode, CitedPassage, serialize_analysis, serialize_nodes
+from aat.core import AATGraph, AATNode, CitableToken, serialize_analysis, serialize_nodes
 
 _REPO_ROOT = Path(__file__).resolve().parent.parent
 _SCRIPT = _REPO_ROOT / "aat_to_dot.py"
@@ -43,16 +43,23 @@ def test_reads_bare_aatnodes_block_and_writes_dot():
     assert result.stdout.rstrip("\n").endswith("}")
 
 
-def test_ignores_a_passages_block_alongside_aatnodes():
+def test_ignores_a_tokens_block_alongside_aatnodes():
     # aat_main.py's own stdout (a full serialize_analysis() -- both
-    # blocks) is the intended common input; confirm the passages block
+    # blocks) is the intended common input; confirm the tokens block
     # is accepted and ignored rather than tripping up the parser.
-    passage = CitedPassage(context="c1", text="The dog ate my homework.")
-    full_analysis = serialize_analysis([passage], _dog_ate_homework_graph())
+    tokens = [
+        CitableToken(context="c1", id="t1", value="The"),
+        CitableToken(context="c1", id="t2", value="dog"),
+        CitableToken(context="c1", id="t3", value="ate"),
+        CitableToken(context="c1", id="t4", value="my"),
+        CitableToken(context="c1", id="t5", value="homework"),
+        CitableToken(context="c1", id="t6", value="."),
+    ]
+    full_analysis = serialize_analysis(tokens, _dog_ate_homework_graph())
     result = _run(full_analysis)
     assert result.returncode == 0, result.stderr
     assert "digraph aat" in result.stdout
-    assert "#!passages" not in result.stdout
+    assert "#!tokens" not in result.stdout
 
 
 def test_orientation_flag_is_passed_through():
