@@ -10,3 +10,7 @@ title: Output format
 context|id|value
 ```
 
+```
+#!aatnodes
+context|id|value|role|related_node
+```
