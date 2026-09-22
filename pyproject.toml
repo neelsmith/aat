@@ -3,11 +3,19 @@ requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "aat"
+# PyPI's "aat" name is already registered to an unrelated, inactive package
+# (timkpaine/aat, an algorithmic-trading library last released in 2019) --
+# distribution and import names are independent in packaging, so this
+# project publishes to PyPI as "aatgraph" while every import in the
+# codebase (and every downstream user's code) still reads `import aat`,
+# `from aat.core import ...`, etc., completely unchanged. `pip install
+# aatgraph` installs the `aat` package.
+name = "aatgraph"
 version = "0.3.0"
 description = "A reductive Agent-Action-Target (AAT) model of natural-language syntax, plus a DSPy-based pipeline applying it to English."
 readme = "README.md"
-license = { file = "LICENSE" }
+license = "GPL-3.0-or-later"
+license-files = ["LICENSE"]
 requires-python = ">=3.10"
 authors = [
     { name = "Neel Smith", email = "nsmith@holycross.edu" },
@@ -18,16 +26,21 @@ dependencies = [
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Science/Research",
-    "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
+    "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
     "Topic :: Text Processing :: Linguistic",
+    "Typing :: Typed",
 ]
 
 [project.optional-dependencies]
 # Only aat.english (and the root scripts that use it) need dspy. aat.core
 # -- the language-agnostic model itself -- has no dependency on it at all,
-# so `pip install aat` alone is enough for a downstream project that only
-# wants CitableToken/AATNode/AATGraph/validate/serialization.
+# so `pip install aatgraph` alone is enough for a downstream project that
+# only wants CitableToken/AATNode/AATGraph/validate/serialization/
+# tokens_to_html/graph_to_mermaid/graph_to_dot (see aat/core/__init__.py).
 english = [
     "dspy>=3.0",
 ]
@@ -46,3 +59,9 @@ Issues = "https://github.com/neelsmith/aat/issues"
 
 [tool.setuptools.packages.find]
 include = ["aat*"]
+
+[tool.setuptools.package-data]
+# PEP 561 marker: aat is fully type-hinted throughout, so ship an empty
+# py.typed file to tell type checkers (mypy, pyright, ...) to use its
+# annotations rather than treating it as untyped.
+aat = ["py.typed"]

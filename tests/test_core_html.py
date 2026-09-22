@@ -1,8 +1,8 @@
-"""Offline tests for aat.english.html.tokens_to_html() -- no dspy needed."""
+"""Offline tests for aat.core.html.tokens_to_html()."""
 
 from aat.core import AATGraph, AATNode, CitableToken
 from aat.core.coloring import assign_action_colors
-from aat.english.html import tokens_to_html
+from aat.core.html import tokens_to_html
 
 
 def _tok(context, id, value):

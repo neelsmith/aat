@@ -85,7 +85,7 @@ def analyze_units_by_sentence(
     `tokens` is every sentence group's tokens concatenated in order,
     `graph` is one AATGraph combining every group's nodes -- so a caller
     (e.g. a marimo notebook) can hand either straight to
-    aat.english.tokens_to_html()/aat.core.graph_to_mermaid() exactly as
+    aat.core.tokens_to_html()/aat.core.graph_to_mermaid() exactly as
     it would analyze_passages()'s own return value.
 
     To later serialize this analysis (e.g. aat.core.write_analysis()),

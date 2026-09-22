@@ -23,11 +23,11 @@ Released under the [GNU General Public License v3 or later](LICENSE).
 
 **Analysis viewed with `graphviz`**:
 
-![AAT graph from opening of Lincoln's Gettysburg Address.](./quarto/imgs/4score.png)
+![AAT graph from opening of Lincoln's Gettysburg Address.](https://raw.githubusercontent.com/neelsmith/aat/refs/heads/main/quarto/imgs/4score.png)
 
 **The same analysis highlighted in its textual context**:
 
-![Input sentence and highlighting of AAT analysis.](./quarto/imgs/4score-hilites.png)
+![Input sentence and highlighting of AAT analysis.](https://raw.githubusercontent.com/neelsmith/aat/refs/heads/main/4score-hilites.png)
 
 
 

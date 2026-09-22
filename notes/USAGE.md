@@ -248,7 +248,9 @@ python3 aat_to_dot.py --orientation LR --no-color < analysis.txt > analysis.dot
 
 ## Rendering tokens as highlighted HTML
 
-`tokens_to_html()` (in `aat/english/html.py`) renders a passage's tokens as one continuous HTML string, reconstructing normal reading spacing (punctuation attaches to the preceding word; opening brackets and the first of a paired quote attach to what follows) rather than putting a space before every token. Pass the same `AATGraph` you'd hand to `graph_to_mermaid()` and every token that's also an AAT graph node is highlighted using the *same* color that node gets in the Mermaid diagram (`aat.core.coloring.assign_action_colors()` -- one shared assignment behind both renderers), with a border style keyed on the node's role: a box around an `action` token, a rounded box around an `agent` token, and an underline under a `target` token.
+`tokens_to_html()` (in `aat/core/html.py`) renders a passage's tokens as one continuous HTML string, reconstructing normal reading spacing (punctuation attaches to the preceding word; opening brackets and the first of a paired quote attach to what follows) rather than putting a space before every token. Pass the same `AATGraph` you'd hand to `graph_to_mermaid()` and every token that's also an AAT graph node is highlighted using the *same* color that node gets in the Mermaid diagram (`aat.core.coloring.assign_action_colors()` -- one shared assignment behind both renderers), with a border style keyed on the node's role: a box around an `action` token, a rounded box around an `agent` token, and an underline under a `target` token.
+
+It lives in `aat.core`, not `aat.english`, even though it only renders English-looking punctuation conventions -- nothing in it needs dspy, so `from aat.core import tokens_to_html` (or `from aat import tokens_to_html`) works with just the base `aat` install, no `english` extra required. It's still re-exported from `aat.english` too, so existing code importing it from there keeps working unchanged.
 
 ```python
 from aat.english import tokenize, tokens_to_html

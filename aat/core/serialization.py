@@ -287,8 +287,9 @@ def read_analysis(path: str) -> Tuple[List[CitableToken], AATGraph]:
 
     Unlike the earlier '#!passages'-based format this replaced, the
     returned `tokens` are already exactly what the original analysis
-    used -- e.g. straight into aat.english.tokens_to_html(tokens,
-    graph=graph) -- no re-tokenization step, and so no dependency on
+    used -- e.g. straight into aat.core.tokens_to_html(tokens,
+    graph=graph) (also re-exported as aat.english.tokens_to_html) -- no
+    re-tokenization step, and so no dependency on
     aat.english.tokenize() (or aat.english.tokenize_corpus_by_sentence()
     for a sentence-spanning file) at all. This whole round trip still
     needs no LM access at any point; it just no longer needs to re-run

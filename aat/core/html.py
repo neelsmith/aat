@@ -52,14 +52,24 @@ Two things this module does, independently of each other:
   token gets highlighted here, not "was" too. Nothing in the current AAT
   graph shape records which other tokens make up a compound action, so
   this module can't recover them.
+
+This module lives in aat.core, not aat.english, even though its name
+(and the fact aat.english is its only caller today) might suggest
+otherwise: nothing in it is English-specific or depends on dspy --
+only aat.core.coloring/graph/tokens and the stdlib `html` module -- so
+a downstream project that only wants aat.core (e.g. a marimo notebook
+exported to WASM/Pyodide, which can't install dspy's dependency
+chain) can render already-produced analyses without pulling in
+aat.english at all. It's re-exported from aat.english too, so
+`from aat.english import tokens_to_html` keeps working unchanged.
 """
 
 import html
 from typing import Dict, List, Optional, Tuple
 
-from ..core.coloring import assign_action_colors
-from ..core.graph import AATGraph
-from ..core.tokens import CitableToken
+from .coloring import assign_action_colors
+from .graph import AATGraph
+from .tokens import CitableToken
 
 _OPENING_BRACKETS = {"(", "[", "{"}
 _CLOSING_BRACKETS = {")", "]", "}"}
