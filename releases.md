@@ -16,6 +16,7 @@ Additions:
 - adds cost tracking output to all notebooks querying a LM
 - refactoring modules for WASM export
 - pipeline for publication to pypi
+- changed build pipeline for docs
 
 
 

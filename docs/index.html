@@ -146,8 +146,14 @@ ul.task-list li input[type="checkbox"] {
 <div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
 <!-- sidebar -->
 <!-- margin-sidebar -->
-    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar zindex-bottom">
-        
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#an-example" id="toc-an-example" class="nav-link active" data-scroll-target="#an-example">An example</a></li>
+  </ul>
+</nav>
     </div>
 <!-- main -->
 <main class="content" id="quarto-document-content">
@@ -175,7 +181,7 @@ ul.task-list li input[type="checkbox"] {
 <ul>
 <li><a href="./bg/about.html">About <code>aat</code></a></li>
 <li><a href="./bg/install.html">Installing <code>aat</code></a></li>
-<li><a href="./bg/conf.html">Configuring a langauge model</a></li>
+<li><a href="./bg/conf.html">Configuring a language model</a></li>
 </ul>
 <p>The <code>aat</code> package:</p>
 <ul>
@@ -183,8 +189,28 @@ ul.task-list li input[type="checkbox"] {
 <li><a href="./guides/index.html">Python recipes</a></li>
 <li><a href="./reference/index.html">Technical reference</a> (including API documentation)</li>
 </ul>
+<section id="an-example" class="level2">
+<h2 class="anchored" data-anchor-id="an-example">An example</h2>
+<blockquote class="blockquote">
+<p>Four score and seven years ago our fathers brought forth, upon this continent, a new nation, conceived in Liberty, and dedicated to the proposition that all men are created equal.</p>
+</blockquote>
+<p><strong>Analysis viewed with <code>graphviz</code></strong>:</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="./imgs/4score.png" class="img-fluid figure-img"></p>
+<figcaption>AAT graph from opening of Lincoln’s Gettysburg Address.</figcaption>
+</figure>
+</div>
+<p><strong>The same analysis highlighted in its textual context</strong>:</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="./imgs/4score-hilites.png" class="img-fluid figure-img"></p>
+<figcaption>Input sentence and highlighting of AAT analysis.</figcaption>
+</figure>
+</div>
 
 
+</section>
 
 </main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">
@@ -594,7 +620,7 @@ ul.task-list li input[type="checkbox"] {
       &nbsp;
     </div>   
     <div class="nav-footer-center">
-<p>Documentation for release version <strong>0.2.1</strong></p>
+<p>Documentation for release version <strong>0.3.0</strong></p>
 </div>
     <div class="nav-footer-right">
       &nbsp;
