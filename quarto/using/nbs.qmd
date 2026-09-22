@@ -2,5 +2,12 @@
 title: Marimo notebooks
 ---
 
+
+## Using LMs to analyze texts
+
 - `marimo/aat_graph.py` lets you enter a passage, analyze it with the configured LM, and visualize the resulting AAT graph. Optionally, save the analysis to a local file.
+- `marimo/aat_corpus_graph.py` lets you load a corpus from a CEX file, analyze it with the configured LM, and visualize the resulting AAT graphs. Optionally, save the analyses to a local file.
+
+## Working with results of analyses
+
 - `marimo/aat_reader.py` lets you load saved analyses from a local file and visualize the AAT graph without any LM.

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "aat"
-version = "0.1.0"
+version = "0.3.0"
 description = "A reductive Agent-Action-Target (AAT) model of natural-language syntax, plus a DSPy-based pipeline applying it to English."
 readme = "README.md"
 license = { file = "LICENSE" }

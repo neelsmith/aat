@@ -9,8 +9,9 @@ from typing import List, Tuple
 
 from aat.core import AATGraph, AATNode, CitableToken, CitedPassage
 
-from .dspy_signatures import analyze, validate
+from .dspy_signatures import validate
 from .sentences import DEFAULT_SENTENCE_TERMINATORS, tokenize_corpus_by_sentence
+from .token_budget import analyze_with_retry
 from .tokenize import tokenize
 
 
@@ -34,7 +35,13 @@ def analyze_passages(passages: List[CitedPassage]) -> Tuple[List[CitableToken], 
 
     for passage in passages:
         tokens = tokenize(passage)
-        result = analyze(passage=passage.text, tokens=tokens)
+        # analyze_with_retry() (token_budget.py), not analyze() directly --
+        # estimates a max_tokens budget from this passage's own token
+        # count and retries with a larger one if the call still comes
+        # back truncated, instead of surfacing a raw AdapterParseError
+        # or a silently incomplete result. See token_budget.py's own
+        # module docstring for the full design.
+        result = analyze_with_retry(passage=passage.text, tokens=tokens)
 
         problems = validate(tokens, result)
         if problems:
@@ -99,7 +106,12 @@ def analyze_units_by_sentence(
     all_nodes: List[AATNode] = []
 
     for combined_context, combined_text, tokens in tokenize_corpus_by_sentence(units, terminators):
-        result = analyze(passage=combined_text, tokens=tokens)
+        # Same analyze_with_retry() as analyze_passages() -- doubly
+        # important here, since a sentence group spanning several
+        # citation units can be considerably longer than any single
+        # citation unit's own text, so a budget sized for one unit alone
+        # is exactly the kind of case that used to truncate.
+        result = analyze_with_retry(passage=combined_text, tokens=tokens)
 
         problems = validate(tokens, result)
         if problems:

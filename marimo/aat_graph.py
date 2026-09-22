@@ -148,7 +148,7 @@ def _(os):
 
 
 @app.cell
-def _(dspy, getenv, os):
+def _(DEFAULT_CEILING, dspy, getenv, os):
     def configure_lm():
         # Reuse an already-configured LM across reactive re-runs -- cheap
         # insurance if this cell itself is ever re-run by hand.
@@ -170,7 +170,13 @@ def _(dspy, getenv, os):
             )
         api_key = os.environ["API_KEY"]
 
-        lm_kwargs = dict(model=model, api_base=api_base)
+        # An explicit numeric baseline, not None (dspy.LM's own default) --
+        # see aat_main.py's _configure_lm() for why: aat.english.token_budget.
+        # analyze_with_retry() overrides max_tokens per call anyway, but
+        # leaving this baseline at None made dspy's own truncation warning
+        # misleadingly report max_tokens=None even when a real, larger
+        # per-call budget had actually been used.
+        lm_kwargs = dict(model=model, api_base=api_base, max_tokens=DEFAULT_CEILING)
         if api_key:
             lm_kwargs["api_key"] = api_key
 
@@ -190,11 +196,12 @@ def _(configure_lm):
 @app.cell
 def _():
     from aat.core import CitedPassage, graph_to_mermaid, write_analysis
-    from aat.english import analyze_passage, tokens_to_html
+    from aat.english import DEFAULT_CEILING, analyze_passage, tokens_to_html
     from aat.lm_cost import format_lm_cost, summarize_lm_cost
 
     return (
         CitedPassage,
+        DEFAULT_CEILING,
         analyze_passage,
         format_lm_cost,
         graph_to_mermaid,

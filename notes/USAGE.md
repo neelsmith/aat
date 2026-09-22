@@ -116,7 +116,7 @@ Every passage gets its own separate LM call (via `analyze_passages()`), so a lar
 
 ## Analyzing a corpus by sentence, across citation-unit boundaries
 
-`aat.english.sentences` groups an ordered list of citation units into the smallest runs that each end a sentence (`cluster_sentences()`, using `.`/`?`/`!` as sentence-final punctuation by default -- pass a different `terminators` string if a corpus needs a different rule), then tokenizes each group as one combined passage (`tokenize_units()`) rather than tokenizing each citation unit on its own. Every token's id stays unique within the combined group by combining its own citation unit's CTS passage component with its position within that unit -- e.g. `"1.14.t3"` -- and the combined group's own context is a CTS range reference (`urn:cts:compnov:bible.genesis.rvvpl:1.14-1.15` for a two-unit group, or just `...:1.14` for a one-unit group). `aat.english.pipeline.analyze_units_by_sentence(units)` is the LM-dependent counterpart that runs each group through `analyze()`/`validate()` and returns `(tokens, graph)` in the same shape `analyze_passages()` does:
+`aat.english.sentences` groups an ordered list of citation units into the smallest runs that each end a sentence (`cluster_sentences()`, using `.`/`?`/`!` as sentence-final punctuation by default -- pass a different `terminators` string if a corpus needs a different rule), then tokenizes each group as one combined passage (`tokenize_units()`) rather than tokenizing each citation unit on its own. Every token's id stays unique within the combined group by combining its own citation unit's CTS passage component with its position within that unit -- e.g. `"1.14.t3"` -- and the combined group's own context is a CTS range reference (`urn:cts:compnov:bible.genesis.rvvpl:1.14-1.15` for a two-unit group, or just `...:1.14` for a one-unit group). `aat.english.pipeline.analyze_units_by_sentence(units)` is the LM-dependent counterpart that runs each group through `analyze_with_retry()`/`validate()` (see "Managing the LM's output token budget" below for what `analyze_with_retry()` adds over calling `analyze()` directly) and returns `(tokens, graph)` in the same shape `analyze_passages()` does:
 
 ```python
 from aat.core import read_cex_passages, write_analysis
@@ -131,6 +131,29 @@ write_analysis(units, graph, "analysis.txt")
 ```
 
 Every function in `aat.english.sentences` is pure and LM-free, deterministic given the same ordered citation units -- the same reasoning `aat.core.serialization`'s own docstring gives for why `write_analysis()`/`read_analysis()` save the *original* passages, not a merged version: a caller with the original citation units back (e.g. reloaded from a saved file's `#!passages` block) can call `aat.english.tokenize_corpus_by_sentence()` again and get back the exact same contexts/ids an earlier, LM-dependent run produced, with no LM access needed to re-pair tokens with an already-saved graph. (`marimo/aat_reader.py` doesn't yet do this automatically on reload -- it re-tokenizes with plain `aat.english.tokenize()`, correct only for a file `aat_graph.py`/`aat_corpus.py` wrote, not one `aat_corpus_graph.py` did -- see the next section.)
+
+
+## Managing the LM's output token budget
+
+Both `analyze_passages()` (and its `analyze_passage()` wrapper) and `analyze_units_by_sentence()` call `aat.english.token_budget.analyze_with_retry()` rather than `aat.english.analyze()` directly. A passage's `reasoning` field plus its `nodes` list grows with how long and syntactically complex the passage is -- and, for a sentence group spanning several citation units, "how long" isn't bounded by any single citation unit's own length either -- so a fixed `max_tokens` is eventually wrong: too small and a real passage gets truncated mid-response (a `dspy.utils.exceptions.AdapterParseError`, or in rarer cases a response that parses but whose `finish_reason` says `"length"` anyway); too large and every call wastes part of its budget.
+
+`analyze_with_retry()` estimates a starting budget from the passage's own token count (`estimate_max_tokens()`, a simple linear fit -- untuned by default, deliberately generous so it overestimates rather than truncates; see `utilities/calibrate_max_tokens.py` below to replace that fit with a real measurement) and, if a call still comes back truncated, retries with a larger budget instead of surfacing the raw error or silently returning an incomplete result:
+
+```python
+from aat.english import analyze_with_retry
+
+result = analyze_with_retry(passage="...", tokens=tokens)
+```
+
+Every marimo notebook and `aat_main.py` also passes an explicit `max_tokens` baseline (`aat.english.DEFAULT_CEILING`) when constructing its `dspy.LM` -- not because an ordinary call needs that much, but because `dspy.LM`'s own truncation warning always reports *that* baseline, never whatever a per-call override `analyze_with_retry()` used, so leaving it at dspy's own default of `None` made every such warning misleadingly claim the call had no budget at all.
+
+To replace the untuned fallback fit with one measured against your actual configured model:
+
+```bash
+python3 utilities/calibrate_max_tokens.py
+```
+
+This runs every `GOLD_EXAMPLES` passage (`tests/fixtures/gold_examples.py`) through the real LM with a generous ceiling, fits `completion_tokens ~ intercept + slope * num_input_tokens` against the results, and writes it to `aat/english/token_budget_calibration.json`, where `estimate_max_tokens()` picks it up automatically. It's a live-LM script with real API cost (one call per gold example) -- re-run it whenever the configured model, the `AgentActionTarget` prompt, or `AATNode`'s own shape changes enough to shift how many output tokens a passage needs.
 
 
 ## Saving and loading a graph
@@ -248,7 +271,7 @@ marimo edit marimo/aat_graph.py
 
 opens it in an editable, reactive browser session; `marimo run marimo/aat_graph.py` runs the same notebook as a read-only app (code cells hidden, just the form and the diagram).
 
-`marimo/aat_corpus_graph.py` is the sentence-spanning, whole-corpus counterpart: browse to a CEX corpus file (two columns -- a CTS URN and that citation unit's own text -- any delimiter), set how many citation units to read (a real safety valve, not a nicety -- every sentence group is its own billed LM call) and click "Analyze corpus". It groups citation units into sentences and analyzes each group as one passage (`aat.english.analyze_units_by_sentence()` -- see "Analyzing a corpus by sentence" above), then shows the same Mermaid-diagram-plus-highlighted-text display, the same "See cost" checkbox, and a "Save analysis to file" button (filename derived from the corpus file's own name, `write_analysis()` given the *original* per-citation-unit passages so the file stays reloadable with no LM access -- see above).
+`marimo/aat_corpus_graph.py` is the sentence-spanning, whole-corpus counterpart: browse to a CEX corpus file (two columns -- a CTS URN and that citation unit's own text -- any delimiter), set how many citation units to read (a real safety valve, not a nicety -- every sentence group is its own billed LM call) and click "Analyze corpus". It groups citation units into sentences and analyzes each group as one passage (`aat.english.analyze_units_by_sentence()` -- see "Analyzing a corpus by sentence" above), each call going through the same automatic truncation-retry as every other notebook (see "Managing the LM's output token budget" above -- worth knowing here specifically, since a sentence spanning several citation units can need a noticeably larger budget than any single unit alone would), then shows the same Mermaid-diagram-plus-highlighted-text display, the same "See cost" checkbox, and a "Save analysis to file" button (filename derived from the corpus file's own name, `write_analysis()` given the *original* per-citation-unit passages so the file stays reloadable with no LM access -- see above).
 
 `marimo/aat_reader.py` is a companion notebook with the identical Mermaid-diagram-plus-highlighted-text display, but instead of a passage form and an LM call, it has a file picker: browse to and select a file `aat_graph.py`'s "Save analysis to file" button wrote (or one written directly with `aat.core.write_analysis()`), and it re-tokenizes the saved passage (`aat.english.tokenize()` -- deterministic, no LM) and pairs it back up with the saved graph. It needs no `.env`, no configured LM, and makes no network access at all -- everything it shows comes straight from the file. **It does not yet know how to reload a file `aat_corpus_graph.py` saved** -- that needs `aat.english.tokenize_corpus_by_sentence()`, not plain `tokenize()`, to correctly re-pair tokens with a sentence-spanning graph; re-run `aat_corpus_graph.py` itself for now (no LM cost the second time around isn't available yet either -- a follow-up worth doing if this notebook sees real use):
 

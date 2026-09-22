@@ -22,6 +22,14 @@ from .sentences import (
     tokenize_units,
     urn_prefix,
 )
+from .token_budget import (
+    DEFAULT_CEILING,
+    DEFAULT_FLOOR,
+    DEFAULT_SAFETY_MARGIN,
+    analyze_with_retry,
+    estimate_max_tokens,
+    get_calibration,
+)
 from .tokenize import tokenize
 
 __all__ = [
@@ -41,4 +49,10 @@ __all__ = [
     "urn_prefix",
     "tokenize_units",
     "tokenize_corpus_by_sentence",
+    "analyze_with_retry",
+    "estimate_max_tokens",
+    "get_calibration",
+    "DEFAULT_CEILING",
+    "DEFAULT_FLOOR",
+    "DEFAULT_SAFETY_MARGIN",
 ]
