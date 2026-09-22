@@ -2,6 +2,10 @@
 
 Current release: *0.2.1*
 
+
+**0.3.0**, *??*: New notebook for parsing a whole CEX corpus.
+
+
 **0.2.1**, *Sept. 15, 2026*: Updates to web site; no changes to code.
 
 

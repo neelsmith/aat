@@ -7,7 +7,7 @@
 
 
 
-Documentation is being added on the project's [github pages](https://neelsmith.github.io/aat/aat.html). (Currently includes several pages of AI slop that need to be edited.)
+Documentation is being added on the project's [github pages](https://neelsmith.github.io/aat/). (Currently includes several pages of AI slop that need to be edited.)
 
 See the [project issue tracker](https://github.com/neelsmith/aat/issues) for known gaps and work in progress or to submit an issue.
 
