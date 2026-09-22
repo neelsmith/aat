@@ -71,3 +71,89 @@ def test_validation_warnings_go_to_stderr_not_stdout(capsys):
     assert captured.out == ""
     assert "Validation warnings" in captured.err
     assert "ghost" in captured.err
+
+def test_analyze_units_by_sentence_spans_citation_units():
+    # Two citation units that only form a complete sentence together --
+    # same shape as the real Genesis 1:14-15 case aat.english.sentences's
+    # own docstring describes. "The dog" (1.1) + "ate the homework."
+    # (1.2) -> tokenized separately, prefixed, combined into one
+    # DummyLM-backed analysis.
+    from aat.core import CitedPassage
+    from aat.english import analyze_units_by_sentence
+
+    answer = {
+        "reasoning": "ate is the action; dog is the agent; homework is the target.",
+        "nodes": [
+            {"context": "urn:cts:test:work:1.1-1.2", "id": "1.2.t1", "value": "ate", "role": "action", "related_node": None},
+            {"context": "urn:cts:test:work:1.1-1.2", "id": "1.1.t2", "value": "dog", "role": "agent", "related_node": "1.2.t1"},
+            {"context": "urn:cts:test:work:1.1-1.2", "id": "1.2.t3", "value": "homework", "role": "target", "related_node": "1.2.t1"},
+        ],
+    }
+    dspy.configure(lm=DummyLM([answer]))
+
+    units = [
+        CitedPassage(context="urn:cts:test:work:1.1", text="The dog"),
+        CitedPassage(context="urn:cts:test:work:1.2", text="ate the homework."),
+    ]
+    tokens, graph = analyze_units_by_sentence(units)
+
+    assert [t.id for t in tokens] == ["1.1.t1", "1.1.t2", "1.2.t1", "1.2.t2", "1.2.t3", "1.2.t4"]
+    assert all(t.context == "urn:cts:test:work:1.1-1.2" for t in tokens)
+    assert graph.actions()[0].id == "1.2.t1"
+    assert graph.agents()[0].id == "1.1.t2"
+    assert graph.targets()[0].id == "1.2.t3"
+
+
+def test_analyze_units_by_sentence_one_sentence_per_group():
+    # Three units forming two sentences (1.1 alone; 1.2+1.3 together) --
+    # confirms one LM call per sentence GROUP, not per citation unit.
+    from aat.core import CitedPassage
+    from aat.english import analyze_units_by_sentence
+
+    answer1 = {
+        "reasoning": "single independent action, no agent/target expressed.",
+        "nodes": [
+            {"context": "urn:cts:test:work:1.1", "id": "1.1.t2", "value": "waited", "role": "action", "related_node": None},
+        ],
+    }
+    answer2 = {
+        "reasoning": "ate is the action; dog is the agent.",
+        "nodes": [
+            {"context": "urn:cts:test:work:1.2-1.3", "id": "1.2.t1", "value": "ate", "role": "action", "related_node": None},
+            {"context": "urn:cts:test:work:1.2-1.3", "id": "1.2.t2", "value": "dog", "role": "agent", "related_node": "1.2.t1"},
+        ],
+    }
+    dspy.configure(lm=DummyLM([answer1, answer2]))
+
+    units = [
+        CitedPassage(context="urn:cts:test:work:1.1", text="He waited."),
+        CitedPassage(context="urn:cts:test:work:1.2", text="The dog"),
+        CitedPassage(context="urn:cts:test:work:1.3", text="ate."),
+    ]
+    tokens, graph = analyze_units_by_sentence(units)
+
+    assert len(graph.nodes) == 3
+    contexts = {t.context for t in tokens}
+    assert contexts == {"urn:cts:test:work:1.1", "urn:cts:test:work:1.2-1.3"}
+
+
+def test_analyze_units_by_sentence_validation_warnings_go_to_stderr(capsys):
+    from aat.core import CitedPassage
+    from aat.english import analyze_units_by_sentence
+
+    broken_answer = {
+        "reasoning": "action found, but related_node points nowhere real.",
+        "nodes": [
+            {"context": "urn:cts:test:work:1.1", "id": "1.1.t2", "value": "ate", "role": "action", "related_node": None},
+            {"context": "urn:cts:test:work:1.1", "id": "1.1.t1", "value": "dog", "role": "agent", "related_node": "ghost"},
+        ],
+    }
+    dspy.configure(lm=DummyLM([broken_answer]))
+
+    analyze_units_by_sentence([CitedPassage(context="urn:cts:test:work:1.1", text="The dog ate.")])
+
+    captured = capsys.readouterr()
+    assert captured.out == ""
+    assert "Validation warnings" in captured.err
+    assert "urn:cts:test:work:1.1" in captured.err
+    assert "ghost" in captured.err

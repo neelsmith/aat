@@ -6,7 +6,7 @@ Background:
 
 - [About `aat`](./bg/about.qmd)
 - [Installing `aat`](./bg/install.qmd)
-- [Configuring a langauge model](./bg/conf.qmd)
+- [Configuring a language model](./bg/conf.qmd)
 
 
 The `aat` package:

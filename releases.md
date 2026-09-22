@@ -3,7 +3,10 @@
 Current release: *0.2.1*
 
 
-**0.3.0**, *??*: New notebook for parsing a whole CEX corpus.
+**0.3.0**, *??*: Additions:
+
+- new marimo notebook for parsing a whole CEX corpus.
+- adds cost tracking to all notebooks querying a LM
 
 
 **0.2.1**, *Sept. 15, 2026*: Updates to web site; no changes to code.

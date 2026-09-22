@@ -10,6 +10,7 @@ from typing import List, Tuple
 from aat.core import AATGraph, AATNode, CitableToken, CitedPassage
 
 from .dspy_signatures import analyze, validate
+from .sentences import DEFAULT_SENTENCE_TERMINATORS, tokenize_corpus_by_sentence
 from .tokenize import tokenize
 
 
@@ -53,3 +54,60 @@ def analyze_passage(text: str, context: str = "") -> Tuple[List[CitableToken], A
     `context` if given, else an empty string) and runs it through
     analyze_passages()."""
     return analyze_passages([CitedPassage(context=context, text=text)])
+
+
+def analyze_units_by_sentence(
+    units: List[CitedPassage], terminators: str = DEFAULT_SENTENCE_TERMINATORS
+) -> Tuple[List[CitableToken], AATGraph]:
+    """Like analyze_passages(), but for a corpus of citation units (e.g.
+    every row from a CEX file's `#!ctsdata` block, in citation order)
+    where a sentence's grammar may span more than one unit -- see
+    aat.english.sentences's own module docstring for why that matters
+    and worked examples.
+
+    Groups `units` into sentences (aat.english.sentences.
+    cluster_sentences()) and analyzes each group as ONE combined passage
+    (aat.english.sentences.tokenize_units() builds its combined context/
+    text/tokens; every unit's own token ids get prefixed with that
+    unit's passage component -- e.g. "1.14.t1" -- so every token across
+    the whole sentence stays unique even though several citation units
+    contributed to it), rather than analyzing each citation unit
+    independently the way analyze_passages()/aat_corpus.py both do.
+
+    Returns (tokens, graph) in the same shape analyze_passages() does --
+    `tokens` is every sentence group's tokens concatenated in order,
+    `graph` is one AATGraph combining every group's nodes -- so a caller
+    (e.g. a marimo notebook) can hand either straight to
+    aat.english.tokens_to_html()/aat.core.graph_to_mermaid() exactly as
+    it would analyze_passages()'s own return value.
+
+    To later serialize the *original*, unmodified citation units (not
+    the merged sentence groups) alongside the returned `graph` -- so a
+    reload needs no LM, only aat.english.sentences.
+    tokenize_corpus_by_sentence() run again on the same `units` -- pass
+    `units` itself (unchanged) as write_analysis()'s own `passages`
+    argument; nothing here needs to return them separately since the
+    caller already has the same list.
+
+    Same validate()-and-warn-on-stderr behavior as analyze_passages(),
+    once per sentence group rather than once per citation unit -- a
+    referential problem in a sentence spanning three citation units is
+    reported once, tagged with that sentence's own combined context, not
+    three times.
+    """
+    all_tokens: List[CitableToken] = []
+    all_nodes: List[AATNode] = []
+
+    for combined_context, combined_text, tokens in tokenize_corpus_by_sentence(units, terminators):
+        result = analyze(passage=combined_text, tokens=tokens)
+
+        problems = validate(tokens, result)
+        if problems:
+            print(f"Validation warnings (context {combined_context!r}):", file=sys.stderr)
+            for p in problems:
+                print(f"  - {p}", file=sys.stderr)
+
+        all_tokens.extend(tokens)
+        all_nodes.extend(result.nodes)
+
+    return all_tokens, AATGraph(nodes=all_nodes)

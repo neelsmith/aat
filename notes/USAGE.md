@@ -112,6 +112,26 @@ cat corpus.cex | python3 aat_corpus.py - > analysis.txt
 
 Every passage gets its own separate LM call (via `analyze_passages()`), so a large corpus means real API cost and real wall-clock time -- there's no batching or parallelism. As with `aat_main.py`, any referential problem `validate()` catches is reported on stderr, never stdout, so it never corrupts the redirected file; and the output pipes straight into `aat_to_dot.py` (see "Rendering a graph as Graphviz dot" below) exactly like `aat_main.py`'s does.
 
+`aat_corpus.py` analyzes every citation unit independently, which is wrong whenever a sentence's own grammar crosses a citation-unit boundary -- a real example from `scratch/eng-rv-vpl-genesis.cex`: Genesis 1:14 ends mid-clause with `:`, and the sentence only completes in 1:15. See the next section for the alternative that handles this.
+
+## Analyzing a corpus by sentence, across citation-unit boundaries
+
+`aat.english.sentences` groups an ordered list of citation units into the smallest runs that each end a sentence (`cluster_sentences()`, using `.`/`?`/`!` as sentence-final punctuation by default -- pass a different `terminators` string if a corpus needs a different rule), then tokenizes each group as one combined passage (`tokenize_units()`) rather than tokenizing each citation unit on its own. Every token's id stays unique within the combined group by combining its own citation unit's CTS passage component with its position within that unit -- e.g. `"1.14.t3"` -- and the combined group's own context is a CTS range reference (`urn:cts:compnov:bible.genesis.rvvpl:1.14-1.15` for a two-unit group, or just `...:1.14` for a one-unit group). `aat.english.pipeline.analyze_units_by_sentence(units)` is the LM-dependent counterpart that runs each group through `analyze()`/`validate()` and returns `(tokens, graph)` in the same shape `analyze_passages()` does:
+
+```python
+from aat.core import read_cex_passages, write_analysis
+from aat.english import analyze_units_by_sentence
+
+units = read_cex_passages("scratch/eng-rv-vpl-genesis.cex", delimiter="|")
+tokens, graph = analyze_units_by_sentence(units)
+
+# Save the ORIGINAL per-citation-unit passages (not the merged sentence
+# text) alongside the graph -- see below for why.
+write_analysis(units, graph, "analysis.txt")
+```
+
+Every function in `aat.english.sentences` is pure and LM-free, deterministic given the same ordered citation units -- the same reasoning `aat.core.serialization`'s own docstring gives for why `write_analysis()`/`read_analysis()` save the *original* passages, not a merged version: a caller with the original citation units back (e.g. reloaded from a saved file's `#!passages` block) can call `aat.english.tokenize_corpus_by_sentence()` again and get back the exact same contexts/ids an earlier, LM-dependent run produced, with no LM access needed to re-pair tokens with an already-saved graph. (`marimo/aat_reader.py` doesn't yet do this automatically on reload -- it re-tokenizes with plain `aat.english.tokenize()`, correct only for a file `aat_graph.py`/`aat_corpus.py` wrote, not one `aat_corpus_graph.py` did -- see the next section.)
+
 
 ## Saving and loading a graph
 
@@ -220,7 +240,7 @@ Note: for a *compound* action (e.g. "was eating"), only the principal-verb token
 
 ## Interactive notebook
 
-`marimo/aat_graph.py` is a [marimo](https://marimo.io) notebook: enter a context ID and a passage in one form, submit it, and it tokenizes the passage, runs it through `analyze_passage()`, and renders the resulting `AATGraph` both as a Mermaid diagram (`aat.core.graph_to_mermaid()`) and as highlighted passage text (`aat.english.tokens_to_html()`), side by side. A separate orientation control (default `BT`) updates the diagram live, without resubmitting the form or making another LM call. A directory picker and a "Save analysis to file" button write the current passage and graph via `aat.core.write_analysis()`; the filename is derived automatically from the context ID (non-alphanumeric characters collapsed to `_`, falling back to `analysis.txt`), so you can reopen the result later without re-running the LM. Needs the 'dev' extra (`pip install -e ".[dev]"`) and a working `.env` (see above) -- the LM is configured as soon as the notebook loads.
+`marimo/aat_graph.py` is a [marimo](https://marimo.io) notebook: enter a context ID and a passage in one form, submit it, and it tokenizes the passage, runs it through `analyze_passage()`, and renders the resulting `AATGraph` both as a Mermaid diagram (`aat.core.graph_to_mermaid()`) and as highlighted passage text (`aat.english.tokens_to_html()`), side by side. A separate orientation control (default `BT`) updates the diagram live, without resubmitting the form or making another LM call. A "See cost" checkbox shows the cumulative dollar cost of every LM call made so far this session (`aat.lm_cost.summarize_lm_cost()`/`format_lm_cost()`, reading `lm.history`) -- every marimo notebook that connects to an LM has this same checkbox, in the same place. A directory picker and a "Save analysis to file" button write the current passage and graph via `aat.core.write_analysis()`; the filename is derived automatically from the context ID (non-alphanumeric characters collapsed to `_`, falling back to `analysis.txt`), so you can reopen the result later without re-running the LM. Needs the 'dev' extra (`pip install -e ".[dev]"`) and a working `.env` (see above) -- the LM is configured as soon as the notebook loads.
 
 ```bash
 marimo edit marimo/aat_graph.py
@@ -228,7 +248,9 @@ marimo edit marimo/aat_graph.py
 
 opens it in an editable, reactive browser session; `marimo run marimo/aat_graph.py` runs the same notebook as a read-only app (code cells hidden, just the form and the diagram).
 
-`marimo/aat_reader.py` is a companion notebook with the identical Mermaid-diagram-plus-highlighted-text display, but instead of a passage form and an LM call, it has a file picker: browse to and select a file `aat_graph.py`'s "Save analysis to file" button wrote (or one written directly with `aat.core.write_analysis()`), and it re-tokenizes the saved passage (`aat.english.tokenize()` -- deterministic, no LM) and pairs it back up with the saved graph. It needs no `.env`, no configured LM, and makes no network access at all -- everything it shows comes straight from the file:
+`marimo/aat_corpus_graph.py` is the sentence-spanning, whole-corpus counterpart: browse to a CEX corpus file (two columns -- a CTS URN and that citation unit's own text -- any delimiter), set how many citation units to read (a real safety valve, not a nicety -- every sentence group is its own billed LM call) and click "Analyze corpus". It groups citation units into sentences and analyzes each group as one passage (`aat.english.analyze_units_by_sentence()` -- see "Analyzing a corpus by sentence" above), then shows the same Mermaid-diagram-plus-highlighted-text display, the same "See cost" checkbox, and a "Save analysis to file" button (filename derived from the corpus file's own name, `write_analysis()` given the *original* per-citation-unit passages so the file stays reloadable with no LM access -- see above).
+
+`marimo/aat_reader.py` is a companion notebook with the identical Mermaid-diagram-plus-highlighted-text display, but instead of a passage form and an LM call, it has a file picker: browse to and select a file `aat_graph.py`'s "Save analysis to file" button wrote (or one written directly with `aat.core.write_analysis()`), and it re-tokenizes the saved passage (`aat.english.tokenize()` -- deterministic, no LM) and pairs it back up with the saved graph. It needs no `.env`, no configured LM, and makes no network access at all -- everything it shows comes straight from the file. **It does not yet know how to reload a file `aat_corpus_graph.py` saved** -- that needs `aat.english.tokenize_corpus_by_sentence()`, not plain `tokenize()`, to correctly re-pair tokens with a sentence-spanning graph; re-run `aat_corpus_graph.py` itself for now (no LM cost the second time around isn't available yet either -- a follow-up worth doing if this notebook sees real use):
 
 ```bash
 marimo edit marimo/aat_reader.py

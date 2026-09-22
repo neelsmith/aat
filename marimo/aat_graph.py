@@ -62,6 +62,12 @@ def _(orientation_input):
 
 
 @app.cell(hide_code=True)
+def _(costdisplay):
+    costdisplay
+    return
+
+
+@app.cell(hide_code=True)
 def _(mo, save_button, save_dir_browser):
     mo.vstack([save_dir_browser, save_button])
     return
@@ -178,18 +184,21 @@ def _(dspy, getenv, os):
 @app.cell
 def _(configure_lm):
     lm = configure_lm()
-    return
+    return (lm,)
 
 
 @app.cell
 def _():
     from aat.core import CitedPassage, graph_to_mermaid, write_analysis
     from aat.english import analyze_passage, tokens_to_html
+    from aat.lm_cost import format_lm_cost, summarize_lm_cost
 
     return (
         CitedPassage,
         analyze_passage,
+        format_lm_cost,
         graph_to_mermaid,
+        summarize_lm_cost,
         tokens_to_html,
         write_analysis,
     )
@@ -236,6 +245,13 @@ def _(mo):
         label="*Diagram orientation*:",
     )
     return (orientation_input,)
+
+
+@app.cell
+def _(mo):
+    seecost = mo.ui.checkbox(label="*See cost*")
+    seecost
+    return (seecost,)
 
 
 @app.cell
@@ -415,6 +431,28 @@ def _(graph, graph_to_mermaid, orientation_input):
     if graph is not None:
         diagram, diagram_warnings = graph_to_mermaid(graph, orientation=orientation_input.value)
     return diagram, diagram_warnings
+
+
+@app.cell
+def _(graph, lm, summarize_lm_cost):
+    # `_ = graph` doesn't do anything with `graph` -- it exists purely so
+    # marimo sees this cell as depending on it and re-runs the cell on
+    # every new analysis. summarize_lm_cost() (aat.lm_cost) sums cost
+    # across every call in lm.history, not just the last one, and never
+    # raises on an empty history (true before the form's first
+    # submission) or on a call served from dspy's own cache (cost=None)
+    # -- see that module's own docstring.
+    _ = graph
+    cost_summary = summarize_lm_cost(lm.history)
+    return (cost_summary,)
+
+
+@app.cell
+def _(cost_summary, format_lm_cost, mo, seecost):
+    costdisplay = None
+    if seecost.value:
+        costdisplay = mo.md(f"**LM cost so far**: {format_lm_cost(cost_summary)}")
+    return (costdisplay,)
 
 
 if __name__ == "__main__":
