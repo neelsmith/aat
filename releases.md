@@ -1,9 +1,9 @@
 # Release history
 
-Current release: *0.2.1*
+Current release: *0.3.0*
 
 
-**0.3.0**, *Sept. 22, 2026*: 
+**0.3.0**, *??*: 
 
 Breaking changes:
 
