@@ -27,7 +27,7 @@ Released under the [GNU General Public License v3 or later](LICENSE).
 
 **The same analysis highlighted in its textual context**:
 
-![Input sentence and highlighting of AAT analysis.](https://raw.githubusercontent.com/neelsmith/aat/refs/heads/main/4score-hilites.png)
+![Input sentence and highlighting of AAT analysis.](https://raw.githubusercontent.com/neelsmith/aat/refs/heads/main/quarto/imgs/4score-hilites.png)
 
 
 
