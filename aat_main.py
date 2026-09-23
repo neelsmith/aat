@@ -9,6 +9,7 @@ import argparse
 import os
 import sys
 from pathlib import Path
+from typing import List
 
 import dspy
 from dotenv import load_dotenv
@@ -47,7 +48,19 @@ def _configure_lm():
     # don't need one at all for a local Ollama daemon -- passing api_key=""
     # explicitly is unnecessary and, depending on the provider, can behave
     # differently than omitting it outright.
-    lm_kwargs = dict(model=model, api_base=api_base)
+    #
+    # An explicit numeric baseline, not None (dspy.LM's own default): every
+    # AgentActionTarget call made through aat.english.pipeline goes through
+    # aat.english.token_budget.analyze_with_retry(), which overrides
+    # max_tokens per call anyway, but leaving THIS baseline at None had a
+    # confusing side effect of its own -- dspy's own truncation warning
+    # (dspy.LM._check_truncation) always reports this baseline, never
+    # whatever a per-call `config={"max_tokens": ...}` override actually
+    # used, so a truncation warning could misleadingly claim
+    # `max_tokens=None` even when analyze_with_retry() had already picked
+    # and used a real, much larger budget. See token_budget.py's own module
+    # docstring for the real incident this fixes.
+    lm_kwargs = dict(model=model, api_base=api_base, max_tokens=DEFAULT_CEILING)
     if api_key:
         lm_kwargs["api_key"] = api_key
 
@@ -56,23 +69,25 @@ def _configure_lm():
     return lm
 
 
-from aat.core import AATGraph, CitedPassage, serialize_analysis  # noqa: E402
-from aat.english import analyze_passage  # noqa: E402
+from aat.core import AATGraph, CitableToken, serialize_analysis  # noqa: E402
+from aat.english import DEFAULT_CEILING, analyze_passage  # noqa: E402
 
 
-def _write_serialized_analysis(passage: CitedPassage, graph: AATGraph) -> None:
+def _write_serialized_analysis(tokens: List[CitableToken], graph: AATGraph) -> None:
     """Write the analysis to stdout in the same plain-text format
-    aat.core.serialize_analysis()/write_analysis() use: a `#!passages`
-    block (this passage's own context/text) followed by a `#!aatnodes`
-    block (the resulting AATGraph). Prints nothing else to stdout, so the
-    output can be redirected straight to a file --
+    aat.core.serialize_analysis()/write_analysis() use: a `#!tokens`
+    block (this passage's own complete, already-tokenized input --
+    exactly what analyze_passage() below produced, not re-derived)
+    followed by a `#!aatnodes` block (the resulting AATGraph). Prints
+    nothing else to stdout, so the output can be redirected straight to
+    a file --
 
         python3 aat_main.py --passage "..." > analysis.txt
 
     -- and reloaded later with aat.core.read_analysis() (or the
     aat_reader.py notebook), with no separate save step needed.
     """
-    sys.stdout.write(serialize_analysis([passage], graph))
+    sys.stdout.write(serialize_analysis(tokens, graph))
 
 
 if __name__ == "__main__":
@@ -93,4 +108,4 @@ if __name__ == "__main__":
 
     _configure_lm()
     _tokens, graph = analyze_passage(args.passage, context=args.context)
-    _write_serialized_analysis(CitedPassage(context=args.context, text=args.passage), graph)
+    _write_serialized_analysis(_tokens, graph)

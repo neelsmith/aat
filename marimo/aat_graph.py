@@ -62,6 +62,12 @@ def _(orientation_input):
 
 
 @app.cell(hide_code=True)
+def _(costdisplay):
+    costdisplay
+    return
+
+
+@app.cell(hide_code=True)
 def _(mo, save_button, save_dir_browser):
     mo.vstack([save_dir_browser, save_button])
     return
@@ -142,7 +148,7 @@ def _(os):
 
 
 @app.cell
-def _(dspy, getenv, os):
+def _(DEFAULT_CEILING, dspy, getenv, os):
     def configure_lm():
         # Reuse an already-configured LM across reactive re-runs -- cheap
         # insurance if this cell itself is ever re-run by hand.
@@ -164,7 +170,13 @@ def _(dspy, getenv, os):
             )
         api_key = os.environ["API_KEY"]
 
-        lm_kwargs = dict(model=model, api_base=api_base)
+        # An explicit numeric baseline, not None (dspy.LM's own default) --
+        # see aat_main.py's _configure_lm() for why: aat.english.token_budget.
+        # analyze_with_retry() overrides max_tokens per call anyway, but
+        # leaving this baseline at None made dspy's own truncation warning
+        # misleadingly report max_tokens=None even when a real, larger
+        # per-call budget had actually been used.
+        lm_kwargs = dict(model=model, api_base=api_base, max_tokens=DEFAULT_CEILING)
         if api_key:
             lm_kwargs["api_key"] = api_key
 
@@ -178,18 +190,21 @@ def _(dspy, getenv, os):
 @app.cell
 def _(configure_lm):
     lm = configure_lm()
-    return
+    return (lm,)
 
 
 @app.cell
 def _():
-    from aat.core import CitedPassage, graph_to_mermaid, write_analysis
-    from aat.english import analyze_passage, tokens_to_html
+    from aat.core import graph_to_mermaid, write_analysis
+    from aat.english import DEFAULT_CEILING, analyze_passage, tokens_to_html
+    from aat.lm_cost import format_lm_cost, summarize_lm_cost
 
     return (
-        CitedPassage,
+        DEFAULT_CEILING,
         analyze_passage,
+        format_lm_cost,
         graph_to_mermaid,
+        summarize_lm_cost,
         tokens_to_html,
         write_analysis,
     )
@@ -236,6 +251,13 @@ def _(mo):
         label="*Diagram orientation*:",
     )
     return (orientation_input,)
+
+
+@app.cell
+def _(mo):
+    seecost = mo.ui.checkbox(label="*See cost*")
+    seecost
+    return (seecost,)
 
 
 @app.cell
@@ -315,33 +337,19 @@ def _(mo):
 
 
 @app.cell
-def _(CitedPassage, passage_form):
-    # The passage last submitted, kept as a CitedPassage so it can be
-    # written back out (write_analysis()) alongside its graph -- built
-    # straight from the form's own value, so it's available for saving
-    # even independent of how the analysis cell below is implemented.
-    passage_for_save = None
-    if passage_form.value and passage_form.value.get("passage_input"):
-        passage_for_save = CitedPassage(
-            context=passage_form.value.get("context_input") or "",
-            text=passage_form.value["passage_input"],
-        )
-    return (passage_for_save,)
-
-
-@app.cell
-def _(passage_for_save):
+def _(tokens):
     # A safe filename base derived from the passage's own context
     # reference (e.g. a CTS/CITE URN like "urn:cite2:aat:examples.v1:ex1",
-    # full of ':' and '.') -- every run of characters that isn't a
-    # letter, digit, '_', or '-' collapses to a single '_', with
-    # leading/trailing '_' stripped. Falls back to "analysis" if that
-    # leaves nothing (e.g. no context was given).
+    # full of ':' and '.') -- taken from the first token's own context
+    # (every token in `tokens` shares one context here, since this
+    # notebook analyzes a single passage at a time). Every run of
+    # characters that isn't a letter, digit, '_', or '-' collapses to a
+    # single '_', with leading/trailing '_' stripped. Falls back to
+    # "analysis" if that leaves nothing (e.g. no context was given, or
+    # no analysis has run yet).
     filename_base = "analysis"
-    if passage_for_save is not None:
-        slug = "".join(
-            c if (c.isalnum() or c in "_-") else "_" for c in passage_for_save.context
-        )
+    if tokens:
+        slug = "".join(c if (c.isalnum() or c in "_-") else "_" for c in tokens[0].context)
         slug = slug.strip("_")
         filename_base = slug or "analysis"
     return (filename_base,)
@@ -353,9 +361,9 @@ def _(
     filename_base,
     graph,
     mo,
-    passage_for_save,
     save_button,
     save_dir_browser,
+    tokens,
     write_analysis,
 ):
     # Only runs (writes a file) when save_button is actually clicked --
@@ -363,10 +371,15 @@ def _(
     # that click, then resets to False, so this cell is a no-op on every
     # other reactive re-run (e.g. re-submitting the form, changing the
     # orientation control, or just browsing to a different directory
-    # without clicking Save).
+    # without clicking Save). write_analysis() gets `tokens` directly --
+    # the exact CitableToken list analyze_passage() produced, not a raw
+    # passage to be re-tokenized later -- so the saved file's own
+    # '#!tokens' block already IS the complete input, no re-derivation
+    # needed on reload (see aat.core.serialization's own module
+    # docstring).
     save_status = None
     if save_button.value:
-        if graph is None or passage_for_save is None:
+        if graph is None or not tokens:
             save_status = mo.callout(
                 mo.md("No analysis to save yet -- build a graph first."), kind="warn"
             )
@@ -380,7 +393,7 @@ def _(
                 else Path(__file__).parent.parent
             )
             save_path = Path(save_dir) / f"{filename_base}.txt"
-            write_analysis([passage_for_save], graph, str(save_path))
+            write_analysis(tokens, graph, str(save_path))
             save_status = mo.callout(
                 mo.md(f"Saved analysis to `{save_path}`."), kind="success"
             )
@@ -415,6 +428,28 @@ def _(graph, graph_to_mermaid, orientation_input):
     if graph is not None:
         diagram, diagram_warnings = graph_to_mermaid(graph, orientation=orientation_input.value)
     return diagram, diagram_warnings
+
+
+@app.cell
+def _(graph, lm, summarize_lm_cost):
+    # `_ = graph` doesn't do anything with `graph` -- it exists purely so
+    # marimo sees this cell as depending on it and re-runs the cell on
+    # every new analysis. summarize_lm_cost() (aat.lm_cost) sums cost
+    # across every call in lm.history, not just the last one, and never
+    # raises on an empty history (true before the form's first
+    # submission) or on a call served from dspy's own cache (cost=None)
+    # -- see that module's own docstring.
+    _ = graph
+    cost_summary = summarize_lm_cost(lm.history)
+    return (cost_summary,)
+
+
+@app.cell
+def _(cost_summary, format_lm_cost, mo, seecost):
+    costdisplay = None
+    if seecost.value:
+        costdisplay = mo.md(f"**LM cost so far**: {format_lm_cost(cost_summary)}")
+    return (costdisplay,)
 
 
 if __name__ == "__main__":

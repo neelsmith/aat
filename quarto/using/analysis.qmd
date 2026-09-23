@@ -12,6 +12,8 @@ python3 aat_main.py --passage "Four score and seven years ago our fathers brough
 Include a citable reference for the passage (such as a CTS URN) with the `--context` argument:
 
 ```bash
-python3 aat_main.py --passage "Four score and seven years ago our fathers brought forth, upon this continent, a new nation, conceived in Liberty, and dedicated to the proposition that all men are created equal." --context "urn:cts:aat:examples.gettysburg.hay:1"
+python3 aat_main.py --context "urn:cts:aat:examples.gettysburg.hay:1" --passage "Four score and seven years ago our fathers brought forth, upon this continent, a new nation, conceived in Liberty, and dedicated to the proposition that all men are created equal." 
 ```
 
+
+The output is a pair of delimited-text blocks. (See [reference section](../reference/serialization.qmd).) You can save these to a file for later use, or [pipe them immediately into other scripts](./piping.qmd).

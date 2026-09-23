@@ -7,12 +7,17 @@ First configure a `dspy.LM` with the same information you would use to [configur
 
 ```python
 import dspy
+from aat.english import DEFAULT_CEILING
+
 dspy.configure(lm=dspy.LM(model="litellm_proxy/anthropic/Claude Opus 5",
                            api_base="https://api_url/litellm",
-                           api_key="your-key-here"))
+                           api_key="your-key-here",
+                           max_tokens=DEFAULT_CEILING))
 ```
 
-You can analyze a single string with the  `analyze_passage` function. (If you include a `--context` citation with a value like a CTS URN, all results will be keyed to unique token IDs within the unique citation context.)
+Always pass `max_tokens` explicitly -- `dspy.LM`'s own default is `None`, which silently disables any output budget and can produce misleading truncation errors; `DEFAULT_CEILING` is the same baseline `aat_main.py` and the marimo notebooks use.
+
+You can analyze a single string with the  `analyze_passage` function. (If you pass a `context` argument with a value like a CTS URN, all results will be keyed to unique token IDs within the unique citation context.)
 
 ```python
 from aat.english import analyze_passage

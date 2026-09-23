@@ -86,13 +86,13 @@ def test_full_composition_analyzes_every_passage_and_serializes_once(tmp_path):
     passages = aat_corpus._read_corpus(str(path), delimiter="#")
 
     dspy.configure(lm=DummyLM([_ANSWER_1, _ANSWER_2]))
-    _tokens, graph = analyze_passages(passages)
+    tokens, graph = analyze_passages(passages)
 
-    result = serialize_analysis(passages, graph)
-    assert result.count("#!passages") == 1
+    result = serialize_analysis(tokens, graph)
+    assert result.count("#!tokens") == 1
     assert result.count("#!aatnodes") == 1
-    assert "ex.1|The dog ate my homework." in result
-    assert "ex.2|The cat sat on the mat." in result
+    assert "ex.1|t1|The" in result
+    assert "ex.2|t1|The" in result
     assert "ex.1|t3|ate|action|" in result
     assert "ex.2|t3|sat|action|" in result
 
@@ -103,12 +103,12 @@ def test_full_composition_round_trips_through_read_analysis(tmp_path):
     passages = aat_corpus._read_corpus(str(path), delimiter="#")
 
     dspy.configure(lm=DummyLM([_ANSWER_1, _ANSWER_2]))
-    _tokens, graph = analyze_passages(passages)
-    result = serialize_analysis(passages, graph)
+    tokens, graph = analyze_passages(passages)
+    result = serialize_analysis(tokens, graph)
 
     out_path = tmp_path / "analysis.txt"
     out_path.write_text(result, encoding="utf-8")
 
-    reloaded_passages, reloaded_graph = read_analysis(str(out_path))
-    assert reloaded_passages == passages
+    reloaded_tokens, reloaded_graph = read_analysis(str(out_path))
+    assert reloaded_tokens == tokens
     assert reloaded_graph == graph

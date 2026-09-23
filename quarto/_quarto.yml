@@ -2,7 +2,7 @@ project:
   type: website
   output-dir: quarto-build
 
-version: "0.2.1"  
+version: "0.3.0"  
   
 
 website:
@@ -59,7 +59,7 @@ website:
       contents: 
           - guides/index.qmd      
           - "---"
-          - guides/cli.qmd
+          - guides/quick.qmd
           - guides/saving-loading.qmd
           - "---"        
           - guides/texthiliting.qmd
@@ -68,6 +68,7 @@ website:
     - title: "Reference"
       contents: 
         - reference/index.qmd   
+        - reference/serialization.qmd
         - reference/testing.qmd
     
         

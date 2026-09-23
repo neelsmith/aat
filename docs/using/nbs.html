@@ -195,8 +195,15 @@ ul.task-list li input[type="checkbox"] {
 </nav>
 <div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
 <!-- margin-sidebar -->
-    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar zindex-bottom">
-        
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#using-lms-to-analyze-texts" id="toc-using-lms-to-analyze-texts" class="nav-link active" data-scroll-target="#using-lms-to-analyze-texts">Using LMs to analyze texts</a></li>
+  <li><a href="#working-with-results-of-analyses" id="toc-working-with-results-of-analyses" class="nav-link" data-scroll-target="#working-with-results-of-analyses">Working with results of analyses</a></li>
+  </ul>
+</nav>
     </div>
 <!-- main -->
 <main class="content" id="quarto-document-content">
@@ -220,12 +227,21 @@ ul.task-list li input[type="checkbox"] {
 </header>
 
 
+<section id="using-lms-to-analyze-texts" class="level2">
+<h2 class="anchored" data-anchor-id="using-lms-to-analyze-texts">Using LMs to analyze texts</h2>
 <ul>
 <li><code>marimo/aat_graph.py</code> lets you enter a passage, analyze it with the configured LM, and visualize the resulting AAT graph. Optionally, save the analysis to a local file.</li>
+<li><code>marimo/aat_corpus_graph.py</code> lets you load a corpus from a CEX file, analyze it with the configured LM, and visualize the resulting AAT graphs. Optionally, save the analyses to a local file.</li>
+</ul>
+</section>
+<section id="working-with-results-of-analyses" class="level2">
+<h2 class="anchored" data-anchor-id="working-with-results-of-analyses">Working with results of analyses</h2>
+<ul>
 <li><code>marimo/aat_reader.py</code> lets you load saved analyses from a local file and visualize the AAT graph without any LM.</li>
 </ul>
 
 
+</section>
 
 </main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">
@@ -635,7 +651,7 @@ ul.task-list li input[type="checkbox"] {
       &nbsp;
     </div>   
     <div class="nav-footer-center">
-<p>Documentation for release version <strong>0.2.1</strong></p>
+<p>Documentation for release version <strong>0.3.0</strong></p>
 </div>
     <div class="nav-footer-right">
       &nbsp;

@@ -7,7 +7,7 @@ order each action first appears in a graph's own node list. This lives in
 its own module, separate from mermaid.py, so it can be reused wherever a
 token or node needs to be colored the same way it is in a Mermaid diagram
 without depending on Mermaid-specific rendering code -- e.g.
-aat.english.html's tokens_to_html(), which highlights passage text with
+aat.core.html's tokens_to_html(), which highlights passage text with
 these same colors. This mirrors why arsgrammatica's verbal_units.py is
 shared between its own mermaid.py and rendering.py.
 

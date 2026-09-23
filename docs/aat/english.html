@@ -65,10 +65,52 @@
                     <a class="function" href="#analyze_passages">analyze_passages</a>
             </li>
             <li>
+                    <a class="function" href="#analyze_units_by_sentence">analyze_units_by_sentence</a>
+            </li>
+            <li>
                     <a class="function" href="#aat_metric">aat_metric</a>
             </li>
             <li>
                     <a class="function" href="#tokens_to_html">tokens_to_html</a>
+            </li>
+            <li>
+                    <a class="variable" href="#DEFAULT_SENTENCE_TERMINATORS">DEFAULT_SENTENCE_TERMINATORS</a>
+            </li>
+            <li>
+                    <a class="function" href="#cluster_sentences">cluster_sentences</a>
+            </li>
+            <li>
+                    <a class="function" href="#ends_sentence">ends_sentence</a>
+            </li>
+            <li>
+                    <a class="function" href="#passage_component">passage_component</a>
+            </li>
+            <li>
+                    <a class="function" href="#urn_prefix">urn_prefix</a>
+            </li>
+            <li>
+                    <a class="function" href="#tokenize_units">tokenize_units</a>
+            </li>
+            <li>
+                    <a class="function" href="#tokenize_corpus_by_sentence">tokenize_corpus_by_sentence</a>
+            </li>
+            <li>
+                    <a class="function" href="#analyze_with_retry">analyze_with_retry</a>
+            </li>
+            <li>
+                    <a class="function" href="#estimate_max_tokens">estimate_max_tokens</a>
+            </li>
+            <li>
+                    <a class="function" href="#get_calibration">get_calibration</a>
+            </li>
+            <li>
+                    <a class="variable" href="#DEFAULT_CEILING">DEFAULT_CEILING</a>
+            </li>
+            <li>
+                    <a class="variable" href="#DEFAULT_FLOOR">DEFAULT_FLOOR</a>
+            </li>
+            <li>
+                    <a class="variable" href="#DEFAULT_SAFETY_MARGIN">DEFAULT_SAFETY_MARGIN</a>
             </li>
     </ul>
 
@@ -114,20 +156,51 @@ runs one way only, so a downstream project can depend on <a href="core.html">aat
 </span><span id="L-11"><a href="#L-11"><span class="linenos">11</span></a>
 </span><span id="L-12"><a href="#L-12"><span class="linenos">12</span></a><span class="kn">from</span><span class="w"> </span><span class="nn">.dspy_signatures</span><span class="w"> </span><span class="kn">import</span> <span class="n">AgentActionTarget</span><span class="p">,</span> <span class="n">analyze</span><span class="p">,</span> <span class="n">validate</span>
 </span><span id="L-13"><a href="#L-13"><span class="linenos">13</span></a><span class="kn">from</span><span class="w"> </span><span class="nn">.gepa_metric</span><span class="w"> </span><span class="kn">import</span> <span class="n">aat_metric</span>
-</span><span id="L-14"><a href="#L-14"><span class="linenos">14</span></a><span class="kn">from</span><span class="w"> </span><span class="nn">.html</span><span class="w"> </span><span class="kn">import</span> <span class="n">tokens_to_html</span>
-</span><span id="L-15"><a href="#L-15"><span class="linenos">15</span></a><span class="kn">from</span><span class="w"> </span><span class="nn">.pipeline</span><span class="w"> </span><span class="kn">import</span> <span class="n">analyze_passage</span><span class="p">,</span> <span class="n">analyze_passages</span>
-</span><span id="L-16"><a href="#L-16"><span class="linenos">16</span></a><span class="kn">from</span><span class="w"> </span><span class="nn">.tokenize</span><span class="w"> </span><span class="kn">import</span> <span class="n">tokenize</span>
-</span><span id="L-17"><a href="#L-17"><span class="linenos">17</span></a>
-</span><span id="L-18"><a href="#L-18"><span class="linenos">18</span></a><span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
-</span><span id="L-19"><a href="#L-19"><span class="linenos">19</span></a>    <span class="s2">"tokenize"</span><span class="p">,</span>
-</span><span id="L-20"><a href="#L-20"><span class="linenos">20</span></a>    <span class="s2">"AgentActionTarget"</span><span class="p">,</span>
-</span><span id="L-21"><a href="#L-21"><span class="linenos">21</span></a>    <span class="s2">"analyze"</span><span class="p">,</span>
-</span><span id="L-22"><a href="#L-22"><span class="linenos">22</span></a>    <span class="s2">"validate"</span><span class="p">,</span>
-</span><span id="L-23"><a href="#L-23"><span class="linenos">23</span></a>    <span class="s2">"analyze_passage"</span><span class="p">,</span>
-</span><span id="L-24"><a href="#L-24"><span class="linenos">24</span></a>    <span class="s2">"analyze_passages"</span><span class="p">,</span>
-</span><span id="L-25"><a href="#L-25"><span class="linenos">25</span></a>    <span class="s2">"aat_metric"</span><span class="p">,</span>
-</span><span id="L-26"><a href="#L-26"><span class="linenos">26</span></a>    <span class="s2">"tokens_to_html"</span><span class="p">,</span>
-</span><span id="L-27"><a href="#L-27"><span class="linenos">27</span></a><span class="p">]</span>
+</span><span id="L-14"><a href="#L-14"><span class="linenos">14</span></a><span class="kn">from</span><span class="w"> </span><span class="nn">..core.html</span><span class="w"> </span><span class="kn">import</span> <span class="n">tokens_to_html</span>
+</span><span id="L-15"><a href="#L-15"><span class="linenos">15</span></a><span class="kn">from</span><span class="w"> </span><span class="nn">.pipeline</span><span class="w"> </span><span class="kn">import</span> <span class="n">analyze_passage</span><span class="p">,</span> <span class="n">analyze_passages</span><span class="p">,</span> <span class="n">analyze_units_by_sentence</span>
+</span><span id="L-16"><a href="#L-16"><span class="linenos">16</span></a><span class="kn">from</span><span class="w"> </span><span class="nn">.sentences</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+</span><span id="L-17"><a href="#L-17"><span class="linenos">17</span></a>    <span class="n">DEFAULT_SENTENCE_TERMINATORS</span><span class="p">,</span>
+</span><span id="L-18"><a href="#L-18"><span class="linenos">18</span></a>    <span class="n">cluster_sentences</span><span class="p">,</span>
+</span><span id="L-19"><a href="#L-19"><span class="linenos">19</span></a>    <span class="n">ends_sentence</span><span class="p">,</span>
+</span><span id="L-20"><a href="#L-20"><span class="linenos">20</span></a>    <span class="n">passage_component</span><span class="p">,</span>
+</span><span id="L-21"><a href="#L-21"><span class="linenos">21</span></a>    <span class="n">tokenize_corpus_by_sentence</span><span class="p">,</span>
+</span><span id="L-22"><a href="#L-22"><span class="linenos">22</span></a>    <span class="n">tokenize_units</span><span class="p">,</span>
+</span><span id="L-23"><a href="#L-23"><span class="linenos">23</span></a>    <span class="n">urn_prefix</span><span class="p">,</span>
+</span><span id="L-24"><a href="#L-24"><span class="linenos">24</span></a><span class="p">)</span>
+</span><span id="L-25"><a href="#L-25"><span class="linenos">25</span></a><span class="kn">from</span><span class="w"> </span><span class="nn">.token_budget</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+</span><span id="L-26"><a href="#L-26"><span class="linenos">26</span></a>    <span class="n">DEFAULT_CEILING</span><span class="p">,</span>
+</span><span id="L-27"><a href="#L-27"><span class="linenos">27</span></a>    <span class="n">DEFAULT_FLOOR</span><span class="p">,</span>
+</span><span id="L-28"><a href="#L-28"><span class="linenos">28</span></a>    <span class="n">DEFAULT_SAFETY_MARGIN</span><span class="p">,</span>
+</span><span id="L-29"><a href="#L-29"><span class="linenos">29</span></a>    <span class="n">analyze_with_retry</span><span class="p">,</span>
+</span><span id="L-30"><a href="#L-30"><span class="linenos">30</span></a>    <span class="n">estimate_max_tokens</span><span class="p">,</span>
+</span><span id="L-31"><a href="#L-31"><span class="linenos">31</span></a>    <span class="n">get_calibration</span><span class="p">,</span>
+</span><span id="L-32"><a href="#L-32"><span class="linenos">32</span></a><span class="p">)</span>
+</span><span id="L-33"><a href="#L-33"><span class="linenos">33</span></a><span class="kn">from</span><span class="w"> </span><span class="nn">.tokenize</span><span class="w"> </span><span class="kn">import</span> <span class="n">tokenize</span>
+</span><span id="L-34"><a href="#L-34"><span class="linenos">34</span></a>
+</span><span id="L-35"><a href="#L-35"><span class="linenos">35</span></a><span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
+</span><span id="L-36"><a href="#L-36"><span class="linenos">36</span></a>    <span class="s2">"tokenize"</span><span class="p">,</span>
+</span><span id="L-37"><a href="#L-37"><span class="linenos">37</span></a>    <span class="s2">"AgentActionTarget"</span><span class="p">,</span>
+</span><span id="L-38"><a href="#L-38"><span class="linenos">38</span></a>    <span class="s2">"analyze"</span><span class="p">,</span>
+</span><span id="L-39"><a href="#L-39"><span class="linenos">39</span></a>    <span class="s2">"validate"</span><span class="p">,</span>
+</span><span id="L-40"><a href="#L-40"><span class="linenos">40</span></a>    <span class="s2">"analyze_passage"</span><span class="p">,</span>
+</span><span id="L-41"><a href="#L-41"><span class="linenos">41</span></a>    <span class="s2">"analyze_passages"</span><span class="p">,</span>
+</span><span id="L-42"><a href="#L-42"><span class="linenos">42</span></a>    <span class="s2">"analyze_units_by_sentence"</span><span class="p">,</span>
+</span><span id="L-43"><a href="#L-43"><span class="linenos">43</span></a>    <span class="s2">"aat_metric"</span><span class="p">,</span>
+</span><span id="L-44"><a href="#L-44"><span class="linenos">44</span></a>    <span class="s2">"tokens_to_html"</span><span class="p">,</span>
+</span><span id="L-45"><a href="#L-45"><span class="linenos">45</span></a>    <span class="s2">"DEFAULT_SENTENCE_TERMINATORS"</span><span class="p">,</span>
+</span><span id="L-46"><a href="#L-46"><span class="linenos">46</span></a>    <span class="s2">"cluster_sentences"</span><span class="p">,</span>
+</span><span id="L-47"><a href="#L-47"><span class="linenos">47</span></a>    <span class="s2">"ends_sentence"</span><span class="p">,</span>
+</span><span id="L-48"><a href="#L-48"><span class="linenos">48</span></a>    <span class="s2">"passage_component"</span><span class="p">,</span>
+</span><span id="L-49"><a href="#L-49"><span class="linenos">49</span></a>    <span class="s2">"urn_prefix"</span><span class="p">,</span>
+</span><span id="L-50"><a href="#L-50"><span class="linenos">50</span></a>    <span class="s2">"tokenize_units"</span><span class="p">,</span>
+</span><span id="L-51"><a href="#L-51"><span class="linenos">51</span></a>    <span class="s2">"tokenize_corpus_by_sentence"</span><span class="p">,</span>
+</span><span id="L-52"><a href="#L-52"><span class="linenos">52</span></a>    <span class="s2">"analyze_with_retry"</span><span class="p">,</span>
+</span><span id="L-53"><a href="#L-53"><span class="linenos">53</span></a>    <span class="s2">"estimate_max_tokens"</span><span class="p">,</span>
+</span><span id="L-54"><a href="#L-54"><span class="linenos">54</span></a>    <span class="s2">"get_calibration"</span><span class="p">,</span>
+</span><span id="L-55"><a href="#L-55"><span class="linenos">55</span></a>    <span class="s2">"DEFAULT_CEILING"</span><span class="p">,</span>
+</span><span id="L-56"><a href="#L-56"><span class="linenos">56</span></a>    <span class="s2">"DEFAULT_FLOOR"</span><span class="p">,</span>
+</span><span id="L-57"><a href="#L-57"><span class="linenos">57</span></a>    <span class="s2">"DEFAULT_SAFETY_MARGIN"</span><span class="p">,</span>
+</span><span id="L-58"><a href="#L-58"><span class="linenos">58</span></a><span class="p">]</span>
 </span></pre></div>
 
 
@@ -414,12 +487,12 @@ import from <a href="core.html">aat.core</a> just for this.</p>
 
     </div>
     <a class="headerlink" href="#analyze_passage"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="analyze_passage-51"><a href="#analyze_passage-51"><span class="linenos">51</span></a><span class="k">def</span><span class="w"> </span><span class="nf">analyze_passage</span><span class="p">(</span><span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">context</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">CitableToken</span><span class="p">],</span> <span class="n">AATGraph</span><span class="p">]:</span>
-</span><span id="analyze_passage-52"><a href="#analyze_passage-52"><span class="linenos">52</span></a><span class="w">    </span><span class="sd">"""Convenience wrapper for the common case of a single string rather</span>
-</span><span id="analyze_passage-53"><a href="#analyze_passage-53"><span class="linenos">53</span></a><span class="sd">    than a list of CitedPassage. Wraps `text` as one CitedPassage (using</span>
-</span><span id="analyze_passage-54"><a href="#analyze_passage-54"><span class="linenos">54</span></a><span class="sd">    `context` if given, else an empty string) and runs it through</span>
-</span><span id="analyze_passage-55"><a href="#analyze_passage-55"><span class="linenos">55</span></a><span class="sd">    analyze_passages()."""</span>
-</span><span id="analyze_passage-56"><a href="#analyze_passage-56"><span class="linenos">56</span></a>    <span class="k">return</span> <span class="n">analyze_passages</span><span class="p">([</span><span class="n">CitedPassage</span><span class="p">(</span><span class="n">context</span><span class="o">=</span><span class="n">context</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="n">text</span><span class="p">)])</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="analyze_passage-59"><a href="#analyze_passage-59"><span class="linenos">59</span></a><span class="k">def</span><span class="w"> </span><span class="nf">analyze_passage</span><span class="p">(</span><span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">context</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">CitableToken</span><span class="p">],</span> <span class="n">AATGraph</span><span class="p">]:</span>
+</span><span id="analyze_passage-60"><a href="#analyze_passage-60"><span class="linenos">60</span></a><span class="w">    </span><span class="sd">"""Convenience wrapper for the common case of a single string rather</span>
+</span><span id="analyze_passage-61"><a href="#analyze_passage-61"><span class="linenos">61</span></a><span class="sd">    than a list of CitedPassage. Wraps `text` as one CitedPassage (using</span>
+</span><span id="analyze_passage-62"><a href="#analyze_passage-62"><span class="linenos">62</span></a><span class="sd">    `context` if given, else an empty string) and runs it through</span>
+</span><span id="analyze_passage-63"><a href="#analyze_passage-63"><span class="linenos">63</span></a><span class="sd">    analyze_passages()."""</span>
+</span><span id="analyze_passage-64"><a href="#analyze_passage-64"><span class="linenos">64</span></a>    <span class="k">return</span> <span class="n">analyze_passages</span><span class="p">([</span><span class="n">CitedPassage</span><span class="p">(</span><span class="n">context</span><span class="o">=</span><span class="n">context</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="n">text</span><span class="p">)])</span>
 </span></pre></div>
 
 
@@ -442,38 +515,44 @@ analyze_passages().</p>
 
     </div>
     <a class="headerlink" href="#analyze_passages"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="analyze_passages-17"><a href="#analyze_passages-17"><span class="linenos">17</span></a><span class="k">def</span><span class="w"> </span><span class="nf">analyze_passages</span><span class="p">(</span><span class="n">passages</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">CitedPassage</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">CitableToken</span><span class="p">],</span> <span class="n">AATGraph</span><span class="p">]:</span>
-</span><span id="analyze_passages-18"><a href="#analyze_passages-18"><span class="linenos">18</span></a><span class="w">    </span><span class="sd">"""Tokenize and analyze every passage in `passages`, independently</span>
-</span><span id="analyze_passages-19"><a href="#analyze_passages-19"><span class="linenos">19</span></a><span class="sd">    (each passage's tokens are numbered from 't1' within its own context</span>
-</span><span id="analyze_passages-20"><a href="#analyze_passages-20"><span class="linenos">20</span></a><span class="sd">    -- see CitableToken's docstring), and return (tokens, graph): `tokens`</span>
-</span><span id="analyze_passages-21"><a href="#analyze_passages-21"><span class="linenos">21</span></a><span class="sd">    is every passage's tokens concatenated in order, `graph` is one</span>
-</span><span id="analyze_passages-22"><a href="#analyze_passages-22"><span class="linenos">22</span></a><span class="sd">    AATGraph combining every passage's nodes.</span>
-</span><span id="analyze_passages-23"><a href="#analyze_passages-23"><span class="linenos">23</span></a>
-</span><span id="analyze_passages-24"><a href="#analyze_passages-24"><span class="linenos">24</span></a><span class="sd">    Prints a warning to stderr (not stdout -- callers such as aat_main.py</span>
-</span><span id="analyze_passages-25"><a href="#analyze_passages-25"><span class="linenos">25</span></a><span class="sd">    write a plain-text serialized analysis to stdout, and a stray print()</span>
-</span><span id="analyze_passages-26"><a href="#analyze_passages-26"><span class="linenos">26</span></a><span class="sd">    there would corrupt it) for any passage whose analysis fails</span>
-</span><span id="analyze_passages-27"><a href="#analyze_passages-27"><span class="linenos">27</span></a><span class="sd">    validate() (a referential problem -- see aat.core.validate.validate);</span>
-</span><span id="analyze_passages-28"><a href="#analyze_passages-28"><span class="linenos">28</span></a><span class="sd">    it does not raise, since a referential problem is a sign the LM's</span>
-</span><span id="analyze_passages-29"><a href="#analyze_passages-29"><span class="linenos">29</span></a><span class="sd">    output needs a re-run or a prompt tweak, not necessarily that the</span>
-</span><span id="analyze_passages-30"><a href="#analyze_passages-30"><span class="linenos">30</span></a><span class="sd">    caller's own code is broken.</span>
-</span><span id="analyze_passages-31"><a href="#analyze_passages-31"><span class="linenos">31</span></a><span class="sd">    """</span>
-</span><span id="analyze_passages-32"><a href="#analyze_passages-32"><span class="linenos">32</span></a>    <span class="n">all_tokens</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">CitableToken</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
-</span><span id="analyze_passages-33"><a href="#analyze_passages-33"><span class="linenos">33</span></a>    <span class="n">all_nodes</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">AATNode</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
-</span><span id="analyze_passages-34"><a href="#analyze_passages-34"><span class="linenos">34</span></a>
-</span><span id="analyze_passages-35"><a href="#analyze_passages-35"><span class="linenos">35</span></a>    <span class="k">for</span> <span class="n">passage</span> <span class="ow">in</span> <span class="n">passages</span><span class="p">:</span>
-</span><span id="analyze_passages-36"><a href="#analyze_passages-36"><span class="linenos">36</span></a>        <span class="n">tokens</span> <span class="o">=</span> <span class="n">tokenize</span><span class="p">(</span><span class="n">passage</span><span class="p">)</span>
-</span><span id="analyze_passages-37"><a href="#analyze_passages-37"><span class="linenos">37</span></a>        <span class="n">result</span> <span class="o">=</span> <span class="n">analyze</span><span class="p">(</span><span class="n">passage</span><span class="o">=</span><span class="n">passage</span><span class="o">.</span><span class="n">text</span><span class="p">,</span> <span class="n">tokens</span><span class="o">=</span><span class="n">tokens</span><span class="p">)</span>
-</span><span id="analyze_passages-38"><a href="#analyze_passages-38"><span class="linenos">38</span></a>
-</span><span id="analyze_passages-39"><a href="#analyze_passages-39"><span class="linenos">39</span></a>        <span class="n">problems</span> <span class="o">=</span> <span class="n">validate</span><span class="p">(</span><span class="n">tokens</span><span class="p">,</span> <span class="n">result</span><span class="p">)</span>
-</span><span id="analyze_passages-40"><a href="#analyze_passages-40"><span class="linenos">40</span></a>        <span class="k">if</span> <span class="n">problems</span><span class="p">:</span>
-</span><span id="analyze_passages-41"><a href="#analyze_passages-41"><span class="linenos">41</span></a>            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Validation warnings (context </span><span class="si">{</span><span class="n">passage</span><span class="o">.</span><span class="n">context</span><span class="si">!r}</span><span class="s2">):"</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
-</span><span id="analyze_passages-42"><a href="#analyze_passages-42"><span class="linenos">42</span></a>            <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">problems</span><span class="p">:</span>
-</span><span id="analyze_passages-43"><a href="#analyze_passages-43"><span class="linenos">43</span></a>                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  - </span><span class="si">{</span><span class="n">p</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
-</span><span id="analyze_passages-44"><a href="#analyze_passages-44"><span class="linenos">44</span></a>
-</span><span id="analyze_passages-45"><a href="#analyze_passages-45"><span class="linenos">45</span></a>        <span class="n">all_tokens</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">tokens</span><span class="p">)</span>
-</span><span id="analyze_passages-46"><a href="#analyze_passages-46"><span class="linenos">46</span></a>        <span class="n">all_nodes</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">nodes</span><span class="p">)</span>
-</span><span id="analyze_passages-47"><a href="#analyze_passages-47"><span class="linenos">47</span></a>
-</span><span id="analyze_passages-48"><a href="#analyze_passages-48"><span class="linenos">48</span></a>    <span class="k">return</span> <span class="n">all_tokens</span><span class="p">,</span> <span class="n">AATGraph</span><span class="p">(</span><span class="n">nodes</span><span class="o">=</span><span class="n">all_nodes</span><span class="p">)</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="analyze_passages-19"><a href="#analyze_passages-19"><span class="linenos">19</span></a><span class="k">def</span><span class="w"> </span><span class="nf">analyze_passages</span><span class="p">(</span><span class="n">passages</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">CitedPassage</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">CitableToken</span><span class="p">],</span> <span class="n">AATGraph</span><span class="p">]:</span>
+</span><span id="analyze_passages-20"><a href="#analyze_passages-20"><span class="linenos">20</span></a><span class="w">    </span><span class="sd">"""Tokenize and analyze every passage in `passages`, independently</span>
+</span><span id="analyze_passages-21"><a href="#analyze_passages-21"><span class="linenos">21</span></a><span class="sd">    (each passage's tokens are numbered from 't1' within its own context</span>
+</span><span id="analyze_passages-22"><a href="#analyze_passages-22"><span class="linenos">22</span></a><span class="sd">    -- see CitableToken's docstring), and return (tokens, graph): `tokens`</span>
+</span><span id="analyze_passages-23"><a href="#analyze_passages-23"><span class="linenos">23</span></a><span class="sd">    is every passage's tokens concatenated in order, `graph` is one</span>
+</span><span id="analyze_passages-24"><a href="#analyze_passages-24"><span class="linenos">24</span></a><span class="sd">    AATGraph combining every passage's nodes.</span>
+</span><span id="analyze_passages-25"><a href="#analyze_passages-25"><span class="linenos">25</span></a>
+</span><span id="analyze_passages-26"><a href="#analyze_passages-26"><span class="linenos">26</span></a><span class="sd">    Prints a warning to stderr (not stdout -- callers such as aat_main.py</span>
+</span><span id="analyze_passages-27"><a href="#analyze_passages-27"><span class="linenos">27</span></a><span class="sd">    write a plain-text serialized analysis to stdout, and a stray print()</span>
+</span><span id="analyze_passages-28"><a href="#analyze_passages-28"><span class="linenos">28</span></a><span class="sd">    there would corrupt it) for any passage whose analysis fails</span>
+</span><span id="analyze_passages-29"><a href="#analyze_passages-29"><span class="linenos">29</span></a><span class="sd">    validate() (a referential problem -- see aat.core.validate.validate);</span>
+</span><span id="analyze_passages-30"><a href="#analyze_passages-30"><span class="linenos">30</span></a><span class="sd">    it does not raise, since a referential problem is a sign the LM's</span>
+</span><span id="analyze_passages-31"><a href="#analyze_passages-31"><span class="linenos">31</span></a><span class="sd">    output needs a re-run or a prompt tweak, not necessarily that the</span>
+</span><span id="analyze_passages-32"><a href="#analyze_passages-32"><span class="linenos">32</span></a><span class="sd">    caller's own code is broken.</span>
+</span><span id="analyze_passages-33"><a href="#analyze_passages-33"><span class="linenos">33</span></a><span class="sd">    """</span>
+</span><span id="analyze_passages-34"><a href="#analyze_passages-34"><span class="linenos">34</span></a>    <span class="n">all_tokens</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">CitableToken</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+</span><span id="analyze_passages-35"><a href="#analyze_passages-35"><span class="linenos">35</span></a>    <span class="n">all_nodes</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">AATNode</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+</span><span id="analyze_passages-36"><a href="#analyze_passages-36"><span class="linenos">36</span></a>
+</span><span id="analyze_passages-37"><a href="#analyze_passages-37"><span class="linenos">37</span></a>    <span class="k">for</span> <span class="n">passage</span> <span class="ow">in</span> <span class="n">passages</span><span class="p">:</span>
+</span><span id="analyze_passages-38"><a href="#analyze_passages-38"><span class="linenos">38</span></a>        <span class="n">tokens</span> <span class="o">=</span> <span class="n">tokenize</span><span class="p">(</span><span class="n">passage</span><span class="p">)</span>
+</span><span id="analyze_passages-39"><a href="#analyze_passages-39"><span class="linenos">39</span></a>        <span class="c1"># analyze_with_retry() (token_budget.py), not analyze() directly --</span>
+</span><span id="analyze_passages-40"><a href="#analyze_passages-40"><span class="linenos">40</span></a>        <span class="c1"># estimates a max_tokens budget from this passage's own token</span>
+</span><span id="analyze_passages-41"><a href="#analyze_passages-41"><span class="linenos">41</span></a>        <span class="c1"># count and retries with a larger one if the call still comes</span>
+</span><span id="analyze_passages-42"><a href="#analyze_passages-42"><span class="linenos">42</span></a>        <span class="c1"># back truncated, instead of surfacing a raw AdapterParseError</span>
+</span><span id="analyze_passages-43"><a href="#analyze_passages-43"><span class="linenos">43</span></a>        <span class="c1"># or a silently incomplete result. See token_budget.py's own</span>
+</span><span id="analyze_passages-44"><a href="#analyze_passages-44"><span class="linenos">44</span></a>        <span class="c1"># module docstring for the full design.</span>
+</span><span id="analyze_passages-45"><a href="#analyze_passages-45"><span class="linenos">45</span></a>        <span class="n">result</span> <span class="o">=</span> <span class="n">analyze_with_retry</span><span class="p">(</span><span class="n">passage</span><span class="o">=</span><span class="n">passage</span><span class="o">.</span><span class="n">text</span><span class="p">,</span> <span class="n">tokens</span><span class="o">=</span><span class="n">tokens</span><span class="p">)</span>
+</span><span id="analyze_passages-46"><a href="#analyze_passages-46"><span class="linenos">46</span></a>
+</span><span id="analyze_passages-47"><a href="#analyze_passages-47"><span class="linenos">47</span></a>        <span class="n">problems</span> <span class="o">=</span> <span class="n">validate</span><span class="p">(</span><span class="n">tokens</span><span class="p">,</span> <span class="n">result</span><span class="p">)</span>
+</span><span id="analyze_passages-48"><a href="#analyze_passages-48"><span class="linenos">48</span></a>        <span class="k">if</span> <span class="n">problems</span><span class="p">:</span>
+</span><span id="analyze_passages-49"><a href="#analyze_passages-49"><span class="linenos">49</span></a>            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Validation warnings (context </span><span class="si">{</span><span class="n">passage</span><span class="o">.</span><span class="n">context</span><span class="si">!r}</span><span class="s2">):"</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
+</span><span id="analyze_passages-50"><a href="#analyze_passages-50"><span class="linenos">50</span></a>            <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">problems</span><span class="p">:</span>
+</span><span id="analyze_passages-51"><a href="#analyze_passages-51"><span class="linenos">51</span></a>                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  - </span><span class="si">{</span><span class="n">p</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
+</span><span id="analyze_passages-52"><a href="#analyze_passages-52"><span class="linenos">52</span></a>
+</span><span id="analyze_passages-53"><a href="#analyze_passages-53"><span class="linenos">53</span></a>        <span class="n">all_tokens</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">tokens</span><span class="p">)</span>
+</span><span id="analyze_passages-54"><a href="#analyze_passages-54"><span class="linenos">54</span></a>        <span class="n">all_nodes</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">nodes</span><span class="p">)</span>
+</span><span id="analyze_passages-55"><a href="#analyze_passages-55"><span class="linenos">55</span></a>
+</span><span id="analyze_passages-56"><a href="#analyze_passages-56"><span class="linenos">56</span></a>    <span class="k">return</span> <span class="n">all_tokens</span><span class="p">,</span> <span class="n">AATGraph</span><span class="p">(</span><span class="n">nodes</span><span class="o">=</span><span class="n">all_nodes</span><span class="p">)</span>
 </span></pre></div>
 
 
@@ -490,6 +569,119 @@ validate() (a referential problem -- see <a href="../aat.html#validate">aat.core
 it does not raise, since a referential problem is a sign the LM's
 output needs a re-run or a prompt tweak, not necessarily that the
 caller's own code is broken.</p>
+</div>
+
+
+                </section>
+                <section id="analyze_units_by_sentence">
+                            <input id="analyze_units_by_sentence-view-source" class="view-source-toggle-state" type="checkbox" aria-hidden="true" tabindex="-1">
+<div class="attr function">
+            
+        <span class="def">def</span>
+        <span class="name">analyze_units_by_sentence</span><span class="signature pdoc-code multiline">(<span class="param">	<span class="n">units</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n"><a href="../aat.html#CitedPassage">aat.CitedPassage</a></span><span class="p">]</span>,</span><span class="param">	<span class="n">terminators</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">'.?!'</span></span><span class="return-annotation">) -> <span class="n">Tuple</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n"><a href="../aat.html#CitableToken">aat.CitableToken</a></span><span class="p">],</span> <span class="n"><a href="../aat.html#AATGraph">aat.AATGraph</a></span><span class="p">]</span>:</span></span>
+
+                <label class="view-source-button" for="analyze_units_by_sentence-view-source"><span>View Source</span></label>
+
+    </div>
+    <a class="headerlink" href="#analyze_units_by_sentence"></a>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="analyze_units_by_sentence-67"><a href="#analyze_units_by_sentence-67"><span class="linenos"> 67</span></a><span class="k">def</span><span class="w"> </span><span class="nf">analyze_units_by_sentence</span><span class="p">(</span>
+</span><span id="analyze_units_by_sentence-68"><a href="#analyze_units_by_sentence-68"><span class="linenos"> 68</span></a>    <span class="n">units</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">CitedPassage</span><span class="p">],</span> <span class="n">terminators</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">DEFAULT_SENTENCE_TERMINATORS</span>
+</span><span id="analyze_units_by_sentence-69"><a href="#analyze_units_by_sentence-69"><span class="linenos"> 69</span></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">CitableToken</span><span class="p">],</span> <span class="n">AATGraph</span><span class="p">]:</span>
+</span><span id="analyze_units_by_sentence-70"><a href="#analyze_units_by_sentence-70"><span class="linenos"> 70</span></a><span class="w">    </span><span class="sd">"""Like analyze_passages(), but for a corpus of citation units (e.g.</span>
+</span><span id="analyze_units_by_sentence-71"><a href="#analyze_units_by_sentence-71"><span class="linenos"> 71</span></a><span class="sd">    every row from a CEX file's `#!ctsdata` block, in citation order)</span>
+</span><span id="analyze_units_by_sentence-72"><a href="#analyze_units_by_sentence-72"><span class="linenos"> 72</span></a><span class="sd">    where a sentence's grammar may span more than one unit -- see</span>
+</span><span id="analyze_units_by_sentence-73"><a href="#analyze_units_by_sentence-73"><span class="linenos"> 73</span></a><span class="sd">    aat.english.sentences's own module docstring for why that matters</span>
+</span><span id="analyze_units_by_sentence-74"><a href="#analyze_units_by_sentence-74"><span class="linenos"> 74</span></a><span class="sd">    and worked examples.</span>
+</span><span id="analyze_units_by_sentence-75"><a href="#analyze_units_by_sentence-75"><span class="linenos"> 75</span></a>
+</span><span id="analyze_units_by_sentence-76"><a href="#analyze_units_by_sentence-76"><span class="linenos"> 76</span></a><span class="sd">    Groups `units` into sentences (aat.english.sentences.</span>
+</span><span id="analyze_units_by_sentence-77"><a href="#analyze_units_by_sentence-77"><span class="linenos"> 77</span></a><span class="sd">    cluster_sentences()) and analyzes each group as ONE combined passage</span>
+</span><span id="analyze_units_by_sentence-78"><a href="#analyze_units_by_sentence-78"><span class="linenos"> 78</span></a><span class="sd">    (aat.english.sentences.tokenize_units() builds its combined context/</span>
+</span><span id="analyze_units_by_sentence-79"><a href="#analyze_units_by_sentence-79"><span class="linenos"> 79</span></a><span class="sd">    text/tokens; every unit's own token ids get prefixed with that</span>
+</span><span id="analyze_units_by_sentence-80"><a href="#analyze_units_by_sentence-80"><span class="linenos"> 80</span></a><span class="sd">    unit's passage component -- e.g. "1.14.t1" -- so every token across</span>
+</span><span id="analyze_units_by_sentence-81"><a href="#analyze_units_by_sentence-81"><span class="linenos"> 81</span></a><span class="sd">    the whole sentence stays unique even though several citation units</span>
+</span><span id="analyze_units_by_sentence-82"><a href="#analyze_units_by_sentence-82"><span class="linenos"> 82</span></a><span class="sd">    contributed to it), rather than analyzing each citation unit</span>
+</span><span id="analyze_units_by_sentence-83"><a href="#analyze_units_by_sentence-83"><span class="linenos"> 83</span></a><span class="sd">    independently the way analyze_passages()/aat_corpus.py both do.</span>
+</span><span id="analyze_units_by_sentence-84"><a href="#analyze_units_by_sentence-84"><span class="linenos"> 84</span></a>
+</span><span id="analyze_units_by_sentence-85"><a href="#analyze_units_by_sentence-85"><span class="linenos"> 85</span></a><span class="sd">    Returns (tokens, graph) in the same shape analyze_passages() does --</span>
+</span><span id="analyze_units_by_sentence-86"><a href="#analyze_units_by_sentence-86"><span class="linenos"> 86</span></a><span class="sd">    `tokens` is every sentence group's tokens concatenated in order,</span>
+</span><span id="analyze_units_by_sentence-87"><a href="#analyze_units_by_sentence-87"><span class="linenos"> 87</span></a><span class="sd">    `graph` is one AATGraph combining every group's nodes -- so a caller</span>
+</span><span id="analyze_units_by_sentence-88"><a href="#analyze_units_by_sentence-88"><span class="linenos"> 88</span></a><span class="sd">    (e.g. a marimo notebook) can hand either straight to</span>
+</span><span id="analyze_units_by_sentence-89"><a href="#analyze_units_by_sentence-89"><span class="linenos"> 89</span></a><span class="sd">    aat.core.tokens_to_html()/aat.core.graph_to_mermaid() exactly as</span>
+</span><span id="analyze_units_by_sentence-90"><a href="#analyze_units_by_sentence-90"><span class="linenos"> 90</span></a><span class="sd">    it would analyze_passages()'s own return value.</span>
+</span><span id="analyze_units_by_sentence-91"><a href="#analyze_units_by_sentence-91"><span class="linenos"> 91</span></a>
+</span><span id="analyze_units_by_sentence-92"><a href="#analyze_units_by_sentence-92"><span class="linenos"> 92</span></a><span class="sd">    To later serialize this analysis (e.g. aat.core.write_analysis()),</span>
+</span><span id="analyze_units_by_sentence-93"><a href="#analyze_units_by_sentence-93"><span class="linenos"> 93</span></a><span class="sd">    pass this function's own returned `tokens` straight through -- they</span>
+</span><span id="analyze_units_by_sentence-94"><a href="#analyze_units_by_sentence-94"><span class="linenos"> 94</span></a><span class="sd">    already carry every composite sentence-spanning id (e.g.</span>
+</span><span id="analyze_units_by_sentence-95"><a href="#analyze_units_by_sentence-95"><span class="linenos"> 95</span></a><span class="sd">    "1.14.t3") this function assigned, in reading order, so a reload</span>
+</span><span id="analyze_units_by_sentence-96"><a href="#analyze_units_by_sentence-96"><span class="linenos"> 96</span></a><span class="sd">    needs no LM and no re-run of aat.english.sentences.</span>
+</span><span id="analyze_units_by_sentence-97"><a href="#analyze_units_by_sentence-97"><span class="linenos"> 97</span></a><span class="sd">    tokenize_corpus_by_sentence() (or any other tokenization step) at</span>
+</span><span id="analyze_units_by_sentence-98"><a href="#analyze_units_by_sentence-98"><span class="linenos"> 98</span></a><span class="sd">    all; see aat.core.serialization's own module docstring for why.</span>
+</span><span id="analyze_units_by_sentence-99"><a href="#analyze_units_by_sentence-99"><span class="linenos"> 99</span></a>
+</span><span id="analyze_units_by_sentence-100"><a href="#analyze_units_by_sentence-100"><span class="linenos">100</span></a><span class="sd">    Same validate()-and-warn-on-stderr behavior as analyze_passages(),</span>
+</span><span id="analyze_units_by_sentence-101"><a href="#analyze_units_by_sentence-101"><span class="linenos">101</span></a><span class="sd">    once per sentence group rather than once per citation unit -- a</span>
+</span><span id="analyze_units_by_sentence-102"><a href="#analyze_units_by_sentence-102"><span class="linenos">102</span></a><span class="sd">    referential problem in a sentence spanning three citation units is</span>
+</span><span id="analyze_units_by_sentence-103"><a href="#analyze_units_by_sentence-103"><span class="linenos">103</span></a><span class="sd">    reported once, tagged with that sentence's own combined context, not</span>
+</span><span id="analyze_units_by_sentence-104"><a href="#analyze_units_by_sentence-104"><span class="linenos">104</span></a><span class="sd">    three times.</span>
+</span><span id="analyze_units_by_sentence-105"><a href="#analyze_units_by_sentence-105"><span class="linenos">105</span></a><span class="sd">    """</span>
+</span><span id="analyze_units_by_sentence-106"><a href="#analyze_units_by_sentence-106"><span class="linenos">106</span></a>    <span class="n">all_tokens</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">CitableToken</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+</span><span id="analyze_units_by_sentence-107"><a href="#analyze_units_by_sentence-107"><span class="linenos">107</span></a>    <span class="n">all_nodes</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">AATNode</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+</span><span id="analyze_units_by_sentence-108"><a href="#analyze_units_by_sentence-108"><span class="linenos">108</span></a>
+</span><span id="analyze_units_by_sentence-109"><a href="#analyze_units_by_sentence-109"><span class="linenos">109</span></a>    <span class="k">for</span> <span class="n">combined_context</span><span class="p">,</span> <span class="n">combined_text</span><span class="p">,</span> <span class="n">tokens</span> <span class="ow">in</span> <span class="n">tokenize_corpus_by_sentence</span><span class="p">(</span><span class="n">units</span><span class="p">,</span> <span class="n">terminators</span><span class="p">):</span>
+</span><span id="analyze_units_by_sentence-110"><a href="#analyze_units_by_sentence-110"><span class="linenos">110</span></a>        <span class="c1"># Same analyze_with_retry() as analyze_passages() -- doubly</span>
+</span><span id="analyze_units_by_sentence-111"><a href="#analyze_units_by_sentence-111"><span class="linenos">111</span></a>        <span class="c1"># important here, since a sentence group spanning several</span>
+</span><span id="analyze_units_by_sentence-112"><a href="#analyze_units_by_sentence-112"><span class="linenos">112</span></a>        <span class="c1"># citation units can be considerably longer than any single</span>
+</span><span id="analyze_units_by_sentence-113"><a href="#analyze_units_by_sentence-113"><span class="linenos">113</span></a>        <span class="c1"># citation unit's own text, so a budget sized for one unit alone</span>
+</span><span id="analyze_units_by_sentence-114"><a href="#analyze_units_by_sentence-114"><span class="linenos">114</span></a>        <span class="c1"># is exactly the kind of case that used to truncate.</span>
+</span><span id="analyze_units_by_sentence-115"><a href="#analyze_units_by_sentence-115"><span class="linenos">115</span></a>        <span class="n">result</span> <span class="o">=</span> <span class="n">analyze_with_retry</span><span class="p">(</span><span class="n">passage</span><span class="o">=</span><span class="n">combined_text</span><span class="p">,</span> <span class="n">tokens</span><span class="o">=</span><span class="n">tokens</span><span class="p">)</span>
+</span><span id="analyze_units_by_sentence-116"><a href="#analyze_units_by_sentence-116"><span class="linenos">116</span></a>
+</span><span id="analyze_units_by_sentence-117"><a href="#analyze_units_by_sentence-117"><span class="linenos">117</span></a>        <span class="n">problems</span> <span class="o">=</span> <span class="n">validate</span><span class="p">(</span><span class="n">tokens</span><span class="p">,</span> <span class="n">result</span><span class="p">)</span>
+</span><span id="analyze_units_by_sentence-118"><a href="#analyze_units_by_sentence-118"><span class="linenos">118</span></a>        <span class="k">if</span> <span class="n">problems</span><span class="p">:</span>
+</span><span id="analyze_units_by_sentence-119"><a href="#analyze_units_by_sentence-119"><span class="linenos">119</span></a>            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Validation warnings (context </span><span class="si">{</span><span class="n">combined_context</span><span class="si">!r}</span><span class="s2">):"</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
+</span><span id="analyze_units_by_sentence-120"><a href="#analyze_units_by_sentence-120"><span class="linenos">120</span></a>            <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">problems</span><span class="p">:</span>
+</span><span id="analyze_units_by_sentence-121"><a href="#analyze_units_by_sentence-121"><span class="linenos">121</span></a>                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  - </span><span class="si">{</span><span class="n">p</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
+</span><span id="analyze_units_by_sentence-122"><a href="#analyze_units_by_sentence-122"><span class="linenos">122</span></a>
+</span><span id="analyze_units_by_sentence-123"><a href="#analyze_units_by_sentence-123"><span class="linenos">123</span></a>        <span class="n">all_tokens</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">tokens</span><span class="p">)</span>
+</span><span id="analyze_units_by_sentence-124"><a href="#analyze_units_by_sentence-124"><span class="linenos">124</span></a>        <span class="n">all_nodes</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">nodes</span><span class="p">)</span>
+</span><span id="analyze_units_by_sentence-125"><a href="#analyze_units_by_sentence-125"><span class="linenos">125</span></a>
+</span><span id="analyze_units_by_sentence-126"><a href="#analyze_units_by_sentence-126"><span class="linenos">126</span></a>    <span class="k">return</span> <span class="n">all_tokens</span><span class="p">,</span> <span class="n">AATGraph</span><span class="p">(</span><span class="n">nodes</span><span class="o">=</span><span class="n">all_nodes</span><span class="p">)</span>
+</span></pre></div>
+
+
+            <div class="docstring"><p>Like analyze_passages(), but for a corpus of citation units (e.g.
+every row from a CEX file's <code>#!ctsdata</code> block, in citation order)
+where a sentence's grammar may span more than one unit -- see
+aat.english.sentences's own module docstring for why that matters
+and worked examples.</p>
+
+<p>Groups <code>units</code> into sentences (aat.english.sentences.
+cluster_sentences()) and analyzes each group as ONE combined passage
+(<a href="#tokenize_units">aat.english.sentences.tokenize_units()</a> builds its combined context/
+text/tokens; every unit's own token ids get prefixed with that
+unit's passage component -- e.g. "1.14.t1" -- so every token across
+the whole sentence stays unique even though several citation units
+contributed to it), rather than analyzing each citation unit
+independently the way analyze_passages()/aat_corpus.py both do.</p>
+
+<p>Returns (tokens, graph) in the same shape analyze_passages() does --
+<code>tokens</code> is every sentence group's tokens concatenated in order,
+<code>graph</code> is one AATGraph combining every group's nodes -- so a caller
+(e.g. a marimo notebook) can hand either straight to
+<a href="core.html">aat.core</a>.tokens_to_html()/aat<a href="../aat.html#graph_to_mermaid">.core.graph_to_mermaid()</a> exactly as
+it would analyze_passages()'s own return value.</p>
+
+<p>To later serialize this analysis (e.g. <a href="../aat.html#write_analysis">aat.core.write_analysis()</a>),
+pass this function's own returned <code>tokens</code> straight through -- they
+already carry every composite sentence-spanning id (e.g.
+"1.14.t3") this function assigned, in reading order, so a reload
+needs no LM and no re-run of aat.english.sentences.
+tokenize_corpus_by_sentence() (or any other tokenization step) at
+all; see aat.core.serialization's own module docstring for why.</p>
+
+<p>Same validate()-and-warn-on-stderr behavior as analyze_passages(),
+once per sentence group rather than once per citation unit -- a
+referential problem in a sentence spanning three citation units is
+reported once, tagged with that sentence's own combined context, not
+three times.</p>
 </div>
 
 
@@ -615,66 +807,66 @@ node counts as correct only if the prediction has a node at the same
 
     </div>
     <a class="headerlink" href="#tokens_to_html"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="tokens_to_html-109"><a href="#tokens_to_html-109"><span class="linenos">109</span></a><span class="k">def</span><span class="w"> </span><span class="nf">tokens_to_html</span><span class="p">(</span><span class="n">tokens</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">CitableToken</span><span class="p">],</span> <span class="n">graph</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">AATGraph</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-</span><span id="tokens_to_html-110"><a href="#tokens_to_html-110"><span class="linenos">110</span></a><span class="w">    </span><span class="sd">"""Render `tokens` as one continuous HTML string: ordinary words get</span>
-</span><span id="tokens_to_html-111"><a href="#tokens_to_html-111"><span class="linenos">111</span></a><span class="sd">    a space before them, punctuation attaches per this module's own</span>
-</span><span id="tokens_to_html-112"><a href="#tokens_to_html-112"><span class="linenos">112</span></a><span class="sd">    docstring (left-joining by default; opening brackets and the first</span>
-</span><span id="tokens_to_html-113"><a href="#tokens_to_html-113"><span class="linenos">113</span></a><span class="sd">    of a quote pair right-join instead).</span>
-</span><span id="tokens_to_html-114"><a href="#tokens_to_html-114"><span class="linenos">114</span></a>
-</span><span id="tokens_to_html-115"><a href="#tokens_to_html-115"><span class="linenos">115</span></a><span class="sd">    If `graph` is given, every token whose (context, id) matches a node</span>
-</span><span id="tokens_to_html-116"><a href="#tokens_to_html-116"><span class="linenos">116</span></a><span class="sd">    in `graph` is highlighted: background/text colored the same way</span>
-</span><span id="tokens_to_html-117"><a href="#tokens_to_html-117"><span class="linenos">117</span></a><span class="sd">    that node is colored in `aat.core.mermaid.graph_to_mermaid()`'s</span>
-</span><span id="tokens_to_html-118"><a href="#tokens_to_html-118"><span class="linenos">118</span></a><span class="sd">    diagram (via `aat.core.coloring.assign_action_colors()`), with a</span>
-</span><span id="tokens_to_html-119"><a href="#tokens_to_html-119"><span class="linenos">119</span></a><span class="sd">    role-specific border -- a box around an `action` token, a rounded</span>
-</span><span id="tokens_to_html-120"><a href="#tokens_to_html-120"><span class="linenos">120</span></a><span class="sd">    box around an `agent` token, an underline under a `target` token.</span>
-</span><span id="tokens_to_html-121"><a href="#tokens_to_html-121"><span class="linenos">121</span></a><span class="sd">    Omit `graph` (or pass `None`) for plain, unhighlighted text.</span>
-</span><span id="tokens_to_html-122"><a href="#tokens_to_html-122"><span class="linenos">122</span></a>
-</span><span id="tokens_to_html-123"><a href="#tokens_to_html-123"><span class="linenos">123</span></a><span class="sd">    Every token's text is HTML-escaped before being emitted, span or</span>
-</span><span id="tokens_to_html-124"><a href="#tokens_to_html-124"><span class="linenos">124</span></a><span class="sd">    not -- real passage text can contain a literal `&lt;`, `&gt;`, `&amp;`, or</span>
-</span><span id="tokens_to_html-125"><a href="#tokens_to_html-125"><span class="linenos">125</span></a><span class="sd">    quote character, which would otherwise be indistinguishable from</span>
-</span><span id="tokens_to_html-126"><a href="#tokens_to_html-126"><span class="linenos">126</span></a><span class="sd">    markup to anything that re-parses this output.</span>
-</span><span id="tokens_to_html-127"><a href="#tokens_to_html-127"><span class="linenos">127</span></a><span class="sd">    """</span>
-</span><span id="tokens_to_html-128"><a href="#tokens_to_html-128"><span class="linenos">128</span></a>    <span class="n">color_of_node</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{}</span>
-</span><span id="tokens_to_html-129"><a href="#tokens_to_html-129"><span class="linenos">129</span></a>    <span class="n">role_of_node</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
-</span><span id="tokens_to_html-130"><a href="#tokens_to_html-130"><span class="linenos">130</span></a>    <span class="k">if</span> <span class="n">graph</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-</span><span id="tokens_to_html-131"><a href="#tokens_to_html-131"><span class="linenos">131</span></a>        <span class="n">color_of_node</span><span class="p">,</span> <span class="n">_warnings</span> <span class="o">=</span> <span class="n">assign_action_colors</span><span class="p">(</span><span class="n">graph</span><span class="p">)</span>
-</span><span id="tokens_to_html-132"><a href="#tokens_to_html-132"><span class="linenos">132</span></a>        <span class="n">role_of_node</span> <span class="o">=</span> <span class="p">{(</span><span class="n">n</span><span class="o">.</span><span class="n">context</span><span class="p">,</span> <span class="n">n</span><span class="o">.</span><span class="n">id</span><span class="p">):</span> <span class="n">n</span><span class="o">.</span><span class="n">role</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">}</span>
-</span><span id="tokens_to_html-133"><a href="#tokens_to_html-133"><span class="linenos">133</span></a>
-</span><span id="tokens_to_html-134"><a href="#tokens_to_html-134"><span class="linenos">134</span></a>    <span class="n">quote_counts</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
-</span><span id="tokens_to_html-135"><a href="#tokens_to_html-135"><span class="linenos">135</span></a>    <span class="n">pieces</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
-</span><span id="tokens_to_html-136"><a href="#tokens_to_html-136"><span class="linenos">136</span></a>    <span class="n">previous_class</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
-</span><span id="tokens_to_html-137"><a href="#tokens_to_html-137"><span class="linenos">137</span></a>
-</span><span id="tokens_to_html-138"><a href="#tokens_to_html-138"><span class="linenos">138</span></a>    <span class="k">for</span> <span class="n">token</span> <span class="ow">in</span> <span class="n">tokens</span><span class="p">:</span>
-</span><span id="tokens_to_html-139"><a href="#tokens_to_html-139"><span class="linenos">139</span></a>        <span class="bp">cls</span> <span class="o">=</span> <span class="n">_classify</span><span class="p">(</span><span class="n">token</span><span class="p">,</span> <span class="n">quote_counts</span><span class="p">)</span>
-</span><span id="tokens_to_html-140"><a href="#tokens_to_html-140"><span class="linenos">140</span></a>        <span class="n">rendered</span> <span class="o">=</span> <span class="n">html</span><span class="o">.</span><span class="n">escape</span><span class="p">(</span><span class="n">token</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
-</span><span id="tokens_to_html-141"><a href="#tokens_to_html-141"><span class="linenos">141</span></a>
-</span><span id="tokens_to_html-142"><a href="#tokens_to_html-142"><span class="linenos">142</span></a>        <span class="n">key</span> <span class="o">=</span> <span class="p">(</span><span class="n">token</span><span class="o">.</span><span class="n">context</span><span class="p">,</span> <span class="n">token</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
-</span><span id="tokens_to_html-143"><a href="#tokens_to_html-143"><span class="linenos">143</span></a>        <span class="n">color</span> <span class="o">=</span> <span class="n">color_of_node</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
-</span><span id="tokens_to_html-144"><a href="#tokens_to_html-144"><span class="linenos">144</span></a>        <span class="k">if</span> <span class="n">color</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-</span><span id="tokens_to_html-145"><a href="#tokens_to_html-145"><span class="linenos">145</span></a>            <span class="n">fill</span><span class="p">,</span> <span class="n">stroke</span><span class="p">,</span> <span class="n">text_color</span> <span class="o">=</span> <span class="n">color</span>
-</span><span id="tokens_to_html-146"><a href="#tokens_to_html-146"><span class="linenos">146</span></a>            <span class="n">role</span> <span class="o">=</span> <span class="n">role_of_node</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span>
-</span><span id="tokens_to_html-147"><a href="#tokens_to_html-147"><span class="linenos">147</span></a>            <span class="n">role_style</span> <span class="o">=</span> <span class="n">_ROLE_STYLE</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">role</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">stroke</span><span class="o">=</span><span class="n">stroke</span><span class="p">)</span>
-</span><span id="tokens_to_html-148"><a href="#tokens_to_html-148"><span class="linenos">148</span></a>            <span class="n">rendered</span> <span class="o">=</span> <span class="p">(</span>
-</span><span id="tokens_to_html-149"><a href="#tokens_to_html-149"><span class="linenos">149</span></a>                <span class="sa">f</span><span class="s1">'&lt;span style="background-color: </span><span class="si">{</span><span class="n">fill</span><span class="si">}</span><span class="s1">; color: </span><span class="si">{</span><span class="n">text_color</span><span class="si">}</span><span class="s1">; </span><span class="si">{</span><span class="n">role_style</span><span class="si">}</span><span class="s1">"&gt;'</span>
-</span><span id="tokens_to_html-150"><a href="#tokens_to_html-150"><span class="linenos">150</span></a>                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">rendered</span><span class="si">}</span><span class="s2">&lt;/span&gt;"</span>
-</span><span id="tokens_to_html-151"><a href="#tokens_to_html-151"><span class="linenos">151</span></a>            <span class="p">)</span>
-</span><span id="tokens_to_html-152"><a href="#tokens_to_html-152"><span class="linenos">152</span></a>
-</span><span id="tokens_to_html-153"><a href="#tokens_to_html-153"><span class="linenos">153</span></a>        <span class="k">if</span> <span class="ow">not</span> <span class="n">pieces</span><span class="p">:</span>
-</span><span id="tokens_to_html-154"><a href="#tokens_to_html-154"><span class="linenos">154</span></a>            <span class="c1"># Nothing precedes the first token -- never prepend a space.</span>
-</span><span id="tokens_to_html-155"><a href="#tokens_to_html-155"><span class="linenos">155</span></a>            <span class="n">pieces</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">rendered</span><span class="p">)</span>
-</span><span id="tokens_to_html-156"><a href="#tokens_to_html-156"><span class="linenos">156</span></a>        <span class="k">elif</span> <span class="bp">cls</span> <span class="o">==</span> <span class="n">_LEFT</span><span class="p">:</span>
-</span><span id="tokens_to_html-157"><a href="#tokens_to_html-157"><span class="linenos">157</span></a>            <span class="n">pieces</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">rendered</span><span class="p">)</span>
-</span><span id="tokens_to_html-158"><a href="#tokens_to_html-158"><span class="linenos">158</span></a>        <span class="k">elif</span> <span class="bp">cls</span> <span class="o">==</span> <span class="n">_RIGHT</span><span class="p">:</span>
-</span><span id="tokens_to_html-159"><a href="#tokens_to_html-159"><span class="linenos">159</span></a>            <span class="n">pieces</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">" "</span> <span class="o">+</span> <span class="n">rendered</span><span class="p">)</span>
-</span><span id="tokens_to_html-160"><a href="#tokens_to_html-160"><span class="linenos">160</span></a>        <span class="k">else</span><span class="p">:</span>  <span class="c1"># _NORMAL</span>
-</span><span id="tokens_to_html-161"><a href="#tokens_to_html-161"><span class="linenos">161</span></a>            <span class="k">if</span> <span class="n">previous_class</span> <span class="o">==</span> <span class="n">_RIGHT</span><span class="p">:</span>
-</span><span id="tokens_to_html-162"><a href="#tokens_to_html-162"><span class="linenos">162</span></a>                <span class="n">pieces</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">rendered</span><span class="p">)</span>
-</span><span id="tokens_to_html-163"><a href="#tokens_to_html-163"><span class="linenos">163</span></a>            <span class="k">else</span><span class="p">:</span>
-</span><span id="tokens_to_html-164"><a href="#tokens_to_html-164"><span class="linenos">164</span></a>                <span class="n">pieces</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">" "</span> <span class="o">+</span> <span class="n">rendered</span><span class="p">)</span>
-</span><span id="tokens_to_html-165"><a href="#tokens_to_html-165"><span class="linenos">165</span></a>
-</span><span id="tokens_to_html-166"><a href="#tokens_to_html-166"><span class="linenos">166</span></a>        <span class="n">previous_class</span> <span class="o">=</span> <span class="bp">cls</span>
-</span><span id="tokens_to_html-167"><a href="#tokens_to_html-167"><span class="linenos">167</span></a>
-</span><span id="tokens_to_html-168"><a href="#tokens_to_html-168"><span class="linenos">168</span></a>    <span class="k">return</span> <span class="s2">""</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">pieces</span><span class="p">)</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="tokens_to_html-119"><a href="#tokens_to_html-119"><span class="linenos">119</span></a><span class="k">def</span><span class="w"> </span><span class="nf">tokens_to_html</span><span class="p">(</span><span class="n">tokens</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">CitableToken</span><span class="p">],</span> <span class="n">graph</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">AATGraph</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+</span><span id="tokens_to_html-120"><a href="#tokens_to_html-120"><span class="linenos">120</span></a><span class="w">    </span><span class="sd">"""Render `tokens` as one continuous HTML string: ordinary words get</span>
+</span><span id="tokens_to_html-121"><a href="#tokens_to_html-121"><span class="linenos">121</span></a><span class="sd">    a space before them, punctuation attaches per this module's own</span>
+</span><span id="tokens_to_html-122"><a href="#tokens_to_html-122"><span class="linenos">122</span></a><span class="sd">    docstring (left-joining by default; opening brackets and the first</span>
+</span><span id="tokens_to_html-123"><a href="#tokens_to_html-123"><span class="linenos">123</span></a><span class="sd">    of a quote pair right-join instead).</span>
+</span><span id="tokens_to_html-124"><a href="#tokens_to_html-124"><span class="linenos">124</span></a>
+</span><span id="tokens_to_html-125"><a href="#tokens_to_html-125"><span class="linenos">125</span></a><span class="sd">    If `graph` is given, every token whose (context, id) matches a node</span>
+</span><span id="tokens_to_html-126"><a href="#tokens_to_html-126"><span class="linenos">126</span></a><span class="sd">    in `graph` is highlighted: background/text colored the same way</span>
+</span><span id="tokens_to_html-127"><a href="#tokens_to_html-127"><span class="linenos">127</span></a><span class="sd">    that node is colored in `aat.core.mermaid.graph_to_mermaid()`'s</span>
+</span><span id="tokens_to_html-128"><a href="#tokens_to_html-128"><span class="linenos">128</span></a><span class="sd">    diagram (via `aat.core.coloring.assign_action_colors()`), with a</span>
+</span><span id="tokens_to_html-129"><a href="#tokens_to_html-129"><span class="linenos">129</span></a><span class="sd">    role-specific border -- a box around an `action` token, a rounded</span>
+</span><span id="tokens_to_html-130"><a href="#tokens_to_html-130"><span class="linenos">130</span></a><span class="sd">    box around an `agent` token, an underline under a `target` token.</span>
+</span><span id="tokens_to_html-131"><a href="#tokens_to_html-131"><span class="linenos">131</span></a><span class="sd">    Omit `graph` (or pass `None`) for plain, unhighlighted text.</span>
+</span><span id="tokens_to_html-132"><a href="#tokens_to_html-132"><span class="linenos">132</span></a>
+</span><span id="tokens_to_html-133"><a href="#tokens_to_html-133"><span class="linenos">133</span></a><span class="sd">    Every token's text is HTML-escaped before being emitted, span or</span>
+</span><span id="tokens_to_html-134"><a href="#tokens_to_html-134"><span class="linenos">134</span></a><span class="sd">    not -- real passage text can contain a literal `&lt;`, `&gt;`, `&amp;`, or</span>
+</span><span id="tokens_to_html-135"><a href="#tokens_to_html-135"><span class="linenos">135</span></a><span class="sd">    quote character, which would otherwise be indistinguishable from</span>
+</span><span id="tokens_to_html-136"><a href="#tokens_to_html-136"><span class="linenos">136</span></a><span class="sd">    markup to anything that re-parses this output.</span>
+</span><span id="tokens_to_html-137"><a href="#tokens_to_html-137"><span class="linenos">137</span></a><span class="sd">    """</span>
+</span><span id="tokens_to_html-138"><a href="#tokens_to_html-138"><span class="linenos">138</span></a>    <span class="n">color_of_node</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{}</span>
+</span><span id="tokens_to_html-139"><a href="#tokens_to_html-139"><span class="linenos">139</span></a>    <span class="n">role_of_node</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+</span><span id="tokens_to_html-140"><a href="#tokens_to_html-140"><span class="linenos">140</span></a>    <span class="k">if</span> <span class="n">graph</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+</span><span id="tokens_to_html-141"><a href="#tokens_to_html-141"><span class="linenos">141</span></a>        <span class="n">color_of_node</span><span class="p">,</span> <span class="n">_warnings</span> <span class="o">=</span> <span class="n">assign_action_colors</span><span class="p">(</span><span class="n">graph</span><span class="p">)</span>
+</span><span id="tokens_to_html-142"><a href="#tokens_to_html-142"><span class="linenos">142</span></a>        <span class="n">role_of_node</span> <span class="o">=</span> <span class="p">{(</span><span class="n">n</span><span class="o">.</span><span class="n">context</span><span class="p">,</span> <span class="n">n</span><span class="o">.</span><span class="n">id</span><span class="p">):</span> <span class="n">n</span><span class="o">.</span><span class="n">role</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">}</span>
+</span><span id="tokens_to_html-143"><a href="#tokens_to_html-143"><span class="linenos">143</span></a>
+</span><span id="tokens_to_html-144"><a href="#tokens_to_html-144"><span class="linenos">144</span></a>    <span class="n">quote_counts</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+</span><span id="tokens_to_html-145"><a href="#tokens_to_html-145"><span class="linenos">145</span></a>    <span class="n">pieces</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+</span><span id="tokens_to_html-146"><a href="#tokens_to_html-146"><span class="linenos">146</span></a>    <span class="n">previous_class</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+</span><span id="tokens_to_html-147"><a href="#tokens_to_html-147"><span class="linenos">147</span></a>
+</span><span id="tokens_to_html-148"><a href="#tokens_to_html-148"><span class="linenos">148</span></a>    <span class="k">for</span> <span class="n">token</span> <span class="ow">in</span> <span class="n">tokens</span><span class="p">:</span>
+</span><span id="tokens_to_html-149"><a href="#tokens_to_html-149"><span class="linenos">149</span></a>        <span class="bp">cls</span> <span class="o">=</span> <span class="n">_classify</span><span class="p">(</span><span class="n">token</span><span class="p">,</span> <span class="n">quote_counts</span><span class="p">)</span>
+</span><span id="tokens_to_html-150"><a href="#tokens_to_html-150"><span class="linenos">150</span></a>        <span class="n">rendered</span> <span class="o">=</span> <span class="n">html</span><span class="o">.</span><span class="n">escape</span><span class="p">(</span><span class="n">token</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+</span><span id="tokens_to_html-151"><a href="#tokens_to_html-151"><span class="linenos">151</span></a>
+</span><span id="tokens_to_html-152"><a href="#tokens_to_html-152"><span class="linenos">152</span></a>        <span class="n">key</span> <span class="o">=</span> <span class="p">(</span><span class="n">token</span><span class="o">.</span><span class="n">context</span><span class="p">,</span> <span class="n">token</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+</span><span id="tokens_to_html-153"><a href="#tokens_to_html-153"><span class="linenos">153</span></a>        <span class="n">color</span> <span class="o">=</span> <span class="n">color_of_node</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+</span><span id="tokens_to_html-154"><a href="#tokens_to_html-154"><span class="linenos">154</span></a>        <span class="k">if</span> <span class="n">color</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+</span><span id="tokens_to_html-155"><a href="#tokens_to_html-155"><span class="linenos">155</span></a>            <span class="n">fill</span><span class="p">,</span> <span class="n">stroke</span><span class="p">,</span> <span class="n">text_color</span> <span class="o">=</span> <span class="n">color</span>
+</span><span id="tokens_to_html-156"><a href="#tokens_to_html-156"><span class="linenos">156</span></a>            <span class="n">role</span> <span class="o">=</span> <span class="n">role_of_node</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span>
+</span><span id="tokens_to_html-157"><a href="#tokens_to_html-157"><span class="linenos">157</span></a>            <span class="n">role_style</span> <span class="o">=</span> <span class="n">_ROLE_STYLE</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">role</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">stroke</span><span class="o">=</span><span class="n">stroke</span><span class="p">)</span>
+</span><span id="tokens_to_html-158"><a href="#tokens_to_html-158"><span class="linenos">158</span></a>            <span class="n">rendered</span> <span class="o">=</span> <span class="p">(</span>
+</span><span id="tokens_to_html-159"><a href="#tokens_to_html-159"><span class="linenos">159</span></a>                <span class="sa">f</span><span class="s1">'&lt;span style="background-color: </span><span class="si">{</span><span class="n">fill</span><span class="si">}</span><span class="s1">; color: </span><span class="si">{</span><span class="n">text_color</span><span class="si">}</span><span class="s1">; </span><span class="si">{</span><span class="n">role_style</span><span class="si">}</span><span class="s1">"&gt;'</span>
+</span><span id="tokens_to_html-160"><a href="#tokens_to_html-160"><span class="linenos">160</span></a>                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">rendered</span><span class="si">}</span><span class="s2">&lt;/span&gt;"</span>
+</span><span id="tokens_to_html-161"><a href="#tokens_to_html-161"><span class="linenos">161</span></a>            <span class="p">)</span>
+</span><span id="tokens_to_html-162"><a href="#tokens_to_html-162"><span class="linenos">162</span></a>
+</span><span id="tokens_to_html-163"><a href="#tokens_to_html-163"><span class="linenos">163</span></a>        <span class="k">if</span> <span class="ow">not</span> <span class="n">pieces</span><span class="p">:</span>
+</span><span id="tokens_to_html-164"><a href="#tokens_to_html-164"><span class="linenos">164</span></a>            <span class="c1"># Nothing precedes the first token -- never prepend a space.</span>
+</span><span id="tokens_to_html-165"><a href="#tokens_to_html-165"><span class="linenos">165</span></a>            <span class="n">pieces</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">rendered</span><span class="p">)</span>
+</span><span id="tokens_to_html-166"><a href="#tokens_to_html-166"><span class="linenos">166</span></a>        <span class="k">elif</span> <span class="bp">cls</span> <span class="o">==</span> <span class="n">_LEFT</span><span class="p">:</span>
+</span><span id="tokens_to_html-167"><a href="#tokens_to_html-167"><span class="linenos">167</span></a>            <span class="n">pieces</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">rendered</span><span class="p">)</span>
+</span><span id="tokens_to_html-168"><a href="#tokens_to_html-168"><span class="linenos">168</span></a>        <span class="k">elif</span> <span class="bp">cls</span> <span class="o">==</span> <span class="n">_RIGHT</span><span class="p">:</span>
+</span><span id="tokens_to_html-169"><a href="#tokens_to_html-169"><span class="linenos">169</span></a>            <span class="n">pieces</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">" "</span> <span class="o">+</span> <span class="n">rendered</span><span class="p">)</span>
+</span><span id="tokens_to_html-170"><a href="#tokens_to_html-170"><span class="linenos">170</span></a>        <span class="k">else</span><span class="p">:</span>  <span class="c1"># _NORMAL</span>
+</span><span id="tokens_to_html-171"><a href="#tokens_to_html-171"><span class="linenos">171</span></a>            <span class="k">if</span> <span class="n">previous_class</span> <span class="o">==</span> <span class="n">_RIGHT</span><span class="p">:</span>
+</span><span id="tokens_to_html-172"><a href="#tokens_to_html-172"><span class="linenos">172</span></a>                <span class="n">pieces</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">rendered</span><span class="p">)</span>
+</span><span id="tokens_to_html-173"><a href="#tokens_to_html-173"><span class="linenos">173</span></a>            <span class="k">else</span><span class="p">:</span>
+</span><span id="tokens_to_html-174"><a href="#tokens_to_html-174"><span class="linenos">174</span></a>                <span class="n">pieces</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">" "</span> <span class="o">+</span> <span class="n">rendered</span><span class="p">)</span>
+</span><span id="tokens_to_html-175"><a href="#tokens_to_html-175"><span class="linenos">175</span></a>
+</span><span id="tokens_to_html-176"><a href="#tokens_to_html-176"><span class="linenos">176</span></a>        <span class="n">previous_class</span> <span class="o">=</span> <span class="bp">cls</span>
+</span><span id="tokens_to_html-177"><a href="#tokens_to_html-177"><span class="linenos">177</span></a>
+</span><span id="tokens_to_html-178"><a href="#tokens_to_html-178"><span class="linenos">178</span></a>    <span class="k">return</span> <span class="s2">""</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">pieces</span><span class="p">)</span>
 </span></pre></div>
 
 
@@ -697,6 +889,677 @@ quote character, which would otherwise be indistinguishable from
 markup to anything that re-parses this output.</p>
 </div>
 
+
+                </section>
+                <section id="DEFAULT_SENTENCE_TERMINATORS">
+                    <div class="attr variable">
+            <span class="name">DEFAULT_SENTENCE_TERMINATORS</span>        =
+<span class="default_value">&#39;.?!&#39;</span>
+
+        
+    </div>
+    <a class="headerlink" href="#DEFAULT_SENTENCE_TERMINATORS"></a>
+    
+    
+
+                </section>
+                <section id="cluster_sentences">
+                            <input id="cluster_sentences-view-source" class="view-source-toggle-state" type="checkbox" aria-hidden="true" tabindex="-1">
+<div class="attr function">
+            
+        <span class="def">def</span>
+        <span class="name">cluster_sentences</span><span class="signature pdoc-code multiline">(<span class="param">	<span class="n">units</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n"><a href="../aat.html#CitedPassage">aat.CitedPassage</a></span><span class="p">]</span>,</span><span class="param">	<span class="n">terminators</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">'.?!'</span></span><span class="return-annotation">) -> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n"><a href="../aat.html#CitedPassage">aat.CitedPassage</a></span><span class="p">]]</span>:</span></span>
+
+                <label class="view-source-button" for="cluster_sentences-view-source"><span>View Source</span></label>
+
+    </div>
+    <a class="headerlink" href="#cluster_sentences"></a>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="cluster_sentences-108"><a href="#cluster_sentences-108"><span class="linenos">108</span></a><span class="k">def</span><span class="w"> </span><span class="nf">cluster_sentences</span><span class="p">(</span>
+</span><span id="cluster_sentences-109"><a href="#cluster_sentences-109"><span class="linenos">109</span></a>    <span class="n">units</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">CitedPassage</span><span class="p">],</span> <span class="n">terminators</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">DEFAULT_SENTENCE_TERMINATORS</span>
+</span><span id="cluster_sentences-110"><a href="#cluster_sentences-110"><span class="linenos">110</span></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">CitedPassage</span><span class="p">]]:</span>
+</span><span id="cluster_sentences-111"><a href="#cluster_sentences-111"><span class="linenos">111</span></a><span class="w">    </span><span class="sd">"""Group `units` (citation units, in their own citation order) into</span>
+</span><span id="cluster_sentences-112"><a href="#cluster_sentences-112"><span class="linenos">112</span></a><span class="sd">    the smallest possible consecutive runs that each end with a</span>
+</span><span id="cluster_sentences-113"><a href="#cluster_sentences-113"><span class="linenos">113</span></a><span class="sd">    sentence-ending unit (ends_sentence() on that run's own last unit),</span>
+</span><span id="cluster_sentences-114"><a href="#cluster_sentences-114"><span class="linenos">114</span></a><span class="sd">    i.e. a one-unit "sentence" whenever a unit's own text already ends</span>
+</span><span id="cluster_sentences-115"><a href="#cluster_sentences-115"><span class="linenos">115</span></a><span class="sd">    the sentence, or a multi-unit run when it takes more than one</span>
+</span><span id="cluster_sentences-116"><a href="#cluster_sentences-116"><span class="linenos">116</span></a><span class="sd">    citation unit to reach one.</span>
+</span><span id="cluster_sentences-117"><a href="#cluster_sentences-117"><span class="linenos">117</span></a>
+</span><span id="cluster_sentences-118"><a href="#cluster_sentences-118"><span class="linenos">118</span></a><span class="sd">    The final group is included even if it never reaches a</span>
+</span><span id="cluster_sentences-119"><a href="#cluster_sentences-119"><span class="linenos">119</span></a><span class="sd">    sentence-ending unit (e.g. the corpus's own last unit ends mid-clause,</span>
+</span><span id="cluster_sentences-120"><a href="#cluster_sentences-120"><span class="linenos">120</span></a><span class="sd">    or `units` is empty) -- there is nothing else to do with trailing</span>
+</span><span id="cluster_sentences-121"><a href="#cluster_sentences-121"><span class="linenos">121</span></a><span class="sd">    text than treat it as its own group; callers that care can check</span>
+</span><span id="cluster_sentences-122"><a href="#cluster_sentences-122"><span class="linenos">122</span></a><span class="sd">    `not ends_sentence(group[-1].text, terminators)` on the last group</span>
+</span><span id="cluster_sentences-123"><a href="#cluster_sentences-123"><span class="linenos">123</span></a><span class="sd">    returned to warn about it.</span>
+</span><span id="cluster_sentences-124"><a href="#cluster_sentences-124"><span class="linenos">124</span></a>
+</span><span id="cluster_sentences-125"><a href="#cluster_sentences-125"><span class="linenos">125</span></a><span class="sd">    Returns `[]` for empty `units`.</span>
+</span><span id="cluster_sentences-126"><a href="#cluster_sentences-126"><span class="linenos">126</span></a><span class="sd">    """</span>
+</span><span id="cluster_sentences-127"><a href="#cluster_sentences-127"><span class="linenos">127</span></a>    <span class="n">groups</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">CitedPassage</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>
+</span><span id="cluster_sentences-128"><a href="#cluster_sentences-128"><span class="linenos">128</span></a>    <span class="n">current</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">CitedPassage</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+</span><span id="cluster_sentences-129"><a href="#cluster_sentences-129"><span class="linenos">129</span></a>
+</span><span id="cluster_sentences-130"><a href="#cluster_sentences-130"><span class="linenos">130</span></a>    <span class="k">for</span> <span class="n">unit</span> <span class="ow">in</span> <span class="n">units</span><span class="p">:</span>
+</span><span id="cluster_sentences-131"><a href="#cluster_sentences-131"><span class="linenos">131</span></a>        <span class="n">current</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">unit</span><span class="p">)</span>
+</span><span id="cluster_sentences-132"><a href="#cluster_sentences-132"><span class="linenos">132</span></a>        <span class="k">if</span> <span class="n">ends_sentence</span><span class="p">(</span><span class="n">unit</span><span class="o">.</span><span class="n">text</span><span class="p">,</span> <span class="n">terminators</span><span class="p">):</span>
+</span><span id="cluster_sentences-133"><a href="#cluster_sentences-133"><span class="linenos">133</span></a>            <span class="n">groups</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">current</span><span class="p">)</span>
+</span><span id="cluster_sentences-134"><a href="#cluster_sentences-134"><span class="linenos">134</span></a>            <span class="n">current</span> <span class="o">=</span> <span class="p">[]</span>
+</span><span id="cluster_sentences-135"><a href="#cluster_sentences-135"><span class="linenos">135</span></a>
+</span><span id="cluster_sentences-136"><a href="#cluster_sentences-136"><span class="linenos">136</span></a>    <span class="k">if</span> <span class="n">current</span><span class="p">:</span>
+</span><span id="cluster_sentences-137"><a href="#cluster_sentences-137"><span class="linenos">137</span></a>        <span class="n">groups</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">current</span><span class="p">)</span>
+</span><span id="cluster_sentences-138"><a href="#cluster_sentences-138"><span class="linenos">138</span></a>
+</span><span id="cluster_sentences-139"><a href="#cluster_sentences-139"><span class="linenos">139</span></a>    <span class="k">return</span> <span class="n">groups</span>
+</span></pre></div>
+
+
+            <div class="docstring"><p>Group <code>units</code> (citation units, in their own citation order) into
+the smallest possible consecutive runs that each end with a
+sentence-ending unit (ends_sentence() on that run's own last unit),
+i.e. a one-unit "sentence" whenever a unit's own text already ends
+the sentence, or a multi-unit run when it takes more than one
+citation unit to reach one.</p>
+
+<p>The final group is included even if it never reaches a
+sentence-ending unit (e.g. the corpus's own last unit ends mid-clause,
+or <code>units</code> is empty) -- there is nothing else to do with trailing
+text than treat it as its own group; callers that care can check
+<code>not ends_sentence(group[-1].text, terminators)</code> on the last group
+returned to warn about it.</p>
+
+<p>Returns <code>[]</code> for empty <code>units</code>.</p>
+</div>
+
+
+                </section>
+                <section id="ends_sentence">
+                            <input id="ends_sentence-view-source" class="view-source-toggle-state" type="checkbox" aria-hidden="true" tabindex="-1">
+<div class="attr function">
+            
+        <span class="def">def</span>
+        <span class="name">ends_sentence</span><span class="signature pdoc-code condensed">(<span class="param"><span class="n">text</span><span class="p">:</span> <span class="nb">str</span>, </span><span class="param"><span class="n">terminators</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">'.?!'</span></span><span class="return-annotation">) -> <span class="nb">bool</span>:</span></span>
+
+                <label class="view-source-button" for="ends_sentence-view-source"><span>View Source</span></label>
+
+    </div>
+    <a class="headerlink" href="#ends_sentence"></a>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="ends_sentence-95"><a href="#ends_sentence-95"><span class="linenos"> 95</span></a><span class="k">def</span><span class="w"> </span><span class="nf">ends_sentence</span><span class="p">(</span><span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">terminators</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">DEFAULT_SENTENCE_TERMINATORS</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+</span><span id="ends_sentence-96"><a href="#ends_sentence-96"><span class="linenos"> 96</span></a><span class="w">    </span><span class="sd">"""True if `text`, stripped of trailing whitespace, ends in one of</span>
+</span><span id="ends_sentence-97"><a href="#ends_sentence-97"><span class="linenos"> 97</span></a><span class="sd">    `terminators`'s characters. False for empty/all-whitespace `text`</span>
+</span><span id="ends_sentence-98"><a href="#ends_sentence-98"><span class="linenos"> 98</span></a><span class="sd">    (there's nothing to call a sentence ending here, and indexing an</span>
+</span><span id="ends_sentence-99"><a href="#ends_sentence-99"><span class="linenos"> 99</span></a><span class="sd">    empty stripped string would raise) -- a citation unit with no text</span>
+</span><span id="ends_sentence-100"><a href="#ends_sentence-100"><span class="linenos">100</span></a><span class="sd">    at all just continues on to the next one, same as any other</span>
+</span><span id="ends_sentence-101"><a href="#ends_sentence-101"><span class="linenos">101</span></a><span class="sd">    non-terminal unit."""</span>
+</span><span id="ends_sentence-102"><a href="#ends_sentence-102"><span class="linenos">102</span></a>    <span class="n">stripped</span> <span class="o">=</span> <span class="n">text</span><span class="o">.</span><span class="n">rstrip</span><span class="p">()</span>
+</span><span id="ends_sentence-103"><a href="#ends_sentence-103"><span class="linenos">103</span></a>    <span class="k">if</span> <span class="ow">not</span> <span class="n">stripped</span><span class="p">:</span>
+</span><span id="ends_sentence-104"><a href="#ends_sentence-104"><span class="linenos">104</span></a>        <span class="k">return</span> <span class="kc">False</span>
+</span><span id="ends_sentence-105"><a href="#ends_sentence-105"><span class="linenos">105</span></a>    <span class="k">return</span> <span class="n">stripped</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="ow">in</span> <span class="n">terminators</span>
+</span></pre></div>
+
+
+            <div class="docstring"><p>True if <code>text</code>, stripped of trailing whitespace, ends in one of
+<code>terminators</code>'s characters. False for empty/all-whitespace <code>text</code>
+(there's nothing to call a sentence ending here, and indexing an
+empty stripped string would raise) -- a citation unit with no text
+at all just continues on to the next one, same as any other
+non-terminal unit.</p>
+</div>
+
+
+                </section>
+                <section id="passage_component">
+                            <input id="passage_component-view-source" class="view-source-toggle-state" type="checkbox" aria-hidden="true" tabindex="-1">
+<div class="attr function">
+            
+        <span class="def">def</span>
+        <span class="name">passage_component</span><span class="signature pdoc-code condensed">(<span class="param"><span class="n">urn</span><span class="p">:</span> <span class="nb">str</span></span><span class="return-annotation">) -> <span class="nb">str</span>:</span></span>
+
+                <label class="view-source-button" for="passage_component-view-source"><span>View Source</span></label>
+
+    </div>
+    <a class="headerlink" href="#passage_component"></a>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="passage_component-66"><a href="#passage_component-66"><span class="linenos">66</span></a><span class="k">def</span><span class="w"> </span><span class="nf">passage_component</span><span class="p">(</span><span class="n">urn</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+</span><span id="passage_component-67"><a href="#passage_component-67"><span class="linenos">67</span></a><span class="w">    </span><span class="sd">"""The fifth, final ':'-delimited field of a CTS URN `urn` -- e.g.</span>
+</span><span id="passage_component-68"><a href="#passage_component-68"><span class="linenos">68</span></a><span class="sd">    "1.14" from "urn:cts:compnov:bible.genesis.rvvpl:1.14". Raises</span>
+</span><span id="passage_component-69"><a href="#passage_component-69"><span class="linenos">69</span></a><span class="sd">    ValueError, naming `urn`, if it doesn't split into at least 5</span>
+</span><span id="passage_component-70"><a href="#passage_component-70"><span class="linenos">70</span></a><span class="sd">    ':'-delimited fields (i.e. isn't a CTS URN at all)."""</span>
+</span><span id="passage_component-71"><a href="#passage_component-71"><span class="linenos">71</span></a>    <span class="n">parts</span> <span class="o">=</span> <span class="n">urn</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">":"</span><span class="p">)</span>
+</span><span id="passage_component-72"><a href="#passage_component-72"><span class="linenos">72</span></a>    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">parts</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">5</span><span class="p">:</span>
+</span><span id="passage_component-73"><a href="#passage_component-73"><span class="linenos">73</span></a>        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+</span><span id="passage_component-74"><a href="#passage_component-74"><span class="linenos">74</span></a>            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">urn</span><span class="si">!r}</span><span class="s2"> doesn't look like a CTS URN (expected at least 5 "</span>
+</span><span id="passage_component-75"><a href="#passage_component-75"><span class="linenos">75</span></a>            <span class="sa">f</span><span class="s2">"':'-delimited fields, got </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">parts</span><span class="p">)</span><span class="si">}</span><span class="s2">)"</span>
+</span><span id="passage_component-76"><a href="#passage_component-76"><span class="linenos">76</span></a>        <span class="p">)</span>
+</span><span id="passage_component-77"><a href="#passage_component-77"><span class="linenos">77</span></a>    <span class="k">return</span> <span class="n">parts</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span>
+</span></pre></div>
+
+
+            <div class="docstring"><p>The fifth, final ':'-delimited field of a CTS URN <code>urn</code> -- e.g.
+"1.14" from "urn:cts:compnov:bible.genesis.rvvpl:1.14". Raises
+ValueError, naming <code>urn</code>, if it doesn't split into at least 5
+':'-delimited fields (i.e. isn't a CTS URN at all).</p>
+</div>
+
+
+                </section>
+                <section id="urn_prefix">
+                            <input id="urn_prefix-view-source" class="view-source-toggle-state" type="checkbox" aria-hidden="true" tabindex="-1">
+<div class="attr function">
+            
+        <span class="def">def</span>
+        <span class="name">urn_prefix</span><span class="signature pdoc-code condensed">(<span class="param"><span class="n">urn</span><span class="p">:</span> <span class="nb">str</span></span><span class="return-annotation">) -> <span class="nb">str</span>:</span></span>
+
+                <label class="view-source-button" for="urn_prefix-view-source"><span>View Source</span></label>
+
+    </div>
+    <a class="headerlink" href="#urn_prefix"></a>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="urn_prefix-80"><a href="#urn_prefix-80"><span class="linenos">80</span></a><span class="k">def</span><span class="w"> </span><span class="nf">urn_prefix</span><span class="p">(</span><span class="n">urn</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+</span><span id="urn_prefix-81"><a href="#urn_prefix-81"><span class="linenos">81</span></a><span class="w">    </span><span class="sd">"""Everything in a CTS URN `urn` *before* its passage component --</span>
+</span><span id="urn_prefix-82"><a href="#urn_prefix-82"><span class="linenos">82</span></a><span class="sd">    "urn:cts:compnov:bible.genesis.rvvpl" from</span>
+</span><span id="urn_prefix-83"><a href="#urn_prefix-83"><span class="linenos">83</span></a><span class="sd">    "urn:cts:compnov:bible.genesis.rvvpl:1.14" -- i.e. the first four</span>
+</span><span id="urn_prefix-84"><a href="#urn_prefix-84"><span class="linenos">84</span></a><span class="sd">    ':'-delimited fields, rejoined with ':'. Same ValueError as</span>
+</span><span id="urn_prefix-85"><a href="#urn_prefix-85"><span class="linenos">85</span></a><span class="sd">    passage_component() for a non-CTS-URN `urn`."""</span>
+</span><span id="urn_prefix-86"><a href="#urn_prefix-86"><span class="linenos">86</span></a>    <span class="n">parts</span> <span class="o">=</span> <span class="n">urn</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">":"</span><span class="p">)</span>
+</span><span id="urn_prefix-87"><a href="#urn_prefix-87"><span class="linenos">87</span></a>    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">parts</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">5</span><span class="p">:</span>
+</span><span id="urn_prefix-88"><a href="#urn_prefix-88"><span class="linenos">88</span></a>        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+</span><span id="urn_prefix-89"><a href="#urn_prefix-89"><span class="linenos">89</span></a>            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">urn</span><span class="si">!r}</span><span class="s2"> doesn't look like a CTS URN (expected at least 5 "</span>
+</span><span id="urn_prefix-90"><a href="#urn_prefix-90"><span class="linenos">90</span></a>            <span class="sa">f</span><span class="s2">"':'-delimited fields, got </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">parts</span><span class="p">)</span><span class="si">}</span><span class="s2">)"</span>
+</span><span id="urn_prefix-91"><a href="#urn_prefix-91"><span class="linenos">91</span></a>        <span class="p">)</span>
+</span><span id="urn_prefix-92"><a href="#urn_prefix-92"><span class="linenos">92</span></a>    <span class="k">return</span> <span class="s2">":"</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">parts</span><span class="p">[:</span><span class="mi">4</span><span class="p">])</span>
+</span></pre></div>
+
+
+            <div class="docstring"><p>Everything in a CTS URN <code>urn</code> <em>before</em> its passage component --
+"urn:cts:compnov:bible.genesis.rvvpl" from
+"urn:cts:compnov:bible.genesis.rvvpl:1.14" -- i.e. the first four
+':'-delimited fields, rejoined with ':'. Same ValueError as
+passage_component() for a non-CTS-URN <code>urn</code>.</p>
+</div>
+
+
+                </section>
+                <section id="tokenize_units">
+                            <input id="tokenize_units-view-source" class="view-source-toggle-state" type="checkbox" aria-hidden="true" tabindex="-1">
+<div class="attr function">
+            
+        <span class="def">def</span>
+        <span class="name">tokenize_units</span><span class="signature pdoc-code multiline">(<span class="param">	<span class="n">units</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n"><a href="../aat.html#CitedPassage">aat.CitedPassage</a></span><span class="p">]</span></span><span class="return-annotation">) -> <span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n"><a href="../aat.html#CitableToken">aat.CitableToken</a></span><span class="p">]]</span>:</span></span>
+
+                <label class="view-source-button" for="tokenize_units-view-source"><span>View Source</span></label>
+
+    </div>
+    <a class="headerlink" href="#tokenize_units"></a>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="tokenize_units-142"><a href="#tokenize_units-142"><span class="linenos">142</span></a><span class="k">def</span><span class="w"> </span><span class="nf">tokenize_units</span><span class="p">(</span><span class="n">units</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">CitedPassage</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">CitableToken</span><span class="p">]]:</span>
+</span><span id="tokenize_units-143"><a href="#tokenize_units-143"><span class="linenos">143</span></a><span class="w">    </span><span class="sd">"""Combine one sentence's worth of citation units (`units`, in</span>
+</span><span id="tokenize_units-144"><a href="#tokenize_units-144"><span class="linenos">144</span></a><span class="sd">    citation order -- typically one element of cluster_sentences()'s own</span>
+</span><span id="tokenize_units-145"><a href="#tokenize_units-145"><span class="linenos">145</span></a><span class="sd">    return value) into a single analyzable passage: a combined context</span>
+</span><span id="tokenize_units-146"><a href="#tokenize_units-146"><span class="linenos">146</span></a><span class="sd">    reference, the combined text, and a token list unique within that</span>
+</span><span id="tokenize_units-147"><a href="#tokenize_units-147"><span class="linenos">147</span></a><span class="sd">    combined context.</span>
+</span><span id="tokenize_units-148"><a href="#tokenize_units-148"><span class="linenos">148</span></a>
+</span><span id="tokenize_units-149"><a href="#tokenize_units-149"><span class="linenos">149</span></a><span class="sd">    The combined context is a CTS range reference spanning every unit's</span>
+</span><span id="tokenize_units-150"><a href="#tokenize_units-150"><span class="linenos">150</span></a><span class="sd">    own passage component: `{urn_prefix}:{first_passage}` for a single</span>
+</span><span id="tokenize_units-151"><a href="#tokenize_units-151"><span class="linenos">151</span></a><span class="sd">    unit, `{urn_prefix}:{first_passage}-{last_passage}` for more than one</span>
+</span><span id="tokenize_units-152"><a href="#tokenize_units-152"><span class="linenos">152</span></a><span class="sd">    (standard CTS range syntax). Every unit in `units` must share the</span>
+</span><span id="tokenize_units-153"><a href="#tokenize_units-153"><span class="linenos">153</span></a><span class="sd">    same urn_prefix() -- raises ValueError, naming both, if two units</span>
+</span><span id="tokenize_units-154"><a href="#tokenize_units-154"><span class="linenos">154</span></a><span class="sd">    disagree (a sign `units` mixes citation units from different works,</span>
+</span><span id="tokenize_units-155"><a href="#tokenize_units-155"><span class="linenos">155</span></a><span class="sd">    which cluster_sentences() should never itself produce from one</span>
+</span><span id="tokenize_units-156"><a href="#tokenize_units-156"><span class="linenos">156</span></a><span class="sd">    corpus, but this is cheap to check and a much clearer failure than a</span>
+</span><span id="tokenize_units-157"><a href="#tokenize_units-157"><span class="linenos">157</span></a><span class="sd">    silently wrong combined context).</span>
+</span><span id="tokenize_units-158"><a href="#tokenize_units-158"><span class="linenos">158</span></a>
+</span><span id="tokenize_units-159"><a href="#tokenize_units-159"><span class="linenos">159</span></a><span class="sd">    The combined text is every unit's own text, in order, joined by a</span>
+</span><span id="tokenize_units-160"><a href="#tokenize_units-160"><span class="linenos">160</span></a><span class="sd">    single space.</span>
+</span><span id="tokenize_units-161"><a href="#tokenize_units-161"><span class="linenos">161</span></a>
+</span><span id="tokenize_units-162"><a href="#tokenize_units-162"><span class="linenos">162</span></a><span class="sd">    Tokens: each unit is tokenized *on its own* (aat.english.tokenize(),</span>
+</span><span id="tokenize_units-163"><a href="#tokenize_units-163"><span class="linenos">163</span></a><span class="sd">    unmodified -- so splitting behavior exactly matches a unit analyzed</span>
+</span><span id="tokenize_units-164"><a href="#tokenize_units-164"><span class="linenos">164</span></a><span class="sd">    independently, e.g. via aat_corpus.py), giving each unit its own</span>
+</span><span id="tokenize_units-165"><a href="#tokenize_units-165"><span class="linenos">165</span></a><span class="sd">    locally-numbered 't1', 't2', ... ids; every one of those ids is then</span>
+</span><span id="tokenize_units-166"><a href="#tokenize_units-166"><span class="linenos">166</span></a><span class="sd">    rewritten to "{that unit's own passage component}.{local id}" (e.g.</span>
+</span><span id="tokenize_units-167"><a href="#tokenize_units-167"><span class="linenos">167</span></a><span class="sd">    "1.14.t1") and given `context` = the combined context above, so the</span>
+</span><span id="tokenize_units-168"><a href="#tokenize_units-168"><span class="linenos">168</span></a><span class="sd">    final list is unique within it regardless of how many units</span>
+</span><span id="tokenize_units-169"><a href="#tokenize_units-169"><span class="linenos">169</span></a><span class="sd">    contributed. Tokenizing each unit separately like this (rather than</span>
+</span><span id="tokenize_units-170"><a href="#tokenize_units-170"><span class="linenos">170</span></a><span class="sd">    tokenizing the combined text as one blob) also means the boundary</span>
+</span><span id="tokenize_units-171"><a href="#tokenize_units-171"><span class="linenos">171</span></a><span class="sd">    between two citation units is never accidentally merged into one</span>
+</span><span id="tokenize_units-172"><a href="#tokenize_units-172"><span class="linenos">172</span></a><span class="sd">    token, whatever whitespace does or doesn't separate them in the</span>
+</span><span id="tokenize_units-173"><a href="#tokenize_units-173"><span class="linenos">173</span></a><span class="sd">    original text.</span>
+</span><span id="tokenize_units-174"><a href="#tokenize_units-174"><span class="linenos">174</span></a>
+</span><span id="tokenize_units-175"><a href="#tokenize_units-175"><span class="linenos">175</span></a><span class="sd">    Raises ValueError for empty `units`.</span>
+</span><span id="tokenize_units-176"><a href="#tokenize_units-176"><span class="linenos">176</span></a><span class="sd">    """</span>
+</span><span id="tokenize_units-177"><a href="#tokenize_units-177"><span class="linenos">177</span></a>    <span class="k">if</span> <span class="ow">not</span> <span class="n">units</span><span class="p">:</span>
+</span><span id="tokenize_units-178"><a href="#tokenize_units-178"><span class="linenos">178</span></a>        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"tokenize_units() needs at least one CitedPassage"</span><span class="p">)</span>
+</span><span id="tokenize_units-179"><a href="#tokenize_units-179"><span class="linenos">179</span></a>
+</span><span id="tokenize_units-180"><a href="#tokenize_units-180"><span class="linenos">180</span></a>    <span class="n">prefix</span> <span class="o">=</span> <span class="n">urn_prefix</span><span class="p">(</span><span class="n">units</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">context</span><span class="p">)</span>
+</span><span id="tokenize_units-181"><a href="#tokenize_units-181"><span class="linenos">181</span></a>    <span class="n">passages</span> <span class="o">=</span> <span class="p">[</span><span class="n">passage_component</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">context</span><span class="p">)</span> <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">units</span><span class="p">]</span>
+</span><span id="tokenize_units-182"><a href="#tokenize_units-182"><span class="linenos">182</span></a>    <span class="k">for</span> <span class="n">unit</span><span class="p">,</span> <span class="n">unit_passage</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">units</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span> <span class="n">passages</span><span class="p">[</span><span class="mi">1</span><span class="p">:]):</span>
+</span><span id="tokenize_units-183"><a href="#tokenize_units-183"><span class="linenos">183</span></a>        <span class="k">if</span> <span class="n">urn_prefix</span><span class="p">(</span><span class="n">unit</span><span class="o">.</span><span class="n">context</span><span class="p">)</span> <span class="o">!=</span> <span class="n">prefix</span><span class="p">:</span>
+</span><span id="tokenize_units-184"><a href="#tokenize_units-184"><span class="linenos">184</span></a>            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+</span><span id="tokenize_units-185"><a href="#tokenize_units-185"><span class="linenos">185</span></a>                <span class="sa">f</span><span class="s2">"units don't share one urn_prefix: </span><span class="si">{</span><span class="n">units</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">context</span><span class="si">!r}</span><span class="s2"> vs "</span>
+</span><span id="tokenize_units-186"><a href="#tokenize_units-186"><span class="linenos">186</span></a>                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">unit</span><span class="o">.</span><span class="n">context</span><span class="si">!r}</span><span class="s2">"</span>
+</span><span id="tokenize_units-187"><a href="#tokenize_units-187"><span class="linenos">187</span></a>            <span class="p">)</span>
+</span><span id="tokenize_units-188"><a href="#tokenize_units-188"><span class="linenos">188</span></a>
+</span><span id="tokenize_units-189"><a href="#tokenize_units-189"><span class="linenos">189</span></a>    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">units</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+</span><span id="tokenize_units-190"><a href="#tokenize_units-190"><span class="linenos">190</span></a>        <span class="n">combined_context</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">prefix</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="n">passages</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span>
+</span><span id="tokenize_units-191"><a href="#tokenize_units-191"><span class="linenos">191</span></a>    <span class="k">else</span><span class="p">:</span>
+</span><span id="tokenize_units-192"><a href="#tokenize_units-192"><span class="linenos">192</span></a>        <span class="n">combined_context</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">prefix</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="n">passages</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2">-</span><span class="si">{</span><span class="n">passages</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span>
+</span><span id="tokenize_units-193"><a href="#tokenize_units-193"><span class="linenos">193</span></a>
+</span><span id="tokenize_units-194"><a href="#tokenize_units-194"><span class="linenos">194</span></a>    <span class="n">combined_text</span> <span class="o">=</span> <span class="s2">" "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">text</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">units</span><span class="p">)</span>
+</span><span id="tokenize_units-195"><a href="#tokenize_units-195"><span class="linenos">195</span></a>
+</span><span id="tokenize_units-196"><a href="#tokenize_units-196"><span class="linenos">196</span></a>    <span class="n">tokens</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">CitableToken</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+</span><span id="tokenize_units-197"><a href="#tokenize_units-197"><span class="linenos">197</span></a>    <span class="k">for</span> <span class="n">unit</span><span class="p">,</span> <span class="n">unit_passage</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">units</span><span class="p">,</span> <span class="n">passages</span><span class="p">):</span>
+</span><span id="tokenize_units-198"><a href="#tokenize_units-198"><span class="linenos">198</span></a>        <span class="n">local_tokens</span> <span class="o">=</span> <span class="n">tokenize</span><span class="p">(</span><span class="n">CitedPassage</span><span class="p">(</span><span class="n">context</span><span class="o">=</span><span class="n">unit</span><span class="o">.</span><span class="n">context</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="n">unit</span><span class="o">.</span><span class="n">text</span><span class="p">))</span>
+</span><span id="tokenize_units-199"><a href="#tokenize_units-199"><span class="linenos">199</span></a>        <span class="k">for</span> <span class="n">tok</span> <span class="ow">in</span> <span class="n">local_tokens</span><span class="p">:</span>
+</span><span id="tokenize_units-200"><a href="#tokenize_units-200"><span class="linenos">200</span></a>            <span class="n">tokens</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+</span><span id="tokenize_units-201"><a href="#tokenize_units-201"><span class="linenos">201</span></a>                <span class="n">CitableToken</span><span class="p">(</span>
+</span><span id="tokenize_units-202"><a href="#tokenize_units-202"><span class="linenos">202</span></a>                    <span class="n">context</span><span class="o">=</span><span class="n">combined_context</span><span class="p">,</span>
+</span><span id="tokenize_units-203"><a href="#tokenize_units-203"><span class="linenos">203</span></a>                    <span class="nb">id</span><span class="o">=</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">unit_passage</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">tok</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+</span><span id="tokenize_units-204"><a href="#tokenize_units-204"><span class="linenos">204</span></a>                    <span class="n">value</span><span class="o">=</span><span class="n">tok</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
+</span><span id="tokenize_units-205"><a href="#tokenize_units-205"><span class="linenos">205</span></a>                <span class="p">)</span>
+</span><span id="tokenize_units-206"><a href="#tokenize_units-206"><span class="linenos">206</span></a>            <span class="p">)</span>
+</span><span id="tokenize_units-207"><a href="#tokenize_units-207"><span class="linenos">207</span></a>
+</span><span id="tokenize_units-208"><a href="#tokenize_units-208"><span class="linenos">208</span></a>    <span class="k">return</span> <span class="n">combined_context</span><span class="p">,</span> <span class="n">combined_text</span><span class="p">,</span> <span class="n">tokens</span>
+</span></pre></div>
+
+
+            <div class="docstring"><p>Combine one sentence's worth of citation units (<code>units</code>, in
+citation order -- typically one element of cluster_sentences()'s own
+return value) into a single analyzable passage: a combined context
+reference, the combined text, and a token list unique within that
+combined context.</p>
+
+<p>The combined context is a CTS range reference spanning every unit's
+own passage component: <code>{urn_prefix}:{first_passage}</code> for a single
+unit, <code>{urn_prefix}:{first_passage}-{last_passage}</code> for more than one
+(standard CTS range syntax). Every unit in <code>units</code> must share the
+same urn_prefix() -- raises ValueError, naming both, if two units
+disagree (a sign <code>units</code> mixes citation units from different works,
+which cluster_sentences() should never itself produce from one
+corpus, but this is cheap to check and a much clearer failure than a
+silently wrong combined context).</p>
+
+<p>The combined text is every unit's own text, in order, joined by a
+single space.</p>
+
+<p>Tokens: each unit is tokenized <em>on its own</em> (<a href="english/tokenize.html">aat.english.tokenize</a>,
+unmodified -- so splitting behavior exactly matches a unit analyzed
+independently, e.g. via aat_corpus.py), giving each unit its own
+locally-numbered 't1', 't2', ... ids; every one of those ids is then
+rewritten to "{that unit's own passage component}.{local id}" (e.g.
+"1.14.t1") and given <code>context</code> = the combined context above, so the
+final list is unique within it regardless of how many units
+contributed. Tokenizing each unit separately like this (rather than
+tokenizing the combined text as one blob) also means the boundary
+between two citation units is never accidentally merged into one
+token, whatever whitespace does or doesn't separate them in the
+original text.</p>
+
+<p>Raises ValueError for empty <code>units</code>.</p>
+</div>
+
+
+                </section>
+                <section id="tokenize_corpus_by_sentence">
+                            <input id="tokenize_corpus_by_sentence-view-source" class="view-source-toggle-state" type="checkbox" aria-hidden="true" tabindex="-1">
+<div class="attr function">
+            
+        <span class="def">def</span>
+        <span class="name">tokenize_corpus_by_sentence</span><span class="signature pdoc-code multiline">(<span class="param">	<span class="n">units</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n"><a href="../aat.html#CitedPassage">aat.CitedPassage</a></span><span class="p">]</span>,</span><span class="param">	<span class="n">terminators</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">'.?!'</span></span><span class="return-annotation">) -> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n"><a href="../aat.html#CitableToken">aat.CitableToken</a></span><span class="p">]]]</span>:</span></span>
+
+                <label class="view-source-button" for="tokenize_corpus_by_sentence-view-source"><span>View Source</span></label>
+
+    </div>
+    <a class="headerlink" href="#tokenize_corpus_by_sentence"></a>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="tokenize_corpus_by_sentence-211"><a href="#tokenize_corpus_by_sentence-211"><span class="linenos">211</span></a><span class="k">def</span><span class="w"> </span><span class="nf">tokenize_corpus_by_sentence</span><span class="p">(</span>
+</span><span id="tokenize_corpus_by_sentence-212"><a href="#tokenize_corpus_by_sentence-212"><span class="linenos">212</span></a>    <span class="n">units</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">CitedPassage</span><span class="p">],</span> <span class="n">terminators</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">DEFAULT_SENTENCE_TERMINATORS</span>
+</span><span id="tokenize_corpus_by_sentence-213"><a href="#tokenize_corpus_by_sentence-213"><span class="linenos">213</span></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">CitableToken</span><span class="p">]]]:</span>
+</span><span id="tokenize_corpus_by_sentence-214"><a href="#tokenize_corpus_by_sentence-214"><span class="linenos">214</span></a><span class="w">    </span><span class="sd">"""cluster_sentences() `units` and tokenize_units() every resulting</span>
+</span><span id="tokenize_corpus_by_sentence-215"><a href="#tokenize_corpus_by_sentence-215"><span class="linenos">215</span></a><span class="sd">    group, in order -- the full, LM-free half of analyzing a corpus by</span>
+</span><span id="tokenize_corpus_by_sentence-216"><a href="#tokenize_corpus_by_sentence-216"><span class="linenos">216</span></a><span class="sd">    sentence rather than by citation unit. See aat.english.pipeline's</span>
+</span><span id="tokenize_corpus_by_sentence-217"><a href="#tokenize_corpus_by_sentence-217"><span class="linenos">217</span></a><span class="sd">    analyze_units_by_sentence() for the LM-dependent counterpart that</span>
+</span><span id="tokenize_corpus_by_sentence-218"><a href="#tokenize_corpus_by_sentence-218"><span class="linenos">218</span></a><span class="sd">    runs each group returned here through analyze()/validate() too.</span>
+</span><span id="tokenize_corpus_by_sentence-219"><a href="#tokenize_corpus_by_sentence-219"><span class="linenos">219</span></a><span class="sd">    """</span>
+</span><span id="tokenize_corpus_by_sentence-220"><a href="#tokenize_corpus_by_sentence-220"><span class="linenos">220</span></a>    <span class="k">return</span> <span class="p">[</span><span class="n">tokenize_units</span><span class="p">(</span><span class="n">group</span><span class="p">)</span> <span class="k">for</span> <span class="n">group</span> <span class="ow">in</span> <span class="n">cluster_sentences</span><span class="p">(</span><span class="n">units</span><span class="p">,</span> <span class="n">terminators</span><span class="p">)]</span>
+</span></pre></div>
+
+
+            <div class="docstring"><p>cluster_sentences() <code>units</code> and tokenize_units() every resulting
+group, in order -- the full, LM-free half of analyzing a corpus by
+sentence rather than by citation unit. See aat.english.pipeline's
+analyze_units_by_sentence() for the LM-dependent counterpart that
+runs each group returned here through analyze()/validate() too.</p>
+</div>
+
+
+                </section>
+                <section id="analyze_with_retry">
+                            <input id="analyze_with_retry-view-source" class="view-source-toggle-state" type="checkbox" aria-hidden="true" tabindex="-1">
+<div class="attr function">
+            
+        <span class="def">def</span>
+        <span class="name">analyze_with_retry</span><span class="signature pdoc-code multiline">(<span class="param">	<span class="n">passage</span><span class="p">:</span> <span class="nb">str</span>,</span><span class="param">	<span class="n">tokens</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n"><a href="../aat.html#CitableToken">aat.CitableToken</a></span><span class="p">]</span>,</span><span class="param">	<span class="o">*</span>,</span><span class="param">	<span class="n">max_retries</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">3</span>,</span><span class="param">	<span class="n">growth_factor</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">2.0</span>,</span><span class="param">	<span class="n">safety_margin</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.4</span>,</span><span class="param">	<span class="n">floor</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">700</span>,</span><span class="param">	<span class="n">ceiling</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">20000</span>,</span><span class="param">	<span class="n">initial_max_tokens</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span></span><span class="return-annotation">):</span></span>
+
+                <label class="view-source-button" for="analyze_with_retry-view-source"><span>View Source</span></label>
+
+    </div>
+    <a class="headerlink" href="#analyze_with_retry"></a>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="analyze_with_retry-325"><a href="#analyze_with_retry-325"><span class="linenos">325</span></a><span class="k">def</span><span class="w"> </span><span class="nf">analyze_with_retry</span><span class="p">(</span>
+</span><span id="analyze_with_retry-326"><a href="#analyze_with_retry-326"><span class="linenos">326</span></a>    <span class="n">passage</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+</span><span id="analyze_with_retry-327"><a href="#analyze_with_retry-327"><span class="linenos">327</span></a>    <span class="n">tokens</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">CitableToken</span><span class="p">],</span>
+</span><span id="analyze_with_retry-328"><a href="#analyze_with_retry-328"><span class="linenos">328</span></a>    <span class="o">*</span><span class="p">,</span>
+</span><span id="analyze_with_retry-329"><a href="#analyze_with_retry-329"><span class="linenos">329</span></a>    <span class="n">max_retries</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">3</span><span class="p">,</span>
+</span><span id="analyze_with_retry-330"><a href="#analyze_with_retry-330"><span class="linenos">330</span></a>    <span class="n">growth_factor</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">2.0</span><span class="p">,</span>
+</span><span id="analyze_with_retry-331"><a href="#analyze_with_retry-331"><span class="linenos">331</span></a>    <span class="n">safety_margin</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">DEFAULT_SAFETY_MARGIN</span><span class="p">,</span>
+</span><span id="analyze_with_retry-332"><a href="#analyze_with_retry-332"><span class="linenos">332</span></a>    <span class="n">floor</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">DEFAULT_FLOOR</span><span class="p">,</span>
+</span><span id="analyze_with_retry-333"><a href="#analyze_with_retry-333"><span class="linenos">333</span></a>    <span class="n">ceiling</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">DEFAULT_CEILING</span><span class="p">,</span>
+</span><span id="analyze_with_retry-334"><a href="#analyze_with_retry-334"><span class="linenos">334</span></a>    <span class="n">initial_max_tokens</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span id="analyze_with_retry-335"><a href="#analyze_with_retry-335"><span class="linenos">335</span></a><span class="p">):</span>
+</span><span id="analyze_with_retry-336"><a href="#analyze_with_retry-336"><span class="linenos">336</span></a><span class="w">    </span><span class="sd">"""Call `aat.english.dspy_signatures.analyze`, detecting truncation and</span>
+</span><span id="analyze_with_retry-337"><a href="#analyze_with_retry-337"><span class="linenos">337</span></a><span class="sd">    retrying with a larger `max_tokens` budget instead of either crashing</span>
+</span><span id="analyze_with_retry-338"><a href="#analyze_with_retry-338"><span class="linenos">338</span></a><span class="sd">    or silently returning an incomplete result.</span>
+</span><span id="analyze_with_retry-339"><a href="#analyze_with_retry-339"><span class="linenos">339</span></a>
+</span><span id="analyze_with_retry-340"><a href="#analyze_with_retry-340"><span class="linenos">340</span></a><span class="sd">    The starting budget is `initial_max_tokens` if given, else</span>
+</span><span id="analyze_with_retry-341"><a href="#analyze_with_retry-341"><span class="linenos">341</span></a><span class="sd">    `estimate_max_tokens(len(tokens), safety_margin=safety_margin,</span>
+</span><span id="analyze_with_retry-342"><a href="#analyze_with_retry-342"><span class="linenos">342</span></a><span class="sd">    floor=floor, ceiling=ceiling)`.</span>
+</span><span id="analyze_with_retry-343"><a href="#analyze_with_retry-343"><span class="linenos">343</span></a>
+</span><span id="analyze_with_retry-344"><a href="#analyze_with_retry-344"><span class="linenos">344</span></a><span class="sd">    `max_retries` defaults to 3 (not 1) with `growth_factor=2.0`, so a</span>
+</span><span id="analyze_with_retry-345"><a href="#analyze_with_retry-345"><span class="linenos">345</span></a><span class="sd">    genuinely under-budgeted call has real headroom to grow (~8x by the</span>
+</span><span id="analyze_with_retry-346"><a href="#analyze_with_retry-346"><span class="linenos">346</span></a><span class="sd">    third retry) rather than giving up after a single doubling --</span>
+</span><span id="analyze_with_retry-347"><a href="#analyze_with_retry-347"><span class="linenos">347</span></a><span class="sd">    mirroring arsgrammatica.token_budget.analyze_with_retry()'s own</span>
+</span><span id="analyze_with_retry-348"><a href="#analyze_with_retry-348"><span class="linenos">348</span></a><span class="sd">    `max_retries` default and the reasoning documented there: a</span>
+</span><span id="analyze_with_retry-349"><a href="#analyze_with_retry-349"><span class="linenos">349</span></a><span class="sd">    passage's `reasoning` field length is stochastic enough call to call</span>
+</span><span id="analyze_with_retry-350"><a href="#analyze_with_retry-350"><span class="linenos">350</span></a><span class="sd">    that even a good estimate can occasionally need more than one</span>
+</span><span id="analyze_with_retry-351"><a href="#analyze_with_retry-351"><span class="linenos">351</span></a><span class="sd">    doubling. Each retry is one more live LM call, so this does raise the</span>
+</span><span id="analyze_with_retry-352"><a href="#analyze_with_retry-352"><span class="linenos">352</span></a><span class="sd">    worst-case cost/latency of a single passage -- still bounded by</span>
+</span><span id="analyze_with_retry-353"><a href="#analyze_with_retry-353"><span class="linenos">353</span></a><span class="sd">    `ceiling`, and far better than surfacing a truncated result or a</span>
+</span><span id="analyze_with_retry-354"><a href="#analyze_with_retry-354"><span class="linenos">354</span></a><span class="sd">    raised exception to the caller.</span>
+</span><span id="analyze_with_retry-355"><a href="#analyze_with_retry-355"><span class="linenos">355</span></a>
+</span><span id="analyze_with_retry-356"><a href="#analyze_with_retry-356"><span class="linenos">356</span></a><span class="sd">    After each attempt: if the call raised `AdapterParseError` (the JSON</span>
+</span><span id="analyze_with_retry-357"><a href="#analyze_with_retry-357"><span class="linenos">357</span></a><span class="sd">    was cut off badly enough to not parse at all, or was malformed some</span>
+</span><span id="analyze_with_retry-358"><a href="#analyze_with_retry-358"><span class="linenos">358</span></a><span class="sd">    other way), EITHER `_finish_reason_was_length()` OR `_looks_truncated()`</span>
+</span><span id="analyze_with_retry-359"><a href="#analyze_with_retry-359"><span class="linenos">359</span></a><span class="sd">    on the raw response text is treated as a truncation signal -- either</span>
+</span><span id="analyze_with_retry-360"><a href="#analyze_with_retry-360"><span class="linenos">360</span></a><span class="sd">    one alone is enough (see `_looks_truncated()`'s own docstring for why</span>
+</span><span id="analyze_with_retry-361"><a href="#analyze_with_retry-361"><span class="linenos">361</span></a><span class="sd">    `finish_reason` alone isn't reliable enough across every</span>
+</span><span id="analyze_with_retry-362"><a href="#analyze_with_retry-362"><span class="linenos">362</span></a><span class="sd">    provider/proxy). If truncation is detected and a retry is still</span>
+</span><span id="analyze_with_retry-363"><a href="#analyze_with_retry-363"><span class="linenos">363</span></a><span class="sd">    available (fewer than `max_retries` attempts so far, and the budget</span>
+</span><span id="analyze_with_retry-364"><a href="#analyze_with_retry-364"><span class="linenos">364</span></a><span class="sd">    hasn't already hit `ceiling`), the budget is multiplied by</span>
+</span><span id="analyze_with_retry-365"><a href="#analyze_with_retry-365"><span class="linenos">365</span></a><span class="sd">    `growth_factor` (capped at `ceiling`) and the call is retried.</span>
+</span><span id="analyze_with_retry-366"><a href="#analyze_with_retry-366"><span class="linenos">366</span></a><span class="sd">    `max_tokens` is part of DSPy's own LM cache key, so a retry with a</span>
+</span><span id="analyze_with_retry-367"><a href="#analyze_with_retry-367"><span class="linenos">367</span></a><span class="sd">    different budget always reaches the LM again rather than replaying a</span>
+</span><span id="analyze_with_retry-368"><a href="#analyze_with_retry-368"><span class="linenos">368</span></a><span class="sd">    cached truncated response.</span>
+</span><span id="analyze_with_retry-369"><a href="#analyze_with_retry-369"><span class="linenos">369</span></a>
+</span><span id="analyze_with_retry-370"><a href="#analyze_with_retry-370"><span class="linenos">370</span></a><span class="sd">    An `AdapterParseError` that neither signal flags as truncation means</span>
+</span><span id="analyze_with_retry-371"><a href="#analyze_with_retry-371"><span class="linenos">371</span></a><span class="sd">    the response was well-terminated but still malformed somewhere -- a</span>
+</span><span id="analyze_with_retry-372"><a href="#analyze_with_retry-372"><span class="linenos">372</span></a><span class="sd">    bigger budget wouldn't have fixed that, but the malformation itself</span>
+</span><span id="analyze_with_retry-373"><a href="#analyze_with_retry-373"><span class="linenos">373</span></a><span class="sd">    is very often a one-off sampling glitch rather than a systematic</span>
+</span><span id="analyze_with_retry-374"><a href="#analyze_with_retry-374"><span class="linenos">374</span></a><span class="sd">    prompt/schema problem, so it's retried once too (still counted</span>
+</span><span id="analyze_with_retry-375"><a href="#analyze_with_retry-375"><span class="linenos">375</span></a><span class="sd">    against `max_retries`, at the SAME budget) with dspy's own response</span>
+</span><span id="analyze_with_retry-376"><a href="#analyze_with_retry-376"><span class="linenos">376</span></a><span class="sd">    cache explicitly bypassed for that one attempt</span>
+</span><span id="analyze_with_retry-377"><a href="#analyze_with_retry-377"><span class="linenos">377</span></a><span class="sd">    (`config={"cache": False, ...}`) -- without that, an identical</span>
+</span><span id="analyze_with_retry-378"><a href="#analyze_with_retry-378"><span class="linenos">378</span></a><span class="sd">    request would just replay the identical broken response, retrying</span>
+</span><span id="analyze_with_retry-379"><a href="#analyze_with_retry-379"><span class="linenos">379</span></a><span class="sd">    nothing. If that retry also fails to parse, or `max_retries` is</span>
+</span><span id="analyze_with_retry-380"><a href="#analyze_with_retry-380"><span class="linenos">380</span></a><span class="sd">    already exhausted, the exception propagates.</span>
+</span><span id="analyze_with_retry-381"><a href="#analyze_with_retry-381"><span class="linenos">381</span></a>
+</span><span id="analyze_with_retry-382"><a href="#analyze_with_retry-382"><span class="linenos">382</span></a><span class="sd">    When the call DOES return a parsed result, this module has no</span>
+</span><span id="analyze_with_retry-383"><a href="#analyze_with_retry-383"><span class="linenos">383</span></a><span class="sd">    reliable per-response signal that it's incomplete (see this module's</span>
+</span><span id="analyze_with_retry-384"><a href="#analyze_with_retry-384"><span class="linenos">384</span></a><span class="sd">    own top docstring for why AgentActionTarget's `nodes` output can't be</span>
+</span><span id="analyze_with_retry-385"><a href="#analyze_with_retry-385"><span class="linenos">385</span></a><span class="sd">    checked for "coverage" the way arsgrammatica's per-token tokengraph</span>
+</span><span id="analyze_with_retry-386"><a href="#analyze_with_retry-386"><span class="linenos">386</span></a><span class="sd">    can) other than `_finish_reason_was_length()` itself -- a provider</span>
+</span><span id="analyze_with_retry-387"><a href="#analyze_with_retry-387"><span class="linenos">387</span></a><span class="sd">    can, in principle, report `finish_reason="length"` even though the</span>
+</span><span id="analyze_with_retry-388"><a href="#analyze_with_retry-388"><span class="linenos">388</span></a><span class="sd">    JSON it emitted up to that point happens to be complete and parses</span>
+</span><span id="analyze_with_retry-389"><a href="#analyze_with_retry-389"><span class="linenos">389</span></a><span class="sd">    cleanly. That case is treated as truncated too (retried with a larger</span>
+</span><span id="analyze_with_retry-390"><a href="#analyze_with_retry-390"><span class="linenos">390</span></a><span class="sd">    budget, same as the parse-failure path), and if retries are exhausted</span>
+</span><span id="analyze_with_retry-391"><a href="#analyze_with_retry-391"><span class="linenos">391</span></a><span class="sd">    while it's still true, the result is returned anyway with a</span>
+</span><span id="analyze_with_retry-392"><a href="#analyze_with_retry-392"><span class="linenos">392</span></a><span class="sd">    `UserWarning` -- matching this codebase's existing convention of</span>
+</span><span id="analyze_with_retry-393"><a href="#analyze_with_retry-393"><span class="linenos">393</span></a><span class="sd">    surfacing analysis problems as warnings (see pipeline.py's own</span>
+</span><span id="analyze_with_retry-394"><a href="#analyze_with_retry-394"><span class="linenos">394</span></a><span class="sd">    validate()-warning-printing) rather than treating an imperfect LM</span>
+</span><span id="analyze_with_retry-395"><a href="#analyze_with_retry-395"><span class="linenos">395</span></a><span class="sd">    result as fatal.</span>
+</span><span id="analyze_with_retry-396"><a href="#analyze_with_retry-396"><span class="linenos">396</span></a><span class="sd">    """</span>
+</span><span id="analyze_with_retry-397"><a href="#analyze_with_retry-397"><span class="linenos">397</span></a>    <span class="n">budget</span> <span class="o">=</span> <span class="n">initial_max_tokens</span> <span class="k">if</span> <span class="n">initial_max_tokens</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">estimate_max_tokens</span><span class="p">(</span>
+</span><span id="analyze_with_retry-398"><a href="#analyze_with_retry-398"><span class="linenos">398</span></a>        <span class="nb">len</span><span class="p">(</span><span class="n">tokens</span><span class="p">),</span> <span class="n">safety_margin</span><span class="o">=</span><span class="n">safety_margin</span><span class="p">,</span> <span class="n">floor</span><span class="o">=</span><span class="n">floor</span><span class="p">,</span> <span class="n">ceiling</span><span class="o">=</span><span class="n">ceiling</span>
+</span><span id="analyze_with_retry-399"><a href="#analyze_with_retry-399"><span class="linenos">399</span></a>    <span class="p">)</span>
+</span><span id="analyze_with_retry-400"><a href="#analyze_with_retry-400"><span class="linenos">400</span></a>
+</span><span id="analyze_with_retry-401"><a href="#analyze_with_retry-401"><span class="linenos">401</span></a>    <span class="n">attempt</span> <span class="o">=</span> <span class="mi">0</span>
+</span><span id="analyze_with_retry-402"><a href="#analyze_with_retry-402"><span class="linenos">402</span></a>    <span class="n">bypass_cache</span> <span class="o">=</span> <span class="kc">False</span>
+</span><span id="analyze_with_retry-403"><a href="#analyze_with_retry-403"><span class="linenos">403</span></a>    <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+</span><span id="analyze_with_retry-404"><a href="#analyze_with_retry-404"><span class="linenos">404</span></a>        <span class="n">old_budget</span> <span class="o">=</span> <span class="n">budget</span>
+</span><span id="analyze_with_retry-405"><a href="#analyze_with_retry-405"><span class="linenos">405</span></a>        <span class="n">call_config</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"max_tokens"</span><span class="p">:</span> <span class="n">budget</span><span class="p">}</span>
+</span><span id="analyze_with_retry-406"><a href="#analyze_with_retry-406"><span class="linenos">406</span></a>        <span class="k">if</span> <span class="n">bypass_cache</span><span class="p">:</span>
+</span><span id="analyze_with_retry-407"><a href="#analyze_with_retry-407"><span class="linenos">407</span></a>            <span class="n">call_config</span><span class="p">[</span><span class="s2">"cache"</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
+</span><span id="analyze_with_retry-408"><a href="#analyze_with_retry-408"><span class="linenos">408</span></a>        <span class="n">bypass_cache</span> <span class="o">=</span> <span class="kc">False</span>  <span class="c1"># only meant for the one attempt it was set for</span>
+</span><span id="analyze_with_retry-409"><a href="#analyze_with_retry-409"><span class="linenos">409</span></a>        <span class="k">try</span><span class="p">:</span>
+</span><span id="analyze_with_retry-410"><a href="#analyze_with_retry-410"><span class="linenos">410</span></a>            <span class="n">result</span> <span class="o">=</span> <span class="n">analyze</span><span class="p">(</span><span class="n">passage</span><span class="o">=</span><span class="n">passage</span><span class="p">,</span> <span class="n">tokens</span><span class="o">=</span><span class="n">tokens</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">call_config</span><span class="p">)</span>
+</span><span id="analyze_with_retry-411"><a href="#analyze_with_retry-411"><span class="linenos">411</span></a>        <span class="k">except</span> <span class="n">AdapterParseError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+</span><span id="analyze_with_retry-412"><a href="#analyze_with_retry-412"><span class="linenos">412</span></a>            <span class="k">if</span> <span class="n">attempt</span> <span class="o">&gt;=</span> <span class="n">max_retries</span><span class="p">:</span>
+</span><span id="analyze_with_retry-413"><a href="#analyze_with_retry-413"><span class="linenos">413</span></a>                <span class="k">raise</span>
+</span><span id="analyze_with_retry-414"><a href="#analyze_with_retry-414"><span class="linenos">414</span></a>            <span class="k">if</span> <span class="n">budget</span> <span class="o">&lt;</span> <span class="n">ceiling</span> <span class="ow">and</span> <span class="p">(</span><span class="n">_finish_reason_was_length</span><span class="p">()</span> <span class="ow">or</span> <span class="n">_looks_truncated</span><span class="p">(</span><span class="n">exc</span><span class="o">.</span><span class="n">lm_response</span><span class="p">)):</span>
+</span><span id="analyze_with_retry-415"><a href="#analyze_with_retry-415"><span class="linenos">415</span></a>                <span class="n">attempt</span> <span class="o">+=</span> <span class="mi">1</span>
+</span><span id="analyze_with_retry-416"><a href="#analyze_with_retry-416"><span class="linenos">416</span></a>                <span class="n">budget</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">ceiling</span><span class="p">,</span> <span class="n">math</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">budget</span> <span class="o">*</span> <span class="n">growth_factor</span><span class="p">))</span>
+</span><span id="analyze_with_retry-417"><a href="#analyze_with_retry-417"><span class="linenos">417</span></a>                <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+</span><span id="analyze_with_retry-418"><a href="#analyze_with_retry-418"><span class="linenos">418</span></a>                    <span class="sa">f</span><span class="s2">"AgentActionTarget call truncated at max_tokens=</span><span class="si">{</span><span class="n">old_budget</span><span class="si">}</span><span class="s2"> before "</span>
+</span><span id="analyze_with_retry-419"><a href="#analyze_with_retry-419"><span class="linenos">419</span></a>                    <span class="sa">f</span><span class="s2">"it could be parsed at all; retrying with max_tokens=</span><span class="si">{</span><span class="n">budget</span><span class="si">}</span><span class="s2"> "</span>
+</span><span id="analyze_with_retry-420"><a href="#analyze_with_retry-420"><span class="linenos">420</span></a>                    <span class="sa">f</span><span class="s2">"(attempt </span><span class="si">{</span><span class="n">attempt</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">max_retries</span><span class="si">}</span><span class="s2">)."</span><span class="p">,</span>
+</span><span id="analyze_with_retry-421"><a href="#analyze_with_retry-421"><span class="linenos">421</span></a>                    <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+</span><span id="analyze_with_retry-422"><a href="#analyze_with_retry-422"><span class="linenos">422</span></a>                <span class="p">)</span>
+</span><span id="analyze_with_retry-423"><a href="#analyze_with_retry-423"><span class="linenos">423</span></a>                <span class="k">continue</span>
+</span><span id="analyze_with_retry-424"><a href="#analyze_with_retry-424"><span class="linenos">424</span></a>            <span class="c1"># Not a (detectable) truncation -- the response finished</span>
+</span><span id="analyze_with_retry-425"><a href="#analyze_with_retry-425"><span class="linenos">425</span></a>            <span class="c1"># normally but was malformed somewhere. Retry once more at the</span>
+</span><span id="analyze_with_retry-426"><a href="#analyze_with_retry-426"><span class="linenos">426</span></a>            <span class="c1"># SAME budget, with dspy's cache explicitly bypassed for that</span>
+</span><span id="analyze_with_retry-427"><a href="#analyze_with_retry-427"><span class="linenos">427</span></a>            <span class="c1"># one attempt, so the retry is a genuinely fresh LM call</span>
+</span><span id="analyze_with_retry-428"><a href="#analyze_with_retry-428"><span class="linenos">428</span></a>            <span class="c1"># rather than a replay of the same broken response.</span>
+</span><span id="analyze_with_retry-429"><a href="#analyze_with_retry-429"><span class="linenos">429</span></a>            <span class="n">attempt</span> <span class="o">+=</span> <span class="mi">1</span>
+</span><span id="analyze_with_retry-430"><a href="#analyze_with_retry-430"><span class="linenos">430</span></a>            <span class="n">bypass_cache</span> <span class="o">=</span> <span class="kc">True</span>
+</span><span id="analyze_with_retry-431"><a href="#analyze_with_retry-431"><span class="linenos">431</span></a>            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+</span><span id="analyze_with_retry-432"><a href="#analyze_with_retry-432"><span class="linenos">432</span></a>                <span class="sa">f</span><span class="s2">"AgentActionTarget call at max_tokens=</span><span class="si">{</span><span class="n">old_budget</span><span class="si">}</span><span class="s2"> returned output that "</span>
+</span><span id="analyze_with_retry-433"><a href="#analyze_with_retry-433"><span class="linenos">433</span></a>                <span class="sa">f</span><span class="s2">"failed to parse, but doesn't look like a truncation (finish_reason "</span>
+</span><span id="analyze_with_retry-434"><a href="#analyze_with_retry-434"><span class="linenos">434</span></a>                <span class="sa">f</span><span class="s2">"wasn't 'length'): </span><span class="si">{</span><span class="n">exc</span><span class="si">}</span><span class="s2"> Retrying once at the same budget with the LM "</span>
+</span><span id="analyze_with_retry-435"><a href="#analyze_with_retry-435"><span class="linenos">435</span></a>                <span class="sa">f</span><span class="s2">"cache bypassed, in case this was a one-off malformed-output glitch "</span>
+</span><span id="analyze_with_retry-436"><a href="#analyze_with_retry-436"><span class="linenos">436</span></a>                <span class="sa">f</span><span class="s2">"(attempt </span><span class="si">{</span><span class="n">attempt</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">max_retries</span><span class="si">}</span><span class="s2">)."</span><span class="p">,</span>
+</span><span id="analyze_with_retry-437"><a href="#analyze_with_retry-437"><span class="linenos">437</span></a>                <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+</span><span id="analyze_with_retry-438"><a href="#analyze_with_retry-438"><span class="linenos">438</span></a>            <span class="p">)</span>
+</span><span id="analyze_with_retry-439"><a href="#analyze_with_retry-439"><span class="linenos">439</span></a>            <span class="k">continue</span>
+</span><span id="analyze_with_retry-440"><a href="#analyze_with_retry-440"><span class="linenos">440</span></a>
+</span><span id="analyze_with_retry-441"><a href="#analyze_with_retry-441"><span class="linenos">441</span></a>        <span class="n">truncated</span> <span class="o">=</span> <span class="n">_finish_reason_was_length</span><span class="p">()</span>
+</span><span id="analyze_with_retry-442"><a href="#analyze_with_retry-442"><span class="linenos">442</span></a>        <span class="k">if</span> <span class="n">truncated</span> <span class="ow">and</span> <span class="n">attempt</span> <span class="o">&lt;</span> <span class="n">max_retries</span> <span class="ow">and</span> <span class="n">budget</span> <span class="o">&lt;</span> <span class="n">ceiling</span><span class="p">:</span>
+</span><span id="analyze_with_retry-443"><a href="#analyze_with_retry-443"><span class="linenos">443</span></a>            <span class="n">attempt</span> <span class="o">+=</span> <span class="mi">1</span>
+</span><span id="analyze_with_retry-444"><a href="#analyze_with_retry-444"><span class="linenos">444</span></a>            <span class="n">budget</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">ceiling</span><span class="p">,</span> <span class="n">math</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">budget</span> <span class="o">*</span> <span class="n">growth_factor</span><span class="p">))</span>
+</span><span id="analyze_with_retry-445"><a href="#analyze_with_retry-445"><span class="linenos">445</span></a>            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+</span><span id="analyze_with_retry-446"><a href="#analyze_with_retry-446"><span class="linenos">446</span></a>                <span class="sa">f</span><span class="s2">"AgentActionTarget call at max_tokens=</span><span class="si">{</span><span class="n">old_budget</span><span class="si">}</span><span class="s2"> parsed, but its "</span>
+</span><span id="analyze_with_retry-447"><a href="#analyze_with_retry-447"><span class="linenos">447</span></a>                <span class="sa">f</span><span class="s2">"finish_reason reported truncation anyway; retrying with a larger "</span>
+</span><span id="analyze_with_retry-448"><a href="#analyze_with_retry-448"><span class="linenos">448</span></a>                <span class="sa">f</span><span class="s2">"max_tokens=</span><span class="si">{</span><span class="n">budget</span><span class="si">}</span><span class="s2"> (attempt </span><span class="si">{</span><span class="n">attempt</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">max_retries</span><span class="si">}</span><span class="s2">)."</span><span class="p">,</span>
+</span><span id="analyze_with_retry-449"><a href="#analyze_with_retry-449"><span class="linenos">449</span></a>                <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+</span><span id="analyze_with_retry-450"><a href="#analyze_with_retry-450"><span class="linenos">450</span></a>            <span class="p">)</span>
+</span><span id="analyze_with_retry-451"><a href="#analyze_with_retry-451"><span class="linenos">451</span></a>            <span class="k">continue</span>
+</span><span id="analyze_with_retry-452"><a href="#analyze_with_retry-452"><span class="linenos">452</span></a>
+</span><span id="analyze_with_retry-453"><a href="#analyze_with_retry-453"><span class="linenos">453</span></a>        <span class="k">if</span> <span class="n">truncated</span><span class="p">:</span>
+</span><span id="analyze_with_retry-454"><a href="#analyze_with_retry-454"><span class="linenos">454</span></a>            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+</span><span id="analyze_with_retry-455"><a href="#analyze_with_retry-455"><span class="linenos">455</span></a>                <span class="sa">f</span><span class="s2">"AgentActionTarget call still reports truncation after </span><span class="si">{</span><span class="n">attempt</span><span class="si">}</span><span class="s2"> "</span>
+</span><span id="analyze_with_retry-456"><a href="#analyze_with_retry-456"><span class="linenos">456</span></a>                <span class="sa">f</span><span class="s2">"retry(ies) (max_tokens=</span><span class="si">{</span><span class="n">old_budget</span><span class="si">}</span><span class="s2">) -- returning it anyway; the "</span>
+</span><span id="analyze_with_retry-457"><a href="#analyze_with_retry-457"><span class="linenos">457</span></a>                <span class="sa">f</span><span class="s2">"result may be missing nodes for content past the cutoff."</span><span class="p">,</span>
+</span><span id="analyze_with_retry-458"><a href="#analyze_with_retry-458"><span class="linenos">458</span></a>                <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+</span><span id="analyze_with_retry-459"><a href="#analyze_with_retry-459"><span class="linenos">459</span></a>            <span class="p">)</span>
+</span><span id="analyze_with_retry-460"><a href="#analyze_with_retry-460"><span class="linenos">460</span></a>
+</span><span id="analyze_with_retry-461"><a href="#analyze_with_retry-461"><span class="linenos">461</span></a>        <span class="k">return</span> <span class="n">result</span>
+</span></pre></div>
+
+
+            <div class="docstring"><p>Call <code><a href="#analyze">aat.english.dspy_signatures.analyze</a></code>, detecting truncation and
+retrying with a larger <code>max_tokens</code> budget instead of either crashing
+or silently returning an incomplete result.</p>
+
+<p>The starting budget is <code>initial_max_tokens</code> if given, else
+<code>estimate_max_tokens(len(tokens), safety_margin=safety_margin,
+floor=floor, ceiling=ceiling)</code>.</p>
+
+<p><code>max_retries</code> defaults to 3 (not 1) with <code>growth_factor=2.0</code>, so a
+genuinely under-budgeted call has real headroom to grow (~8x by the
+third retry) rather than giving up after a single doubling --
+mirroring arsgrammatica.token_budget.analyze_with_retry()'s own
+<code>max_retries</code> default and the reasoning documented there: a
+passage's <code>reasoning</code> field length is stochastic enough call to call
+that even a good estimate can occasionally need more than one
+doubling. Each retry is one more live LM call, so this does raise the
+worst-case cost/latency of a single passage -- still bounded by
+<code>ceiling</code>, and far better than surfacing a truncated result or a
+raised exception to the caller.</p>
+
+<p>After each attempt: if the call raised <code>AdapterParseError</code> (the JSON
+was cut off badly enough to not parse at all, or was malformed some
+other way), EITHER <code>_finish_reason_was_length()</code> OR <code>_looks_truncated()</code>
+on the raw response text is treated as a truncation signal -- either
+one alone is enough (see <code>_looks_truncated()</code>'s own docstring for why
+<code>finish_reason</code> alone isn't reliable enough across every
+provider/proxy). If truncation is detected and a retry is still
+available (fewer than <code>max_retries</code> attempts so far, and the budget
+hasn't already hit <code>ceiling</code>), the budget is multiplied by
+<code>growth_factor</code> (capped at <code>ceiling</code>) and the call is retried.
+<code>max_tokens</code> is part of DSPy's own LM cache key, so a retry with a
+different budget always reaches the LM again rather than replaying a
+cached truncated response.</p>
+
+<p>An <code>AdapterParseError</code> that neither signal flags as truncation means
+the response was well-terminated but still malformed somewhere -- a
+bigger budget wouldn't have fixed that, but the malformation itself
+is very often a one-off sampling glitch rather than a systematic
+prompt/schema problem, so it's retried once too (still counted
+against <code>max_retries</code>, at the SAME budget) with dspy's own response
+cache explicitly bypassed for that one attempt
+(<code>config={"cache": False, ...}</code>) -- without that, an identical
+request would just replay the identical broken response, retrying
+nothing. If that retry also fails to parse, or <code>max_retries</code> is
+already exhausted, the exception propagates.</p>
+
+<p>When the call DOES return a parsed result, this module has no
+reliable per-response signal that it's incomplete (see this module's
+own top docstring for why AgentActionTarget's <code>nodes</code> output can't be
+checked for "coverage" the way arsgrammatica's per-token tokengraph
+can) other than <code>_finish_reason_was_length()</code> itself -- a provider
+can, in principle, report <code>finish_reason="length"</code> even though the
+JSON it emitted up to that point happens to be complete and parses
+cleanly. That case is treated as truncated too (retried with a larger
+budget, same as the parse-failure path), and if retries are exhausted
+while it's still true, the result is returned anyway with a
+<code>UserWarning</code> -- matching this codebase's existing convention of
+surfacing analysis problems as warnings (see pipeline.py's own
+validate()-warning-printing) rather than treating an imperfect LM
+result as fatal.</p>
+</div>
+
+
+                </section>
+                <section id="estimate_max_tokens">
+                            <input id="estimate_max_tokens-view-source" class="view-source-toggle-state" type="checkbox" aria-hidden="true" tabindex="-1">
+<div class="attr function">
+            
+        <span class="def">def</span>
+        <span class="name">estimate_max_tokens</span><span class="signature pdoc-code multiline">(<span class="param">	<span class="n">num_tokens</span><span class="p">:</span> <span class="nb">int</span>,</span><span class="param">	<span class="o">*</span>,</span><span class="param">	<span class="n">safety_margin</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.4</span>,</span><span class="param">	<span class="n">floor</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">700</span>,</span><span class="param">	<span class="n">ceiling</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">20000</span></span><span class="return-annotation">) -> <span class="nb">int</span>:</span></span>
+
+                <label class="view-source-button" for="estimate_max_tokens-view-source"><span>View Source</span></label>
+
+    </div>
+    <a class="headerlink" href="#estimate_max_tokens"></a>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="estimate_max_tokens-229"><a href="#estimate_max_tokens-229"><span class="linenos">229</span></a><span class="k">def</span><span class="w"> </span><span class="nf">estimate_max_tokens</span><span class="p">(</span>
+</span><span id="estimate_max_tokens-230"><a href="#estimate_max_tokens-230"><span class="linenos">230</span></a>    <span class="n">num_tokens</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+</span><span id="estimate_max_tokens-231"><a href="#estimate_max_tokens-231"><span class="linenos">231</span></a>    <span class="o">*</span><span class="p">,</span>
+</span><span id="estimate_max_tokens-232"><a href="#estimate_max_tokens-232"><span class="linenos">232</span></a>    <span class="n">safety_margin</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">DEFAULT_SAFETY_MARGIN</span><span class="p">,</span>
+</span><span id="estimate_max_tokens-233"><a href="#estimate_max_tokens-233"><span class="linenos">233</span></a>    <span class="n">floor</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">DEFAULT_FLOOR</span><span class="p">,</span>
+</span><span id="estimate_max_tokens-234"><a href="#estimate_max_tokens-234"><span class="linenos">234</span></a>    <span class="n">ceiling</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">DEFAULT_CEILING</span><span class="p">,</span>
+</span><span id="estimate_max_tokens-235"><a href="#estimate_max_tokens-235"><span class="linenos">235</span></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+</span><span id="estimate_max_tokens-236"><a href="#estimate_max_tokens-236"><span class="linenos">236</span></a><span class="w">    </span><span class="sd">"""Estimate a `max_tokens` budget for an AgentActionTarget call over a</span>
+</span><span id="estimate_max_tokens-237"><a href="#estimate_max_tokens-237"><span class="linenos">237</span></a><span class="sd">    passage with `num_tokens` input tokens.</span>
+</span><span id="estimate_max_tokens-238"><a href="#estimate_max_tokens-238"><span class="linenos">238</span></a>
+</span><span id="estimate_max_tokens-239"><a href="#estimate_max_tokens-239"><span class="linenos">239</span></a><span class="sd">    `raw = intercept + slope * num_tokens` comes from the calibrated (or</span>
+</span><span id="estimate_max_tokens-240"><a href="#estimate_max_tokens-240"><span class="linenos">240</span></a><span class="sd">    fallback) linear fit (see _load_calibration()); `safety_margin`</span>
+</span><span id="estimate_max_tokens-241"><a href="#estimate_max_tokens-241"><span class="linenos">241</span></a><span class="sd">    multiplies that to leave room for the reasoning field's length being</span>
+</span><span id="estimate_max_tokens-242"><a href="#estimate_max_tokens-242"><span class="linenos">242</span></a><span class="sd">    only roughly, not exactly, a function of passage length. The result is</span>
+</span><span id="estimate_max_tokens-243"><a href="#estimate_max_tokens-243"><span class="linenos">243</span></a><span class="sd">    clamped to `[floor, ceiling]` -- `floor` guards against a degenerate</span>
+</span><span id="estimate_max_tokens-244"><a href="#estimate_max_tokens-244"><span class="linenos">244</span></a><span class="sd">    tiny estimate for a very short passage, `ceiling` is a hard cap you</span>
+</span><span id="estimate_max_tokens-245"><a href="#estimate_max_tokens-245"><span class="linenos">245</span></a><span class="sd">    should set to your actual model's real max-output-tokens limit (see</span>
+</span><span id="estimate_max_tokens-246"><a href="#estimate_max_tokens-246"><span class="linenos">246</span></a><span class="sd">    DEFAULT_CEILING's docstring note).</span>
+</span><span id="estimate_max_tokens-247"><a href="#estimate_max_tokens-247"><span class="linenos">247</span></a>
+</span><span id="estimate_max_tokens-248"><a href="#estimate_max_tokens-248"><span class="linenos">248</span></a><span class="sd">    Raises ValueError if `num_tokens` is negative.</span>
+</span><span id="estimate_max_tokens-249"><a href="#estimate_max_tokens-249"><span class="linenos">249</span></a><span class="sd">    """</span>
+</span><span id="estimate_max_tokens-250"><a href="#estimate_max_tokens-250"><span class="linenos">250</span></a>    <span class="k">if</span> <span class="n">num_tokens</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+</span><span id="estimate_max_tokens-251"><a href="#estimate_max_tokens-251"><span class="linenos">251</span></a>        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"num_tokens must be &gt;= 0, got </span><span class="si">{</span><span class="n">num_tokens</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+</span><span id="estimate_max_tokens-252"><a href="#estimate_max_tokens-252"><span class="linenos">252</span></a>
+</span><span id="estimate_max_tokens-253"><a href="#estimate_max_tokens-253"><span class="linenos">253</span></a>    <span class="n">calibration</span> <span class="o">=</span> <span class="n">_load_calibration</span><span class="p">()</span>
+</span><span id="estimate_max_tokens-254"><a href="#estimate_max_tokens-254"><span class="linenos">254</span></a>    <span class="n">raw</span> <span class="o">=</span> <span class="n">calibration</span><span class="p">[</span><span class="s2">"intercept"</span><span class="p">]</span> <span class="o">+</span> <span class="n">calibration</span><span class="p">[</span><span class="s2">"slope"</span><span class="p">]</span> <span class="o">*</span> <span class="n">num_tokens</span>
+</span><span id="estimate_max_tokens-255"><a href="#estimate_max_tokens-255"><span class="linenos">255</span></a>    <span class="n">budget</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">raw</span> <span class="o">*</span> <span class="n">safety_margin</span><span class="p">)</span>
+</span><span id="estimate_max_tokens-256"><a href="#estimate_max_tokens-256"><span class="linenos">256</span></a>    <span class="k">return</span> <span class="nb">max</span><span class="p">(</span><span class="n">floor</span><span class="p">,</span> <span class="nb">min</span><span class="p">(</span><span class="n">ceiling</span><span class="p">,</span> <span class="n">budget</span><span class="p">))</span>
+</span></pre></div>
+
+
+            <div class="docstring"><p>Estimate a <code>max_tokens</code> budget for an AgentActionTarget call over a
+passage with <code>num_tokens</code> input tokens.</p>
+
+<p><code>raw = intercept + slope * num_tokens</code> comes from the calibrated (or
+fallback) linear fit (see _load_calibration()); <code>safety_margin</code>
+multiplies that to leave room for the reasoning field's length being
+only roughly, not exactly, a function of passage length. The result is
+clamped to <code>[floor, ceiling]</code> -- <code>floor</code> guards against a degenerate
+tiny estimate for a very short passage, <code>ceiling</code> is a hard cap you
+should set to your actual model's real max-output-tokens limit (see
+DEFAULT_CEILING's docstring note).</p>
+
+<p>Raises ValueError if <code>num_tokens</code> is negative.</p>
+</div>
+
+
+                </section>
+                <section id="get_calibration">
+                            <input id="get_calibration-view-source" class="view-source-toggle-state" type="checkbox" aria-hidden="true" tabindex="-1">
+<div class="attr function">
+            
+        <span class="def">def</span>
+        <span class="name">get_calibration</span><span class="signature pdoc-code condensed">(<span class="return-annotation">) -> <span class="nb">dict</span>:</span></span>
+
+                <label class="view-source-button" for="get_calibration-view-source"><span>View Source</span></label>
+
+    </div>
+    <a class="headerlink" href="#get_calibration"></a>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="get_calibration-221"><a href="#get_calibration-221"><span class="linenos">221</span></a><span class="k">def</span><span class="w"> </span><span class="nf">get_calibration</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+</span><span id="get_calibration-222"><a href="#get_calibration-222"><span class="linenos">222</span></a><span class="w">    </span><span class="sd">"""Public introspection: what (intercept, slope) is estimate_max_tokens()</span>
+</span><span id="get_calibration-223"><a href="#get_calibration-223"><span class="linenos">223</span></a><span class="sd">    currently using, and did it come from utilities/calibrate_max_tokens.py's</span>
+</span><span id="get_calibration-224"><a href="#get_calibration-224"><span class="linenos">224</span></a><span class="sd">    fit or from this module's untuned fallback? See _load_calibration()'s</span>
+</span><span id="get_calibration-225"><a href="#get_calibration-225"><span class="linenos">225</span></a><span class="sd">    docstring for the shape returned."""</span>
+</span><span id="get_calibration-226"><a href="#get_calibration-226"><span class="linenos">226</span></a>    <span class="k">return</span> <span class="n">_load_calibration</span><span class="p">()</span>
+</span></pre></div>
+
+
+            <div class="docstring"><p>Public introspection: what (intercept, slope) is estimate_max_tokens()
+currently using, and did it come from utilities/calibrate_max_tokens.py's
+fit or from this module's untuned fallback? See _load_calibration()'s
+docstring for the shape returned.</p>
+</div>
+
+
+                </section>
+                <section id="DEFAULT_CEILING">
+                    <div class="attr variable">
+            <span class="name">DEFAULT_CEILING</span>        =
+<span class="default_value">20000</span>
+
+        
+    </div>
+    <a class="headerlink" href="#DEFAULT_CEILING"></a>
+    
+    
+
+                </section>
+                <section id="DEFAULT_FLOOR">
+                    <div class="attr variable">
+            <span class="name">DEFAULT_FLOOR</span>        =
+<span class="default_value">700</span>
+
+        
+    </div>
+    <a class="headerlink" href="#DEFAULT_FLOOR"></a>
+    
+    
+
+                </section>
+                <section id="DEFAULT_SAFETY_MARGIN">
+                    <div class="attr variable">
+            <span class="name">DEFAULT_SAFETY_MARGIN</span>        =
+<span class="default_value">1.4</span>
+
+        
+    </div>
+    <a class="headerlink" href="#DEFAULT_SAFETY_MARGIN"></a>
+    
+    
 
                 </section>
     </main>

@@ -19,13 +19,14 @@ from .serialization import (
     write_nodes,
     read_nodes,
     read_graph,
-    serialize_passages,
-    write_passages,
-    read_passages,
+    serialize_tokens,
+    write_tokens,
+    read_tokens,
     serialize_analysis,
     write_analysis,
     read_analysis,
 )
+from .html import tokens_to_html
 from .mermaid import graph_to_mermaid, save_mermaid
 from .graphviz import graph_to_dot, save_dot
 from .coloring import assign_action_colors
@@ -43,12 +44,13 @@ __all__ = [
     "write_nodes",
     "read_nodes",
     "read_graph",
-    "serialize_passages",
-    "write_passages",
-    "read_passages",
+    "serialize_tokens",
+    "write_tokens",
+    "read_tokens",
     "serialize_analysis",
     "write_analysis",
     "read_analysis",
+    "tokens_to_html",
     "graph_to_mermaid",
     "save_mermaid",
     "graph_to_dot",

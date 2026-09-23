@@ -1,0 +1,16 @@
+---
+title: Output format
+---
+
+*TBA*
+
+
+```
+#!tokens
+context|id|value
+```
+
+```
+#!aatnodes
+context|id|value|role|related_node
+```

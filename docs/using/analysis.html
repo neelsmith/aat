@@ -258,7 +258,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>Run an analysis from the command line:</p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">python3</span> aat_main.py <span class="at">--passage</span> <span class="st">"Four score and seven years ago our fathers brought forth, upon this continent, a new nation, conceived in Liberty, and dedicated to the proposition that all men are created equal."</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Include a citable reference for the passage (such as a CTS URN) with the <code>--context</code> argument:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="ex">python3</span> aat_main.py <span class="at">--passage</span> <span class="st">"Four score and seven years ago our fathers brought forth, upon this continent, a new nation, conceived in Liberty, and dedicated to the proposition that all men are created equal."</span> <span class="at">--context</span> <span class="st">"urn:cts:aat:examples.gettysburg.hay:1"</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="ex">python3</span> aat_main.py <span class="at">--context</span> <span class="st">"urn:cts:aat:examples.gettysburg.hay:1"</span> <span class="at">--passage</span> <span class="st">"Four score and seven years ago our fathers brought forth, upon this continent, a new nation, conceived in Liberty, and dedicated to the proposition that all men are created equal."</span> </span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>The output is a pair of delimited-text blocks. (See <a href="../reference/serialization.html">reference section</a>.) You can save these to a file for later use, or <a href="../using/piping.html">pipe them immediately into other scripts</a>.</p>
 
 
 
@@ -670,7 +671,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       &nbsp;
     </div>   
     <div class="nav-footer-center">
-<p>Documentation for release version <strong>0.2.1</strong></p>
+<p>Documentation for release version <strong>0.3.0</strong></p>
 </div>
     <div class="nav-footer-right">
       &nbsp;

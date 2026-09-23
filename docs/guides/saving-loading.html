@@ -202,8 +202,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
         <li class="px-0"><hr class="sidebar-divider hi "></li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../guides/cli.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Analyze from the command line</span></a>
+  <a href="../guides/quick.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Quick start: using <code>aat</code> in Python</span></a>
   </div>
 </li>
         <li class="sidebar-item">
@@ -261,13 +261,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </header>
 
 
-<p>ing for the exact format. Multiple blocks in one file are concatenated, in file order, into the list <code>read_nodes()</code> returns, so simply concatenating several <code>write_nodes()</code> outputs together and reading the result back gives you one combined graph.</p>
-<p><code>serialize_analysis()</code>/<code>write_analysis()</code> (a thin wrapper that writes <code>serialize_analysis()</code>’s string to a file) and <code>read_analysis()</code> save and reload a <em>complete, re-displayable</em> analysis – the graph AND its source passage(s) – so a later reader can recover tokens (via <code>aat.english.tokenize()</code>, which needs no LM) and pair them back up with the graph, without ever calling an LM again:</p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> aat.core <span class="im">import</span> CitedPassage, write_analysis, read_analysis</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>write_analysis([CitedPassage(context<span class="op">=</span>context, text<span class="op">=</span>text)], graph, <span class="st">"analysis.txt"</span>)</span>
 <span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>passages, reloaded_graph <span class="op">=</span> read_analysis(<span class="st">"analysis.txt"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Call <code>serialize_analysis()</code> directly (no <code>path</code> argument) when you want the text itself rather than a file – this is what powers <code>aat_graph.py</code>’s “Save analysis to file” button, which writes the string wherever the user’s own directory picker points, not to a fixed path. <code>aat_reader.py</code> is the matching file-loading notebook – see “Interactive notebook” below. The file has a <code>#!passages</code> block (header <code>context|text</code>) alongside the <code>#!aatnodes</code> block; each is read independently by its own function (<code>read_passages()</code>/<code>read_nodes()</code>), so the two block types can coexist in one file without interfering with each other.</p>
 
 
 
@@ -679,7 +676,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       &nbsp;
     </div>   
     <div class="nav-footer-center">
-<p>Documentation for release version <strong>0.2.1</strong></p>
+<p>Documentation for release version <strong>0.3.0</strong></p>
 </div>
     <div class="nav-footer-right">
       &nbsp;

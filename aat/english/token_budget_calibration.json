@@ -1,0 +1,7 @@
+{
+  "intercept": 19.42105263157896,
+  "slope": 36.526315789473685,
+  "sample_size": 4,
+  "model": "litellm_proxy/anthropic/Claude Opus 5",
+  "calibrated_at": "2026-09-22T15:43:50.784547"
+}

@@ -1,6 +1,24 @@
 # Release history
 
-Current release: *0.2.1*
+Current release: *0.3.0*
+
+
+**0.3.0**, *Sept. 22, 2026*: 
+
+Breaking changes:
+
+- serialization format changed
+
+Additions:
+
+- new marimo notebook for parsing a whole CEX corpus.
+- adds cost tracking mechanism for LM queries
+- adds cost tracking output to all notebooks querying a LM
+- refactoring modules for WASM export
+- pipeline for publication to pypi
+- changed build pipeline for docs
+
+
 
 **0.2.1**, *Sept. 15, 2026*: Updates to web site; no changes to code.
 

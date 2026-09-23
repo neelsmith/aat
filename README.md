@@ -7,7 +7,7 @@
 
 
 
-Documentation is being added on the project's [github pages](https://neelsmith.github.io/aat/aat.html). (Currently includes several pages of AI slop that need to be edited.)
+Documentation is being added on the project's [github pages](https://neelsmith.github.io/aat/). (Currently includes several pages of AI slop that need to be edited.)
 
 See the [project issue tracker](https://github.com/neelsmith/aat/issues) for known gaps and work in progress or to submit an issue.
 
@@ -23,11 +23,11 @@ Released under the [GNU General Public License v3 or later](LICENSE).
 
 **Analysis viewed with `graphviz`**:
 
-![AAT graph from opening of Lincoln's Gettysburg Address.](./quarto/imgs/4score.png)
+![AAT graph from opening of Lincoln's Gettysburg Address.](https://raw.githubusercontent.com/neelsmith/aat/refs/heads/main/quarto/imgs/4score.png)
 
 **The same analysis highlighted in its textual context**:
 
-![Input sentence and highlighting of AAT analysis.](./4score-hilites.png)
+![Input sentence and highlighting of AAT analysis.](https://raw.githubusercontent.com/neelsmith/aat/refs/heads/main/4score-hilites.png)
 
 
 

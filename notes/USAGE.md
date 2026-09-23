@@ -24,7 +24,7 @@ Include a citable reference for the passage (such as a CTS URN) with the `--cont
 python3 aat_main.py --passage "The homework was eaten by the dog." --context "urn:cite2:aat:examples.v1:ex1"
 ```
 
-`aat_main.py` writes the analysis to stdout as a plain-text serialized analysis -- the same `#!passages`/`#!aatnodes` format `aat.core.serialize_analysis()`/`write_analysis()` produce (see "Saving and loading a graph" below), and nothing else -- so it can be redirected straight to a file and reloaded later, with no separate save step:
+`aat_main.py` writes the analysis to stdout as a plain-text serialized analysis -- the same `#!tokens`/`#!aatnodes` format `aat.core.serialize_analysis()`/`write_analysis()` produce (see "Saving and loading a graph" below), and nothing else -- so it can be redirected straight to a file and reloaded later, with no separate save step:
 
 ```bash
 python3 aat_main.py --passage "The homework was eaten by the dog." --context "urn:cite2:aat:examples.v1:ex1" > analysis.txt
@@ -90,7 +90,7 @@ Each passage's own tokens are numbered from `t1` within its own context (`Citabl
 
 ## Analyzing a whole corpus from a CEX file
 
-`aat_corpus.py` is the corpus-level version of `aat_main.py`: it reads every passage from a [CEX (CITE Exchange)](https://cite-architecture.github.io/citedx/CEX-spec-3.0.1/) file's `#!ctsdata` block -- an external plain-text interchange format, not this project's own `#!passages`/`#!aatnodes` serialization -- analyzes all of them, and writes ONE combined serialized analysis to stdout, in the same `#!passages`/`#!aatnodes` format `aat_main.py` uses for a single passage:
+`aat_corpus.py` is the corpus-level version of `aat_main.py`: it reads every passage from a [CEX (CITE Exchange)](https://cite-architecture.github.io/citedx/CEX-spec-3.0.1/) file's `#!ctsdata` block -- an external plain-text interchange format, not this project's own `#!tokens`/`#!aatnodes` serialization -- analyzes all of them, and writes ONE combined serialized analysis to stdout, in the same `#!tokens`/`#!aatnodes` format `aat_main.py` uses for a single passage:
 
 ```bash
 python3 aat_corpus.py corpus.cex > analysis.txt
@@ -112,6 +112,53 @@ cat corpus.cex | python3 aat_corpus.py - > analysis.txt
 
 Every passage gets its own separate LM call (via `analyze_passages()`), so a large corpus means real API cost and real wall-clock time -- there's no batching or parallelism. As with `aat_main.py`, any referential problem `validate()` catches is reported on stderr, never stdout, so it never corrupts the redirected file; and the output pipes straight into `aat_to_dot.py` (see "Rendering a graph as Graphviz dot" below) exactly like `aat_main.py`'s does.
 
+`aat_corpus.py` analyzes every citation unit independently, which is wrong whenever a sentence's own grammar crosses a citation-unit boundary -- a real example from `scratch/eng-rv-vpl-genesis.cex`: Genesis 1:14 ends mid-clause with `:`, and the sentence only completes in 1:15. See the next section for the alternative that handles this.
+
+## Analyzing a corpus by sentence, across citation-unit boundaries
+
+`aat.english.sentences` groups an ordered list of citation units into the smallest runs that each end a sentence (`cluster_sentences()`, using `.`/`?`/`!` as sentence-final punctuation by default -- pass a different `terminators` string if a corpus needs a different rule), then tokenizes each group as one combined passage (`tokenize_units()`) rather than tokenizing each citation unit on its own. Every token's id stays unique within the combined group by combining its own citation unit's CTS passage component with its position within that unit -- e.g. `"1.14.t3"` -- and the combined group's own context is a CTS range reference (`urn:cts:compnov:bible.genesis.rvvpl:1.14-1.15` for a two-unit group, or just `...:1.14` for a one-unit group). `aat.english.pipeline.analyze_units_by_sentence(units)` is the LM-dependent counterpart that runs each group through `analyze_with_retry()`/`validate()` (see "Managing the LM's output token budget" below for what `analyze_with_retry()` adds over calling `analyze()` directly) and returns `(tokens, graph)` in the same shape `analyze_passages()` does:
+
+```python
+from aat.core import read_cex_passages, write_analysis
+from aat.english import analyze_units_by_sentence
+
+units = read_cex_passages("scratch/eng-rv-vpl-genesis.cex", delimiter="|")
+tokens, graph = analyze_units_by_sentence(units)
+
+# Save the tokens analyze_units_by_sentence() actually produced --
+# composite sentence-spanning ids (e.g. "1.14.t3") and all -- not the
+# original per-citation-unit `units`. See "Saving and loading a graph"
+# above for why: the saved file's own '#!tokens' block already IS the
+# resolved token list, so reloading it needs no re-run of this module
+# at all.
+write_analysis(tokens, graph, "analysis.txt")
+```
+
+Every function in `aat.english.sentences` is pure and LM-free, deterministic given the same ordered citation units -- useful if you want to reproduce a particular grouping or composite id scheme yourself, but *not* something a caller reloading a saved file needs to rely on: `write_analysis()` saves the actual resolved `tokens` (see "Saving and loading a graph" above), so `marimo/aat_reader.py` (or any other `read_analysis()` caller) gets the exact composite ids `analyze_units_by_sentence()` assigned straight back from the file, with no re-clustering and no dependency on this module at all.
+
+
+## Managing the LM's output token budget
+
+Both `analyze_passages()` (and its `analyze_passage()` wrapper) and `analyze_units_by_sentence()` call `aat.english.token_budget.analyze_with_retry()` rather than `aat.english.analyze()` directly. A passage's `reasoning` field plus its `nodes` list grows with how long and syntactically complex the passage is -- and, for a sentence group spanning several citation units, "how long" isn't bounded by any single citation unit's own length either -- so a fixed `max_tokens` is eventually wrong: too small and a real passage gets truncated mid-response (a `dspy.utils.exceptions.AdapterParseError`, or in rarer cases a response that parses but whose `finish_reason` says `"length"` anyway); too large and every call wastes part of its budget.
+
+`analyze_with_retry()` estimates a starting budget from the passage's own token count (`estimate_max_tokens()`, a simple linear fit -- untuned by default, deliberately generous so it overestimates rather than truncates; see `utilities/calibrate_max_tokens.py` below to replace that fit with a real measurement) and, if a call still comes back truncated, retries with a larger budget instead of surfacing the raw error or silently returning an incomplete result:
+
+```python
+from aat.english import analyze_with_retry
+
+result = analyze_with_retry(passage="...", tokens=tokens)
+```
+
+Every marimo notebook and `aat_main.py` also passes an explicit `max_tokens` baseline (`aat.english.DEFAULT_CEILING`) when constructing its `dspy.LM` -- not because an ordinary call needs that much, but because `dspy.LM`'s own truncation warning always reports *that* baseline, never whatever a per-call override `analyze_with_retry()` used, so leaving it at dspy's own default of `None` made every such warning misleadingly claim the call had no budget at all.
+
+To replace the untuned fallback fit with one measured against your actual configured model:
+
+```bash
+python3 utilities/calibrate_max_tokens.py
+```
+
+This runs every `GOLD_EXAMPLES` passage (`tests/fixtures/gold_examples.py`) through the real LM with a generous ceiling, fits `completion_tokens ~ intercept + slope * num_input_tokens` against the results, and writes it to `aat/english/token_budget_calibration.json`, where `estimate_max_tokens()` picks it up automatically. It's a live-LM script with real API cost (one call per gold example) -- re-run it whenever the configured model, the `AgentActionTarget` prompt, or `AATNode`'s own shape changes enough to shift how many output tokens a passage needs.
+
 
 ## Saving and loading a graph
 
@@ -126,16 +173,16 @@ reloaded = read_graph("analysis.txt")
 
 The file has one `#!aatnodes` block per call to `write_nodes()`/`serialize_nodes()`, each with the fixed header `context|id|value|role|related_node` -- see `serialization.py`'s module docstring for the exact format. Multiple blocks in one file are concatenated, in file order, into the list `read_nodes()` returns, so simply concatenating several `write_nodes()` outputs together and reading the result back gives you one combined graph.
 
-`serialize_analysis()`/`write_analysis()` (a thin wrapper that writes `serialize_analysis()`'s string to a file) and `read_analysis()` save and reload a *complete, re-displayable* analysis -- the graph AND its source passage(s) -- so a later reader can recover tokens (via `aat.english.tokenize()`, which needs no LM) and pair them back up with the graph, without ever calling an LM again:
+`serialize_analysis()`/`write_analysis()` (a thin wrapper that writes `serialize_analysis()`'s string to a file) and `read_analysis()` save and reload a *complete, re-displayable* analysis -- the graph AND the complete, already-tokenized input every node's `id` refers back to -- so a later reader gets the exact same tokens straight back, with no re-tokenization step and so no dependency on `aat.english.tokenize()` (or any other tokenizer) at all:
 
 ```python
-from aat.core import CitedPassage, write_analysis, read_analysis
+from aat.core import write_analysis, read_analysis
 
-write_analysis([CitedPassage(context=context, text=text)], graph, "analysis.txt")
-passages, reloaded_graph = read_analysis("analysis.txt")
+write_analysis(tokens, graph, "analysis.txt")
+reloaded_tokens, reloaded_graph = read_analysis("analysis.txt")
 ```
 
-Call `serialize_analysis()` directly (no `path` argument) when you want the text itself rather than a file -- this is what powers `aat_graph.py`'s "Save analysis to file" button, which writes the string wherever the user's own directory picker points, not to a fixed path. `aat_reader.py` is the matching file-loading notebook -- see "Interactive notebook" below. The file has a `#!passages` block (header `context|text`) alongside the `#!aatnodes` block; each is read independently by its own function (`read_passages()`/`read_nodes()`), so the two block types can coexist in one file without interfering with each other. `aat_main.py` (see "Running an analysis from the command line" above) is a third way to get this same text: it writes `serialize_analysis()`'s output straight to stdout instead of a file, so redirecting it (`> analysis.txt`) is equivalent to calling `write_analysis()` yourself.
+`tokens` here is whatever `analyze_passage()`/`analyze_passages()`/`analyze_units_by_sentence()` returned alongside `graph` -- pass it straight through, don't reconstruct it. Call `serialize_analysis()` directly (no `path` argument) when you want the text itself rather than a file -- this is what powers `aat_graph.py`'s and `aat_corpus_graph.py`'s own "Save analysis to file" buttons, which write the string wherever the user's own directory picker points, not to a fixed path. `aat_reader.py` is the matching file-loading notebook -- see "Interactive notebook" below. The file has a `#!tokens` block (header `context|id|value`, one row per token, in reading order) alongside the `#!aatnodes` block; each is read independently by its own function (`read_tokens()`/`read_nodes()`), so the two block types can coexist in one file without interfering with each other. Unlike an earlier version of this format (a `#!passages` block of raw passage text, requiring a fresh `tokenize()` call to recover tokens on reload), a `#!tokens` block already *is* the resolved token list -- every token an `#!aatnodes` node's `id` can point at, not just the ones that became nodes, in file order -- so an id like `t3` (or a sentence-spanning composite id like `1.14.t3`, from `analyze_units_by_sentence()`) is resolvable back to its surface text and its position in the passage directly from the file, without running any code at all. `aat_main.py` (see "Running an analysis from the command line" above) is a third way to get this same text: it writes `serialize_analysis()`'s output straight to stdout instead of a file, so redirecting it (`> analysis.txt`) is equivalent to calling `write_analysis()` yourself.
 
 
 ## Rendering a graph as Mermaid
@@ -185,7 +232,7 @@ Pass `color_by_action=False` for a plain, uncolored digraph. `save_dot(graph, pa
 
 `warnings` has the same two cases as `graph_to_mermaid()`'s: a node whose `related_node` doesn't resolve to another node actually present in `graph`, and, if the graph has more distinct actions than the color palette has slots, one warning that colors repeat.
 
-`aat_to_dot.py` is the command-line version of this: it reads a serialized analysis from stdin (the same `#!aatnodes` plain-text format -- a `#!passages` block alongside it, if present, is ignored) and writes the DOT digraph to stdout, so you can pipe `aat_main.py`'s own output straight into it:
+`aat_to_dot.py` is the command-line version of this: it reads a serialized analysis from stdin (the same `#!aatnodes` plain-text format -- a `#!tokens` block alongside it, if present, is ignored) and writes the DOT digraph to stdout, so you can pipe `aat_main.py`'s own output straight into it:
 
 ```bash
 python3 aat_main.py --passage "The dog ate my homework." | python3 aat_to_dot.py > analysis.dot
@@ -201,7 +248,9 @@ python3 aat_to_dot.py --orientation LR --no-color < analysis.txt > analysis.dot
 
 ## Rendering tokens as highlighted HTML
 
-`tokens_to_html()` (in `aat/english/html.py`) renders a passage's tokens as one continuous HTML string, reconstructing normal reading spacing (punctuation attaches to the preceding word; opening brackets and the first of a paired quote attach to what follows) rather than putting a space before every token. Pass the same `AATGraph` you'd hand to `graph_to_mermaid()` and every token that's also an AAT graph node is highlighted using the *same* color that node gets in the Mermaid diagram (`aat.core.coloring.assign_action_colors()` -- one shared assignment behind both renderers), with a border style keyed on the node's role: a box around an `action` token, a rounded box around an `agent` token, and an underline under a `target` token.
+`tokens_to_html()` (in `aat/core/html.py`) renders a passage's tokens as one continuous HTML string, reconstructing normal reading spacing (punctuation attaches to the preceding word; opening brackets and the first of a paired quote attach to what follows) rather than putting a space before every token. Pass the same `AATGraph` you'd hand to `graph_to_mermaid()` and every token that's also an AAT graph node is highlighted using the *same* color that node gets in the Mermaid diagram (`aat.core.coloring.assign_action_colors()` -- one shared assignment behind both renderers), with a border style keyed on the node's role: a box around an `action` token, a rounded box around an `agent` token, and an underline under a `target` token.
+
+It lives in `aat.core`, not `aat.english`, even though it only renders English-looking punctuation conventions -- nothing in it needs dspy, so `from aat.core import tokens_to_html` (or `from aat import tokens_to_html`) works with just the base `aat` install, no `english` extra required. It's still re-exported from `aat.english` too, so existing code importing it from there keeps working unchanged.
 
 ```python
 from aat.english import tokenize, tokens_to_html
@@ -220,7 +269,7 @@ Note: for a *compound* action (e.g. "was eating"), only the principal-verb token
 
 ## Interactive notebook
 
-`marimo/aat_graph.py` is a [marimo](https://marimo.io) notebook: enter a context ID and a passage in one form, submit it, and it tokenizes the passage, runs it through `analyze_passage()`, and renders the resulting `AATGraph` both as a Mermaid diagram (`aat.core.graph_to_mermaid()`) and as highlighted passage text (`aat.english.tokens_to_html()`), side by side. A separate orientation control (default `BT`) updates the diagram live, without resubmitting the form or making another LM call. A directory picker and a "Save analysis to file" button write the current passage and graph via `aat.core.write_analysis()`; the filename is derived automatically from the context ID (non-alphanumeric characters collapsed to `_`, falling back to `analysis.txt`), so you can reopen the result later without re-running the LM. Needs the 'dev' extra (`pip install -e ".[dev]"`) and a working `.env` (see above) -- the LM is configured as soon as the notebook loads.
+`marimo/aat_graph.py` is a [marimo](https://marimo.io) notebook: enter a context ID and a passage in one form, submit it, and it tokenizes the passage, runs it through `analyze_passage()`, and renders the resulting `AATGraph` both as a Mermaid diagram (`aat.core.graph_to_mermaid()`) and as highlighted passage text (`aat.english.tokens_to_html()`), side by side. A separate orientation control (default `BT`) updates the diagram live, without resubmitting the form or making another LM call. A "See cost" checkbox shows the cumulative dollar cost of every LM call made so far this session (`aat.lm_cost.summarize_lm_cost()`/`format_lm_cost()`, reading `lm.history`) -- every marimo notebook that connects to an LM has this same checkbox, in the same place. A directory picker and a "Save analysis to file" button write the current passage and graph via `aat.core.write_analysis()`; the filename is derived automatically from the context ID (non-alphanumeric characters collapsed to `_`, falling back to `analysis.txt`), so you can reopen the result later without re-running the LM. Needs the 'dev' extra (`pip install -e ".[dev]"`) and a working `.env` (see above) -- the LM is configured as soon as the notebook loads.
 
 ```bash
 marimo edit marimo/aat_graph.py
@@ -228,7 +277,9 @@ marimo edit marimo/aat_graph.py
 
 opens it in an editable, reactive browser session; `marimo run marimo/aat_graph.py` runs the same notebook as a read-only app (code cells hidden, just the form and the diagram).
 
-`marimo/aat_reader.py` is a companion notebook with the identical Mermaid-diagram-plus-highlighted-text display, but instead of a passage form and an LM call, it has a file picker: browse to and select a file `aat_graph.py`'s "Save analysis to file" button wrote (or one written directly with `aat.core.write_analysis()`), and it re-tokenizes the saved passage (`aat.english.tokenize()` -- deterministic, no LM) and pairs it back up with the saved graph. It needs no `.env`, no configured LM, and makes no network access at all -- everything it shows comes straight from the file:
+`marimo/aat_corpus_graph.py` is the sentence-spanning, whole-corpus counterpart: browse to a CEX corpus file (two columns -- a CTS URN and that citation unit's own text -- any delimiter), set how many citation units to read (a real safety valve, not a nicety -- every sentence group is its own billed LM call) and click "Analyze corpus". It groups citation units into sentences and analyzes each group as one passage (`aat.english.analyze_units_by_sentence()` -- see "Analyzing a corpus by sentence" above), each call going through the same automatic truncation-retry as every other notebook (see "Managing the LM's output token budget" above -- worth knowing here specifically, since a sentence spanning several citation units can need a noticeably larger budget than any single unit alone would), then shows the same Mermaid-diagram-plus-highlighted-text display, the same "See cost" checkbox, and a "Save analysis to file" button (filename derived from the corpus file's own name, `write_analysis()` given the actual tokens `analyze_units_by_sentence()` produced -- composite sentence-spanning ids and all -- so the file stays reloadable with no LM access and no re-clustering -- see above).
+
+`marimo/aat_reader.py` is a companion notebook with the identical Mermaid-diagram-plus-highlighted-text display, but instead of a passage form and an LM call, it has a file picker: browse to and select a file any of this project's "Save analysis to file" buttons wrote (`aat_graph.py`, `aat_corpus_graph.py`), or one written directly with `aat.core.write_analysis()` (`aat_main.py`'s and `aat_corpus.py`'s own stdout included), and it reads the saved token list straight from the file's own `#!tokens` block and pairs it back up with the saved graph -- no re-tokenization step, so it works identically regardless of which script or notebook produced the file, sentence-spanning composite ids included. It needs no `.env`, no configured LM, and makes no network access at all -- everything it shows comes straight from the file:
 
 ```bash
 marimo edit marimo/aat_reader.py

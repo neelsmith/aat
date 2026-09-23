@@ -50,7 +50,7 @@ def parse_cex_ctsdata(text: str, delimiter: str = "#") -> List[CitedPassage]:
     is wrong for this particular file. Raises ValueError (not returning
     an empty list) if the file has no '#!ctsdata' block at all, so a
     caller can't mistake "wrong file" for "file with zero passages" --
-    same reasoning as aat.core.serialization.read_nodes()/read_passages().
+    same reasoning as aat.core.serialization.read_nodes()/read_tokens().
     """
     passages: List[CitedPassage] = []
     in_ctsdata = False

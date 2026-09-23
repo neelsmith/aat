@@ -2,18 +2,18 @@
 
 import pytest
 
-from aat.core import AATNode, CitedPassage
+from aat.core import AATNode, CitableToken
 from aat.core.serialization import (
     read_analysis,
     read_graph,
     read_nodes,
-    read_passages,
+    read_tokens,
     serialize_analysis,
     serialize_nodes,
-    serialize_passages,
+    serialize_tokens,
     write_analysis,
     write_nodes,
-    write_passages,
+    write_tokens,
 )
 
 _NODES = [
@@ -75,50 +75,66 @@ def test_multiple_blocks_concatenate_in_file_order(tmp_path):
     assert [n.id for n in roundtripped] == ["t3", "t2", "t5"]
 
 
-_PASSAGES = [
-    CitedPassage(context="c1", text="The dog ate the homework."),
+_TOKENS = [
+    CitableToken(context="c1", id="t1", value="The"),
+    CitableToken(context="c1", id="t2", value="dog"),
+    CitableToken(context="c1", id="t3", value="ate"),
+    CitableToken(context="c1", id="t4", value="the"),
+    CitableToken(context="c1", id="t5", value="homework"),
+    CitableToken(context="c1", id="t6", value="."),
 ]
 
 
-def test_serialize_passages_shape():
-    text = serialize_passages(_PASSAGES)
+def test_serialize_tokens_shape():
+    text = serialize_tokens(_TOKENS)
     lines = text.splitlines()
-    assert lines[0] == "#!passages"
-    assert lines[1] == "context|text"
-    assert lines[2] == "c1|The dog ate the homework."
+    assert lines[0] == "#!tokens"
+    assert lines[1] == "context|id|value"
+    assert lines[2] == "c1|t1|The"
+    assert lines[3] == "c1|t2|dog"
+    assert lines[-1] == "c1|t6|."
 
 
-def test_write_and_read_passages_roundtrip(tmp_path):
-    path = tmp_path / "passages.txt"
-    write_passages(_PASSAGES, str(path))
-    roundtripped = read_passages(str(path))
-    assert roundtripped == _PASSAGES
+def test_serialize_tokens_preserves_order():
+    # Row order is the only thing that records reading order for a
+    # '#!tokens' block -- confirm it isn't silently re-sorted by id or
+    # anything else.
+    text = serialize_tokens(list(reversed(_TOKENS)))
+    ids_in_file_order = [line.split("|")[1] for line in text.splitlines()[2:]]
+    assert ids_in_file_order == [t.id for t in reversed(_TOKENS)]
 
 
-def test_read_passages_rejects_file_with_no_block(tmp_path):
+def test_write_and_read_tokens_roundtrip(tmp_path):
+    path = tmp_path / "tokens.txt"
+    write_tokens(_TOKENS, str(path))
+    roundtripped = read_tokens(str(path))
+    assert roundtripped == _TOKENS
+
+
+def test_read_tokens_rejects_file_with_no_block(tmp_path):
     path = tmp_path / "bad.txt"
-    path.write_text("not a valid passages file\n")
+    path.write_text("not a valid tokens file\n")
     with pytest.raises(ValueError):
-        read_passages(str(path))
+        read_tokens(str(path))
 
 
-def test_read_nodes_ignores_a_passages_block_in_the_same_file(tmp_path):
+def test_read_nodes_ignores_a_tokens_block_in_the_same_file(tmp_path):
     path = tmp_path / "combo.txt"
-    path.write_text(serialize_passages(_PASSAGES) + "\n" + serialize_nodes(_NODES))
+    path.write_text(serialize_tokens(_TOKENS) + "\n" + serialize_nodes(_NODES))
     roundtripped = read_nodes(str(path))
     assert roundtripped == _NODES
 
 
-def test_read_passages_ignores_an_aatnodes_block_in_the_same_file(tmp_path):
+def test_read_tokens_ignores_an_aatnodes_block_in_the_same_file(tmp_path):
     path = tmp_path / "combo.txt"
-    path.write_text(serialize_passages(_PASSAGES) + "\n" + serialize_nodes(_NODES))
-    roundtripped = read_passages(str(path))
-    assert roundtripped == _PASSAGES
+    path.write_text(serialize_tokens(_TOKENS) + "\n" + serialize_nodes(_NODES))
+    roundtripped = read_tokens(str(path))
+    assert roundtripped == _TOKENS
 
 
-def test_read_nodes_still_requires_its_own_block_even_if_passages_present(tmp_path):
-    path = tmp_path / "passages_only.txt"
-    write_passages(_PASSAGES, str(path))
+def test_read_nodes_still_requires_its_own_block_even_if_tokens_present(tmp_path):
+    path = tmp_path / "tokens_only.txt"
+    write_tokens(_TOKENS, str(path))
     with pytest.raises(ValueError):
         read_nodes(str(path))
 
@@ -127,19 +143,19 @@ def test_write_and_read_analysis_roundtrip(tmp_path):
     from aat.core import AATGraph
 
     path = tmp_path / "analysis.txt"
-    write_analysis(_PASSAGES, AATGraph(nodes=_NODES), str(path))
-    passages, graph = read_analysis(str(path))
-    assert passages == _PASSAGES
+    write_analysis(_TOKENS, AATGraph(nodes=_NODES), str(path))
+    tokens, graph = read_analysis(str(path))
+    assert tokens == _TOKENS
     assert [n.id for n in graph.nodes] == ["t3", "t2", "t5"]
 
 
-def test_serialize_analysis_is_passages_block_then_nodes_block():
+def test_serialize_analysis_is_tokens_block_then_nodes_block():
     from aat.core import AATGraph
 
-    text = serialize_analysis(_PASSAGES, AATGraph(nodes=_NODES))
-    passages_part = serialize_passages(_PASSAGES)
+    text = serialize_analysis(_TOKENS, AATGraph(nodes=_NODES))
+    tokens_part = serialize_tokens(_TOKENS)
     nodes_part = serialize_nodes(_NODES)
-    assert text == passages_part + "\n" + nodes_part
+    assert text == tokens_part + "\n" + nodes_part
 
 
 def test_write_analysis_is_a_thin_wrapper_around_serialize_analysis(tmp_path):
@@ -147,8 +163,8 @@ def test_write_analysis_is_a_thin_wrapper_around_serialize_analysis(tmp_path):
 
     graph = AATGraph(nodes=_NODES)
     path = tmp_path / "analysis.txt"
-    write_analysis(_PASSAGES, graph, str(path))
-    assert path.read_text() == serialize_analysis(_PASSAGES, graph)
+    write_analysis(_TOKENS, graph, str(path))
+    assert path.read_text() == serialize_analysis(_TOKENS, graph)
 
 
 def test_serialize_analysis_returns_a_string_with_no_file_written(tmp_path):
@@ -156,6 +172,35 @@ def test_serialize_analysis_returns_a_string_with_no_file_written(tmp_path):
 
     # serialize_analysis() takes no path at all -- calling it can't have
     # written anything to disk, unlike write_analysis().
-    text = serialize_analysis(_PASSAGES, AATGraph(nodes=_NODES))
+    text = serialize_analysis(_TOKENS, AATGraph(nodes=_NODES))
     assert isinstance(text, str)
     assert list(tmp_path.iterdir()) == []
+
+
+def test_read_analysis_round_trips_a_sentence_spanning_composite_id(tmp_path):
+    # The whole point of this format change: a composite id like
+    # "1.14.t3" (aat.english.sentences' own scheme for a sentence
+    # spanning several citation units) is just data here, not something
+    # that needs re-deriving by re-running tokenize_corpus_by_sentence()
+    # -- confirm it round-trips completely unremarkably.
+    from aat.core import AATGraph
+
+    tokens = [
+        CitableToken(context="urn:cts:test:work:1.14-1.15", id="1.14.t1", value="and"),
+        CitableToken(context="urn:cts:test:work:1.14-1.15", id="1.15.t1", value="ruled"),
+    ]
+    nodes = [
+        AATNode(
+            context="urn:cts:test:work:1.14-1.15",
+            id="1.15.t1",
+            value="ruled",
+            role="action",
+            related_node=None,
+        ),
+    ]
+    path = tmp_path / "spanning.txt"
+    write_analysis(tokens, AATGraph(nodes=nodes), str(path))
+
+    reloaded_tokens, reloaded_graph = read_analysis(str(path))
+    assert reloaded_tokens == tokens
+    assert [n.id for n in reloaded_graph.nodes] == ["1.15.t1"]

@@ -1,0 +1,97 @@
+name: Publish to PyPI
+
+# Two ways to run this:
+#
+# 1. Automatic, real release: publishing a GitHub Release (Releases ->
+#    Draft a new release, pick or create a tag like v0.3.0) triggers this
+#    workflow and it publishes straight to PyPI as "aatgraph".
+#
+# 2. Manual dry run: Actions -> "Publish to PyPI" -> Run workflow lets you
+#    choose "testpypi" to publish the exact same build to TestPyPI instead,
+#    without needing to cut a real release first. Use this to sanity-check
+#    a release before trusting it to go to the real index -- especially
+#    worth doing before the very first publish.
+#
+# No PyPI API token is stored anywhere. Both jobs below authenticate to
+# PyPI/TestPyPI via OIDC "Trusted Publishing" -- see notes/PUBLISHING.md
+# for the one-time setup this requires on pypi.org/test.pypi.org before
+# this workflow can succeed.
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      target:
+        description: "Which index to publish to"
+        required: true
+        default: "testpypi"
+        type: choice
+        options:
+          - testpypi
+          - pypi
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Install build tooling
+        run: pip install build twine
+
+      - name: Build sdist and wheel
+        run: python -m build
+
+      - name: Validate distribution metadata
+        run: twine check dist/*
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+  publish-testpypi:
+    # Only for a manual dry run that explicitly asks for testpypi -- never
+    # runs for an actual GitHub Release.
+    if: github.event_name == 'workflow_dispatch' && inputs.target == 'testpypi'
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: testpypi
+      url: https://test.pypi.org/project/aatgraph/
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+      - uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          repository-url: https://test.pypi.org/legacy/
+
+  publish-pypi:
+    # Runs for a real GitHub Release, or for a manual dry run that
+    # explicitly asks for pypi (e.g. to re-publish a yanked/failed build).
+    if: github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && inputs.target == 'pypi')
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/project/aatgraph/
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+      - uses: pypa/gh-action-pypi-publish@release/v1

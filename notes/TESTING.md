@@ -24,7 +24,10 @@ Some standard `pytest` shorthands:
 
 - `tests/test_core_*.py` -- `aat.core` (tokens, graph accessors, `validate()`, serialization). Pure pydantic/Python, no dspy involved at all.
 - `tests/test_english_tokenize.py` -- the deterministic English tokenizer.
-- `tests/test_english_pipeline.py` -- `analyze_passage()`/`analyze_passages()`, DummyLM-backed.
+- `tests/test_english_pipeline.py` -- `analyze_passage()`/`analyze_passages()`, DummyLM-backed, plus `analyze_units_by_sentence()` (sentence-clustering across citation-unit boundaries, including the validation-warnings-go-to-stderr case).
+- `tests/test_english_sentences.py` -- `aat.english.sentences`: `passage_component()`/`urn_prefix()`/`ends_sentence()`, `cluster_sentences()`, `tokenize_units()`/`tokenize_corpus_by_sentence()` (LM-free, deterministic), including the real Genesis 1:14-15 sentence-spanning example.
+- `tests/test_lm_cost.py` -- `aat.lm_cost`: `summarize_lm_cost()`/`format_lm_cost()` against synthetic `lm.history` entries (priced calls, `None`-cost cache hits, empty history).
+- `tests/test_english_token_budget.py` -- `aat.english.token_budget`: `estimate_max_tokens()`'s formula/clamping/calibration-file handling, and `analyze_with_retry()`'s detect-truncation-and-retry loop (DummyLM-backed, plus `analyze()` monkeypatched for the AdapterParseError cases).
 - `tests/test_gold_examples.py` -- every entry in `tests/fixtures/gold_examples.py`'s `GOLD_EXAMPLES`, run through `analyze()` with DummyLM returning that example's own hand-written `canned_answer`, checked against `validate()` and against the gold nodes exactly.
 - `tests/test_coverage.py` -- confirms `GOLD_EXAMPLES` collectively exercises every role, both related_node states for an action, both simple and compound actions, both voices, and both "no agent"/"no target" cases -- so a change that silently breaks coverage of one of these is caught here rather than only showing up later as a gap in `utilities/optimize_gepa.py`'s trainset.
 - `tests/test_gepa_metric.py` -- `aat.english.gepa_metric.aat_metric` in isolation (missing/extra/mismatched nodes, perfect match), independent of `GOLD_EXAMPLES` or any LM.

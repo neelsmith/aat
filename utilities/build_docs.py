@@ -13,15 +13,26 @@ Requires pdoc (`pip install pdoc --break-system-packages`, or install the
 Docs are published to GitHub Pages by hand, not by CI: run this script,
 then separately `quarto render` inside quarto/ whenever you decide to
 refresh that site too -- see notes/DEVELOPMENT.md and
-notes/CLAUDE_WORKFLOW.md. The output directory (REPO_ROOT/docs/) is wiped
-from scratch on every run (see build()'s shutil.rmtree() below), which
-also destroys anything Quarto has rendered into docs/ since the last
-time you ran it -- re-run `quarto render` afterward if this script's own
-run followed a Quarto publish, rather than assuming docs/ only holds
-pdoc's own pages.
+notes/CLAUDE_WORKFLOW.md.
+
+The output directory (REPO_ROOT/docs/) is NOT cleared before writing:
+build() only creates it if missing and lets pdoc.pdoc() write its own
+files into it (one .html per module, index.html, search.js), overwriting
+whichever of those specific files already exist from a previous run.
+Everything else already in docs/ -- most importantly Neel's own,
+separately-published Quarto site (docs/guides/, docs/using/,
+docs/reference/, docs/site_libs/, docs/about.html, docs/install.html,
+etc.) -- is left completely alone. This script used to `shutil.rmtree()`
+the whole directory first, which wiped that Quarto content along with
+pdoc's own stale output every time; that caused a real incident on
+2026-09-08 (see notes/CLAUDE_WORKFLOW.md's session log), which is why
+this changed. The one tradeoff of not wiping: if a module that used to
+get its own page stops being built (e.g. aat.english skipped because
+dspy isn't installed -- see modules below), that page's old .html file
+is simply left behind rather than removed, since nothing here tracks
+what a *previous* run wrote.
 """
 
-import shutil
 import sys
 from pathlib import Path
 
@@ -45,8 +56,7 @@ import aat  # noqa: E402  (confirms aat.core itself imports cleanly before we st
 
 
 def build():
-    if OUTPUT_DIR.exists():
-        shutil.rmtree(OUTPUT_DIR)
+    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
     pdoc.render.configure(
         docformat="google",
