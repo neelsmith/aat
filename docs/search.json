@@ -48,7 +48,7 @@
     "href": "bg/install.html#installing",
     "title": "Installing aat",
     "section": "Installing",
-    "text": "Installing\nInstall the core module directly from this repository:\npip install git+https://github.com/neelsmith/aat.git\nTo include aat.english (the dspy-based English pipeline):\npip install \"aat[english] @ git+https://github.com/neelsmith/aat.git\"\nTo pin to a specific branch, tag, or commit appending @&lt;ref&gt; to the URL, e.g.\npip install \"aat[english] @ git+https://github.com/neelsmith/aat.git@v0.1.0`",
+    "text": "Installing\nInstall the core module directly from this repository:\npip install aatgraph\nTo also run the English AAT pipeline (tokenizing and analyzing passages with an LM via dspy):\npip install \"aatgraph[english]\"",
     "crumbs": [
       "Background",
       "Installing `aat`"
@@ -227,7 +227,7 @@
     "href": "guides/quick.html",
     "title": "Quick start: using aat in Python",
     "section": "",
-    "text": "First configure a dspy.LM with the same information you would use to configure command-line programs or Marimo notebooks:\nYou can analyze a single string with the analyze_passage function. (If you include a --context citation with a value like a CTS URN, all results will be keyed to unique token IDs within the unique citation context.)\nanalyze_passage returns two values. tokens is a complete tokenization of the input. (In this example, the list has 35 tokens.)\ngraph is an AATGraph. This snippet illustrates the actions function, which returns a list of all the AATNodes in the graph with type action. The agents_for and targets_for functions return a (possibly empty) list of AATNodes related to a given action, with type agent and target respectively.\nHere is the output printed by the snippet above:",
+    "text": "First configure a dspy.LM with the same information you would use to configure command-line programs or Marimo notebooks:\nAlways pass max_tokens explicitly – dspy.LM’s own default is None, which silently disables any output budget and can produce misleading truncation errors; DEFAULT_CEILING is the same baseline aat_main.py and the marimo notebooks use.\nYou can analyze a single string with the analyze_passage function. (If you pass a context argument with a value like a CTS URN, all results will be keyed to unique token IDs within the unique citation context.)\nanalyze_passage returns two values. tokens is a complete tokenization of the input. (In this example, the list has 35 tokens.)\ngraph is an AATGraph. This snippet illustrates the actions function, which returns a list of all the AATNodes in the graph with type action. The agents_for and targets_for functions return a (possibly empty) list of AATNodes related to a given action, with type agent and target respectively.\nHere is the output printed by the snippet above:",
     "crumbs": [
       "Python recipes",
       "Quick start: using `aat` in Python"

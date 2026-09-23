@@ -3,7 +3,7 @@
 Current release: *0.3.0*
 
 
-**0.3.0**, *??*: 
+**0.3.0**, *Sept. 22, 2026*: 
 
 Breaking changes:
 
