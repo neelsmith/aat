@@ -29,6 +29,13 @@ with no special separation between them -- same caveat as
 graph_to_mermaid(); filter `graph.nodes` first for one digraph per
 context.
 
+Node/edge ids are written as bare DOT identifiers when that's valid
+(e.g. "t3"), or double-quoted (see _dot_id()) when it isn't -- notably a
+sentence-spanning composite id such as "1.14.t3"
+(aat.english.sentences.tokenize_units(), aat.corpus) starts with a digit
+and contains '.', which Graphviz's own lexer otherwise misreads as a
+malformed number literal.
+
 `orientation` (default "BT", bottom-to-top) is validated the same way
 graph_to_mermaid() validates it (aat.core.orientation, shared between
 both renderers) -- but Graphviz's `rankdir` graph attribute has no "TD"
@@ -38,6 +45,7 @@ spelling of it) when it's written out; see graph_to_dot()'s own
 docstring.
 """
 
+import re
 from typing import Dict, List, Tuple
 
 from .coloring import ColorTriple, assign_action_colors
@@ -76,6 +84,28 @@ def _escape_label(text: str) -> str:
     backslash first (so escaping the quote below doesn't get re-escaped
     itself), then the quote character."""
     return text.replace("\\", "\\\\").replace('"', '\\"')
+
+
+_BARE_DOT_ID = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
+
+
+def _dot_id(node_id: str) -> str:
+    """Render `node_id` (an AATNode/CitableToken id -- e.g. "t3", or a
+    sentence-spanning composite id like "1.14.t3", see
+    aat.english.sentences's own module docstring) as a DOT identifier.
+
+    A plain id like "t3" is already a valid bare DOT ID (letter/
+    underscore, then letters/digits/underscores) and is returned as-is,
+    matching this module's own pre-existing output exactly for the
+    common single-citation-unit case. A composite id such as "1.14.t3"
+    is NOT a valid bare DOT ID -- it starts with a digit and contains
+    '.', which Graphviz's own lexer tries to parse as part of a number
+    literal and then rejects ("badly delimited number") -- so it's
+    quoted instead (same escaping _escape_label() uses for a label),
+    which DOT accepts for any identifier at all."""
+    if _BARE_DOT_ID.match(node_id):
+        return node_id
+    return f'"{_escape_label(node_id)}"'
 
 
 def graph_to_dot(
@@ -137,7 +167,7 @@ def graph_to_dot(
             attrs.append(f'style="{",".join(styles)}"')
         attrs.append(f'label="{_escape_label(node.value)}"')
 
-        lines.append(f'    {node.id} [{", ".join(attrs)}];')
+        lines.append(f'    {_dot_id(node.id)} [{", ".join(attrs)}];')
 
     for node in graph.nodes:
         if node.related_node is None:
@@ -150,7 +180,7 @@ def graph_to_dot(
             )
             continue
         edge_label = "dependent" if node.role == "action" else node.role
-        lines.append(f'    {node.id} -> {node.related_node} [label="{edge_label}"];')
+        lines.append(f'    {_dot_id(node.id)} -> {_dot_id(node.related_node)} [label="{edge_label}"];')
 
     lines.append("}")
     return "\n".join(lines), warnings

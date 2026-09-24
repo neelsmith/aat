@@ -137,6 +137,55 @@ write_analysis(tokens, graph, "analysis.txt")
 Every function in `aat.english.sentences` is pure and LM-free, deterministic given the same ordered citation units -- useful if you want to reproduce a particular grouping or composite id scheme yourself, but *not* something a caller reloading a saved file needs to rely on: `write_analysis()` saves the actual resolved `tokens` (see "Saving and loading a graph" above), so `marimo/aat_reader.py` (or any other `read_analysis()` caller) gets the exact composite ids `analyze_units_by_sentence()` assigned straight back from the file, with no re-clustering and no dependency on this module at all.
 
 
+## Analyzing a full corpus, one file per sentence cluster
+
+`aat.corpus` (`aat/corpus.py`) puts the previous section's clustering together with real serialization, progress reporting, and cost/error tracking, for a corpus too large to want held as one combined result in memory: `analyze_corpus(cex_path, output_dir)` reads a CEX file, clusters it into sentences exactly as `tokenize_corpus_by_sentence()` does (no LM call), then analyzes and immediately serializes each cluster to its own file in `output_dir` -- one `write_analysis()` call per cluster, not one combined file for the whole corpus -- before moving on to the next. A run interrupted partway through still leaves every cluster analyzed so far on disk.
+
+```python
+import dspy
+from aat.corpus import analyze_corpus
+
+dspy.configure(lm=dspy.LM(...))  # analyze_corpus() doesn't configure one itself
+summary = analyze_corpus("scratch/eng-rv-vpl-genesis.cex", "out/")
+
+print(summary.clusters_succeeded, "of", summary.clusters_total, "clusters analyzed")
+print("see", summary.warnings_path, "for the full run log")
+```
+
+`delimiter` defaults to `"|"` here -- this module's own convention (matching `scratch/eng-rv-vpl-genesis.cex`'s own delimiter and `aat_corpus_graph.py`'s own default), deliberately NOT the same as `aat.core.read_cex_passages()`'s own `"#"` default the previous section's example uses -- pass `delimiter="#"` explicitly for a file using that convention instead.
+
+`lang` selects English (`"en"`, the default) or Dutch (`"nl"`) -- dispatching to `aat.english`'s or `aat.dutch`'s own tokenize/analyze/validate pipeline, same functions the previous section calls directly:
+
+```python
+summary = analyze_corpus("mijn-corpus.cex", "out/", lang="nl")
+```
+
+Once clustering finishes -- before the first cluster is analyzed -- a one-line report of the run's own scope goes to stderr: how many citable passages were read, and how many sentence clusters they were grouped into (e.g. `"Read 12 citable passage(s), clustered into 9 sentence cluster(s)."` -- the second number is smaller than the first whenever a sentence actually spans citation units). As the run proceeds, a progress line for each cluster (and any error or `validate()` warning) is printed to stderr too, never stdout. That same scope line, the same errors/warnings, plus a final LM cost summary (`aat.lm_cost.format_lm_cost()`, reading `dspy.settings.lm.history`), are written to `{output_dir}/warnings.txt` (override the name with `warnings_filename`) -- the scope line as its very first line. A cluster whose own analysis raises (e.g. `analyze_with_retry()` giving up after persistent truncation -- see below) is logged as an `ERROR` line and skipped, rather than aborting the whole run; a cluster that fails `validate()` without raising is still serialized, with each referential problem logged as a `WARNING` line -- same "warn, don't fail" convention `analyze_passages()`/`analyze_units_by_sentence()` already use.
+
+`analyze_corpus_w_diagrams(cex_path, output_dir, ...)` does everything `analyze_corpus()` does, plus renders each successfully analyzed cluster's graph as a PNG (via `graph_to_dot()` and the real `dot` command-line tool, piped through stdin -- not a Python Graphviz binding) to `{output_dir}/pngs/`:
+
+```python
+from aat.corpus import analyze_corpus_w_diagrams
+
+summary = analyze_corpus_w_diagrams("scratch/eng-rv-vpl-genesis.cex", "out/", delimiter="|", orientation="LR")
+print(summary.png_paths)
+```
+
+It checks that `dot` is actually on `PATH` up front, before any LM call, raising `RuntimeError` immediately if it's missing rather than burning real LM cost on a run that would fail at its first diagram anyway. Both functions return a `CorpusRunSummary` (`clusters_total`/`clusters_succeeded`/`clusters_failed`, `output_paths`, `png_paths`, `warnings_path`, `cost_summary`) -- useful for a script or test that wants more than "go look in the output directory".
+
+`utilities/analyze_corpus.py` and `utilities/analyze_corpus_w_diagrams.py` are command-line wrappers around the two functions above, for running a corpus without writing a script:
+
+```bash
+python3 utilities/analyze_corpus.py corpus.cex out/
+python3 utilities/analyze_corpus.py --lang nl --delimiter "#" mijn-corpus.cex out/
+cat corpus.cex | python3 utilities/analyze_corpus.py - out/
+
+python3 utilities/analyze_corpus_w_diagrams.py --orientation LR corpus.cex out/
+```
+
+Both need the same `.env` `aat_main.py` uses (`_configure_lm()` is reused directly, same as `aat_corpus.py`'s own script), accept `-` for `cex_file` to read the same CEX format from stdin (same convention `aat_corpus.py` already uses), and print a short one-line summary to stdout when the run finishes -- everything else (per-cluster progress, errors/warnings) goes to stderr and `warnings.txt`, exactly as `analyze_corpus()`/`analyze_corpus_w_diagrams()` themselves already do. Run from the repo root, same as `utilities/optimize_gepa.py`/`utilities/calibrate_max_tokens.py`.
+
+
 ## Managing the LM's output token budget
 
 Both `analyze_passages()` (and its `analyze_passage()` wrapper) and `analyze_units_by_sentence()` call `aat.english.token_budget.analyze_with_retry()` rather than `aat.english.analyze()` directly. A passage's `reasoning` field plus its `nodes` list grows with how long and syntactically complex the passage is -- and, for a sentence group spanning several citation units, "how long" isn't bounded by any single citation unit's own length either -- so a fixed `max_tokens` is eventually wrong: too small and a real passage gets truncated mid-response (a `dspy.utils.exceptions.AdapterParseError`, or in rarer cases a response that parses but whose `finish_reason` says `"length"` anyway); too large and every call wastes part of its budget.
@@ -257,6 +306,8 @@ dot, warnings = graph_to_dot(graph, orientation="LR")
 Pass `color_by_action=False` for a plain, uncolored digraph. `save_dot(graph, path, ...)` takes the same `orientation`/`color_by_action` arguments and writes the digraph straight to a file (e.g. `analysis.dot`), which the `dot` command-line tool (or any other Graphviz frontend) can render directly: `dot -Tsvg analysis.dot -o analysis.svg`.
 
 `warnings` has the same two cases as `graph_to_mermaid()`'s: a node whose `related_node` doesn't resolve to another node actually present in `graph`, and, if the graph has more distinct actions than the color palette has slots, one warning that colors repeat.
+
+Node/edge ids are written as bare DOT identifiers when that's valid (e.g. `t3`), or double-quoted when it isn't -- in particular a sentence-spanning composite id such as `1.14.t3` (see "Analyzing a corpus by sentence" above, and "Analyzing a full corpus" below), which starts with a digit and contains `.` and would otherwise make Graphviz's own lexer misread it as a malformed number literal.
 
 `aat_to_dot.py` is the command-line version of this: it reads a serialized analysis from stdin (the same `#!aatnodes` plain-text format -- a `#!tokens` block alongside it, if present, is ignored) and writes the DOT digraph to stdout, so you can pipe `aat_main.py`'s own output straight into it:
 

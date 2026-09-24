@@ -2,6 +2,9 @@
 Mirrors tests/test_core_mermaid.py's structure and coverage, asserting
 Graphviz DOT syntax instead of Mermaid syntax for the same fixtures."""
 
+import shutil
+import subprocess
+
 import pytest
 
 from aat.core import AATGraph, AATNode
@@ -169,3 +172,52 @@ def test_label_with_quote_and_backslash_is_escaped():
     )
     dot, _warnings = graph_to_dot(graph, color_by_action=False)
     assert '    t1 [shape=box, label="say \\"hi\\"\\\\bye"];' in dot
+
+
+def test_composite_sentence_spanning_ids_are_quoted_in_dot():
+    # aat.corpus (notes/corpus.qmd) and aat.english/dutch.sentences's own
+    # tokenize_units() assign ids like "1.14.t3" for a sentence that
+    # spans more than one citation unit -- not a valid bare DOT
+    # identifier (starts with a digit, contains '.', which Graphviz's
+    # own lexer tries to read as a malformed number literal). Regression
+    # test for exactly that: both node and edge lines must quote such an
+    # id, while a plain id like "t3" (the common, single-citation-unit
+    # case -- see every other test in this file) stays unquoted, exactly
+    # as graph_to_dot() has always rendered it.
+    graph = AATGraph(
+        nodes=[
+            AATNode(context="c1", id="1.14.t3", value="ate", role="action", related_node=None),
+            AATNode(context="c1", id="1.14.t2", value="dog", role="agent", related_node="1.14.t3"),
+        ]
+    )
+    dot, warnings = graph_to_dot(graph, color_by_action=False)
+    assert warnings == []
+    assert '    "1.14.t3" [shape=box, label="ate"];' in dot
+    assert '    "1.14.t2" [shape=box, style="rounded", label="dog"];' in dot
+    assert '    "1.14.t2" -> "1.14.t3" [label="agent"];' in dot
+    # Plain ids elsewhere in this file (e.g. "t3") are confirmed to stay
+    # bare/unquoted by every other test above -- this test only needs to
+    # confirm the composite case is now quoted.
+
+
+@pytest.mark.skipif(shutil.which("dot") is None, reason="needs the real Graphviz 'dot' CLI on PATH")
+def test_composite_sentence_spanning_ids_actually_parse_as_real_dot():
+    # Same fixture as the test above, but exercising the REAL `dot`
+    # command-line tool (matching tests/test_aat_to_dot.py's own
+    # established "exercise the real subprocess, don't mock it"
+    # convention) -- the quoting fix above exists specifically because
+    # unquoted composite ids fail here with a real syntax error
+    # ("badly delimited number"), which a purely string-based assertion
+    # can't catch on its own.
+    graph = AATGraph(
+        nodes=[
+            AATNode(context="c1", id="1.14.t3", value="ate", role="action", related_node=None),
+            AATNode(context="c1", id="1.14.t2", value="dog", role="agent", related_node="1.14.t3"),
+        ]
+    )
+    dot, _warnings = graph_to_dot(graph)
+    proc = subprocess.run(
+        ["dot", "-Tpng"], input=dot.encode("utf-8"), stdout=subprocess.PIPE, stderr=subprocess.PIPE
+    )
+    assert proc.returncode == 0, proc.stderr.decode("utf-8", errors="replace")
+    assert proc.stdout[:8] == b"\x89PNG\r\n\x1a\n"

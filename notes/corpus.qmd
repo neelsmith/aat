@@ -1,0 +1,19 @@
+# Analyzing a corpus
+
+To analyze a full citable corpus (normally from a CEX source file) requires a few special considerations.
+
+## Algorithm
+
+A citable corpus groups text by citation unit, but these do not always align with syntactic units. (Example: a poem citable by line where a sentence spans multiple lines.)
+
+To parse a full corpus, we therefore first have to cluster citable passages ino the smallest groupings such that the last passage in the cluster coincides with a sentence end. This should be done algorithmically wihtout LM calls.
+
+Then we can sequentially submit each cluster for analysis.
+
+## Implementation
+
+We should implement two functions. `analyze_corpus` should take a CEX source file as one parameter, and an output directory as a second. It should implement the above algorithm to analyze the corpus. It should serialize each analysis individually to the output directory. As it processes each analysis it should display a progress message visible to the user (not on standard out).
+
+It should keep track of the total cost of the run, and note any errors or warnings, and write this information to a separate output file in the output directory, by default named `warnings.txt`. 
+
+The second function is `analyze_corpus_w_diagrams`. It should work identically to `analyze_corpus` with one additional step. For each analysis it should create a grpahviz dot representations and genreate a PNG file in `{OUTPUT_DIR}/pngs`.
