@@ -69,12 +69,25 @@ if __name__ == "__main__":
         action="store_true",
         help="Disable the default action-cluster coloring (write a plain digraph).",
     )
+    parser.add_argument(
+        "--no-root",
+        action="store_true",
+        help=(
+            "Disable the default `root` node -- every independent action "
+            "(related_node None) normally gets an edge to a shared synthetic "
+            "`root` node (aat.core.graph_to_dot()'s own docstring); pass "
+            "this to leave independent actions with no outgoing edge instead."
+        ),
+    )
     args = parser.parse_args()
 
     try:
         graph = _read_graph_from_stdin()
         dot_text, warnings = graph_to_dot(
-            graph, orientation=args.orientation, color_by_action=not args.no_color
+            graph,
+            orientation=args.orientation,
+            color_by_action=not args.no_color,
+            rooted=not args.no_root,
         )
     except ValueError as exc:
         sys.exit(f"aat_to_dot.py: {exc}")

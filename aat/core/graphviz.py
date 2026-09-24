@@ -23,6 +23,19 @@ target syntax differs:
   directly on each node's own line. DOT has no equivalent to Mermaid's
   separate classDef/class mechanism, so there's no separate "class"
   grouping step here; each node just carries its own color attributes.
+- By default (`rooted=True`), every *independent* action (an action node
+  whose own `related_node` is `None` -- see aat-model.md) gets an extra
+  edge to a single synthetic `root` node, shared across the whole
+  digraph (not one per context), so a multi-sentence/multi-context graph
+  reads as one connected tree rather than several disconnected ones, one
+  per independent action. `root` is drawn in Graphviz's own default node
+  form -- no `shape=`, no color/fill attributes at all -- deliberately,
+  so it reads as scaffolding rather than a token the source text
+  actually contains, standing apart from every other node here (all of
+  which always carry an explicit `shape=` and, when `color_by_action` is
+  on, fill/border/font colors too). `graph_to_mermaid()` has no
+  equivalent of this -- `rooted` is DOT-only, not part of the shared
+  node/edge/coloring model the rest of this docstring describes.
 
 Multiple contexts in one `graph` are all drawn into a single digraph,
 with no special separation between them -- same caveat as
@@ -112,6 +125,7 @@ def graph_to_dot(
     graph: AATGraph,
     orientation: str = "BT",
     color_by_action: bool = True,
+    rooted: bool = True,
 ) -> Tuple[str, List[str]]:
     """Build a Graphviz DOT digraph from an AATGraph -- see this module's
     own docstring for the node-shape/edge/coloring mapping, which mirrors
@@ -129,6 +143,14 @@ def graph_to_dot(
 
     `color_by_action` (default True) -- see this module's own docstring.
     Pass False for a plain, uncolored digraph.
+
+    `rooted` (default True) -- see this module's own docstring. When
+    True and the graph has at least one independent action (role
+    "action", related_node None), a single `root` node (Graphviz's own
+    default plain-oval shape, no color) is added, with an edge from
+    every independent action to it. Pass False to skip this -- an
+    independent action then simply has no outgoing edge, same as this
+    function's behavior before `rooted` existed.
 
     Returns (dot_text, warnings) -- same warning cases as
     graph_to_mermaid(): a node whose `related_node` doesn't resolve to
@@ -151,6 +173,12 @@ def graph_to_dot(
 
     lines = ["digraph aat {", f"    rankdir={rankdir};"]
 
+    has_independent_action = any(
+        node.role == "action" and node.related_node is None for node in graph.nodes
+    )
+    if rooted and has_independent_action:
+        lines.append('    root [label="root"];')
+
     for node in graph.nodes:
         attrs = [f"shape={_ROLE_SHAPE.get(node.role, 'box')}"]
         styles = list(_ROLE_EXTRA_STYLES.get(node.role, []))
@@ -171,6 +199,8 @@ def graph_to_dot(
 
     for node in graph.nodes:
         if node.related_node is None:
+            if rooted and node.role == "action":
+                lines.append(f'    {_dot_id(node.id)} -> root [label="root"];')
             continue
         target_key = (node.context, node.related_node)
         if target_key not in by_key:
@@ -191,11 +221,15 @@ def save_dot(
     path: str,
     orientation: str = "BT",
     color_by_action: bool = True,
+    rooted: bool = True,
 ) -> List[str]:
     """Write the digraph to `path` (e.g. 'analysis.dot') and return any
-    warnings from graph_to_dot(). `orientation` is validated the same
-    way -- see graph_to_dot()'s own docstring."""
-    dot_text, warnings = graph_to_dot(graph, orientation=orientation, color_by_action=color_by_action)
+    warnings from graph_to_dot(). `orientation`, `color_by_action`, and
+    `rooted` are all passed straight through -- see graph_to_dot()'s own
+    docstring for each."""
+    dot_text, warnings = graph_to_dot(
+        graph, orientation=orientation, color_by_action=color_by_action, rooted=rooted
+    )
     with open(path, "w", encoding="utf-8") as f:
         f.write(dot_text + "\n")
     return warnings

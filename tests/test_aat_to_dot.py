@@ -87,6 +87,22 @@ def test_default_is_colored():
     assert "fillcolor" in result.stdout
 
 
+def test_default_is_rooted():
+    # _dog_ate_homework_graph()'s "ate" (t3) is an independent action
+    # (related_node None) -- rooted defaults to True, so it should get a
+    # root node/edge with no flag needed.
+    result = _run(serialize_nodes(_dog_ate_homework_graph().nodes))
+    assert result.returncode == 0, result.stderr
+    assert '    root [label="root"];' in result.stdout
+    assert '    t3 -> root [label="root"];' in result.stdout
+
+
+def test_no_root_flag_omits_root_node_and_edge():
+    result = _run(serialize_nodes(_dog_ate_homework_graph().nodes), "--no-root")
+    assert result.returncode == 0, result.stderr
+    assert "root" not in result.stdout
+
+
 def test_invalid_orientation_exits_nonzero_with_message_on_stderr():
     result = _run(serialize_nodes(_dog_ate_homework_graph().nodes), "--orientation", "sideways")
     assert result.returncode != 0

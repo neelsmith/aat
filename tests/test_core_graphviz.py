@@ -35,9 +35,12 @@ def test_agent_and_target_edges_point_at_the_action():
     assert '    t5 -> t3 [label="target"];' in dot
 
 
-def test_independent_action_has_no_outgoing_edge():
-    dot, _warnings = graph_to_dot(_dog_ate_homework_graph())
+def test_independent_action_has_no_outgoing_edge_when_rooted_is_false():
+    # rooted=True is now the default (see the rooted tests below) -- this
+    # is the pre-rooted behavior, still reachable via rooted=False.
+    dot, _warnings = graph_to_dot(_dog_ate_homework_graph(), rooted=False)
     assert "    t3 ->" not in dot
+    assert "root" not in dot
 
 
 def test_dependent_action_edge_is_labelled_dependent():
@@ -216,6 +219,120 @@ def test_composite_sentence_spanning_ids_actually_parse_as_real_dot():
         ]
     )
     dot, _warnings = graph_to_dot(graph)
+    proc = subprocess.run(
+        ["dot", "-Tpng"], input=dot.encode("utf-8"), stdout=subprocess.PIPE, stderr=subprocess.PIPE
+    )
+    assert proc.returncode == 0, proc.stderr.decode("utf-8", errors="replace")
+    assert proc.stdout[:8] == b"\x89PNG\r\n\x1a\n"
+
+
+
+def test_rooted_defaults_to_true_and_adds_root_node_and_edge():
+    dot, warnings = graph_to_dot(_dog_ate_homework_graph(), color_by_action=False)
+    assert warnings == []
+    assert '    root [label="root"];' in dot
+    assert '    t3 -> root [label="root"];' in dot
+    # root itself carries no shape/style/color attrs -- Graphviz's own
+    # default plain-oval node, deliberately unlike every other node here.
+    assert "root [" not in dot.replace('root [label="root"];', "")
+
+
+def test_rooted_root_node_has_no_shape_or_color_attrs():
+    dot, _warnings = graph_to_dot(_dog_ate_homework_graph(), color_by_action=True)
+    lines = {line.strip() for line in dot.splitlines()}
+    root_line = next(line for line in lines if line.startswith("root ["))
+    assert root_line == 'root [label="root"];'
+
+
+def test_rooted_only_independent_actions_get_a_root_edge():
+    # t2 is an independent action (related_node None) -> gets a root
+    # edge; t6 is a dependent action (related_node "t2") -> does NOT,
+    # even though it's also role "action". Agent/target nodes never get
+    # a root edge regardless of their own related_node.
+    graph = AATGraph(
+        nodes=[
+            AATNode(context="c1", id="t2", value="said", role="action", related_node=None),
+            AATNode(context="c1", id="t6", value="ate", role="action", related_node="t2"),
+        ]
+    )
+    dot, _warnings = graph_to_dot(graph)
+    assert '    t2 -> root [label="root"];' in dot
+    assert "    t6 -> root" not in dot
+
+
+def test_rooted_root_node_is_shared_not_duplicated_across_multiple_independent_actions():
+    graph = AATGraph(
+        nodes=[
+            AATNode(context="c1", id="t2", value="said", role="action", related_node=None),
+            AATNode(context="c2", id="t9", value="ran", role="action", related_node=None),
+        ]
+    )
+    dot, _warnings = graph_to_dot(graph, color_by_action=False)
+    lines = dot.splitlines()
+    assert lines.count('    root [label="root"];') == 1
+    assert '    t2 -> root [label="root"];' in dot
+    assert '    t9 -> root [label="root"];' in dot
+
+
+def test_rooted_false_restores_pre_rooted_behavior():
+    dot, warnings = graph_to_dot(_dog_ate_homework_graph(), rooted=False, color_by_action=False)
+    assert warnings == []
+    assert "root" not in dot
+    assert "    t3 ->" not in dot
+
+
+def test_rooted_true_but_no_independent_action_adds_no_root_node():
+    # Every action in this graph has a related_node -- no independent
+    # action exists, so root is skipped entirely even though rooted is
+    # (by default) True.
+    graph = AATGraph(
+        nodes=[
+            AATNode(context="c1", id="t2", value="said", role="action", related_node="t9"),
+            AATNode(context="c1", id="t9", value="ran", role="action", related_node=None),
+        ]
+    )
+    # t9 IS independent here (related_node None), so root should appear
+    # for t9 but not be duplicated for t2 (which has a real related_node
+    # target and gets its own governed edge instead).
+    dot, _warnings = graph_to_dot(graph, color_by_action=False)
+    lines = dot.splitlines()
+    assert lines.count('    root [label="root"];') == 1
+    assert '    t9 -> root [label="root"];' in dot
+    assert '    t2 -> t9 [label="dependent"];' in dot
+
+
+def test_rooted_with_zero_independent_actions_adds_no_root_at_all():
+    graph = AATGraph(
+        nodes=[
+            AATNode(context="c1", id="t2", value="dog", role="agent", related_node="t3"),
+            AATNode(context="c1", id="t3", value="ate", role="action", related_node="t9"),
+            AATNode(context="c1", id="t9", value="barked", role="action", related_node="t3"),
+        ]
+    )
+    dot, _warnings = graph_to_dot(graph, color_by_action=False)
+    assert "root" not in dot
+
+
+def test_save_dot_passes_rooted_through():
+    import tempfile
+    import os
+
+    fd, path = tempfile.mkstemp(suffix=".dot")
+    os.close(fd)
+    try:
+        from aat.core.graphviz import save_dot
+
+        warnings = save_dot(_dog_ate_homework_graph(), path, rooted=False, color_by_action=False)
+        assert warnings == []
+        text = open(path, encoding="utf-8").read()
+        assert "root" not in text
+    finally:
+        os.remove(path)
+
+
+@pytest.mark.skipif(shutil.which("dot") is None, reason="needs the real Graphviz 'dot' CLI on PATH")
+def test_rooted_output_actually_parses_as_real_dot():
+    dot, _warnings = graph_to_dot(_dog_ate_homework_graph())
     proc = subprocess.run(
         ["dot", "-Tpng"], input=dot.encode("utf-8"), stdout=subprocess.PIPE, stderr=subprocess.PIPE
     )

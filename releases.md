@@ -8,6 +8,7 @@ Current release: *0.3.0*
 - a new module for analyzing texts in Dutch
 - new functions for processing entire citable corpora
 - new utility scripts to analyze entire corpora and to analyze entire corpora with PNG output of the syntax graph
+- add option to include a `root` node in `dot` graphs
 
 **0.3.0**, *Sept. 22, 2026*: 
 

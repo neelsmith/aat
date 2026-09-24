@@ -303,11 +303,17 @@ for w in warnings:
 dot, warnings = graph_to_dot(graph, orientation="LR")
 ```
 
-Pass `color_by_action=False` for a plain, uncolored digraph. `save_dot(graph, path, ...)` takes the same `orientation`/`color_by_action` arguments and writes the digraph straight to a file (e.g. `analysis.dot`), which the `dot` command-line tool (or any other Graphviz frontend) can render directly: `dot -Tsvg analysis.dot -o analysis.svg`.
+Pass `color_by_action=False` for a plain, uncolored digraph. `save_dot(graph, path, ...)` takes the same `orientation`/`color_by_action`/`rooted` arguments and writes the digraph straight to a file (e.g. `analysis.dot`), which the `dot` command-line tool (or any other Graphviz frontend) can render directly: `dot -Tsvg analysis.dot -o analysis.svg`.
 
 `warnings` has the same two cases as `graph_to_mermaid()`'s: a node whose `related_node` doesn't resolve to another node actually present in `graph`, and, if the graph has more distinct actions than the color palette has slots, one warning that colors repeat.
 
 Node/edge ids are written as bare DOT identifiers when that's valid (e.g. `t3`), or double-quoted when it isn't -- in particular a sentence-spanning composite id such as `1.14.t3` (see "Analyzing a corpus by sentence" above, and "Analyzing a full corpus" below), which starts with a digit and contains `.` and would otherwise make Graphviz's own lexer misread it as a malformed number literal.
+
+By default (`rooted=True`), every *independent* action -- an action node whose own `related_node` is `None` -- gets an extra edge to a single synthetic `root` node, shared across the whole digraph rather than one per context, so a multi-sentence graph reads as one connected tree instead of several disconnected ones. `root` is drawn in Graphviz's own default node form (no `shape=`, no fill/border/font colors at all), so it stands apart from every other node here, which always carries an explicit shape and, when `color_by_action` is on, colors too. `root` is added only if the graph actually has an independent action; a graph where every action has a `related_node` gets no `root` node at all, `rooted` or not. Pass `rooted=False` to skip this -- an independent action then simply has no outgoing edge, as before this option existed. `graph_to_mermaid()` has no equivalent -- `rooted` is DOT-only.
+
+```python
+dot, warnings = graph_to_dot(graph, rooted=False)
+```
 
 `aat_to_dot.py` is the command-line version of this: it reads a serialized analysis from stdin (the same `#!aatnodes` plain-text format -- a `#!tokens` block alongside it, if present, is ignored) and writes the DOT digraph to stdout, so you can pipe `aat_main.py`'s own output straight into it:
 
@@ -318,10 +324,10 @@ python3 aat_main.py --passage "The dog ate my homework." | python3 aat_to_dot.py
 or render a file saved earlier:
 
 ```bash
-python3 aat_to_dot.py --orientation LR --no-color < analysis.txt > analysis.dot
+python3 aat_to_dot.py --orientation LR --no-color --no-root < analysis.txt > analysis.dot
 ```
 
-`--orientation` and `--no-color` mirror `graph_to_dot()`'s own `orientation`/`color_by_action` arguments; warnings go to stderr, never stdout, so stdout stays exactly the DOT text -- pipe it straight into Graphviz's own `dot` CLI: `python3 aat_to_dot.py < analysis.txt | dot -Tsvg -o analysis.svg`.
+`--orientation`, `--no-color`, and `--no-root` mirror `graph_to_dot()`'s own `orientation`/`color_by_action`/`rooted` arguments (`--no-root` passes `rooted=False`); warnings go to stderr, never stdout, so stdout stays exactly the DOT text -- pipe it straight into Graphviz's own `dot` CLI: `python3 aat_to_dot.py < analysis.txt | dot -Tsvg -o analysis.svg`.
 
 ## Rendering tokens as highlighted HTML
 
