@@ -15,15 +15,21 @@ import pytest
 from dotenv import load_dotenv
 from dspy.utils.dummies import DummyLM
 
-from aat.english import analyze
+from aat.english import analyze as _english_analyze
 
 
-def run_gold_example(example):
+def run_gold_example(example, analyze=_english_analyze):
     """Run a GoldExample's passage through analyze(), with DummyLM
     standing in for the real LM and returning that example's
     canned_answer (see fixtures/gold_examples.py). Returns (tokens,
     result) -- tokens from the example's own tokenize()-derived
-    GoldExample.tokens()."""
+    GoldExample.tokens().
+
+    `analyze` defaults to aat.english's own -- every existing English
+    caller keeps working unchanged -- but a GoldExample from another
+    language's fixture file passes its own language's analyze (e.g.
+    `from aat.dutch import analyze as dutch_analyze`), since a
+    GoldExample doesn't carry its own analyze function."""
     dspy.configure(lm=DummyLM([example.canned_answer]))
     tokens = example.tokens()
     result = analyze(passage=example.passage, tokens=tokens)
