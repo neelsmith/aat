@@ -46,7 +46,13 @@ class AgentActionTarget(dspy.Signature):
     which is still just "heeft gelezen". An *independent* action (not
     embedded in another clause) has related_node=None; a *dependent* (or
     *subordinate*) action has related_node set to the id of the action
-    node for the clause that governs it.
+    node for the clause that governs it. A clause can be subordinated
+    several ways, all treated the same for this purpose: a relative
+    pronoun (e.g. "die"), a purpose construction (e.g. "om ... te ..."),
+    or a subordinating conjunction (e.g. "want"). When a sentence has
+    more than one dependent clause, each one's related_node points at
+    the single independent (main) action that governs the sentence, not
+    at each other.
 
     For every action, also extract:
       - its *agent*: the subject of an active-voice, intransitive, or
@@ -82,9 +88,28 @@ class AgentActionTarget(dspy.Signature):
         passive-voice subject), related_node=<the action's id>.
       - "Alle kunsten en wetenschappen die tot de menselijke beschaving
         bijdragen, bezitten een gemeenschappelijke band." (one
-        independent clause, one dependent clause) -> action node on
-        "bezitten" (independent, related_node=None); action node on
-        "bijdragen" (dependent, related_node=<"bezitten"'s own id>).
+        independent clause, one dependent clause, subordinated by the
+        relative pronoun "die") -> action node on "bezitten"
+        (independent, related_node=None; target node on "band", the
+        direct object); action node on "bijdragen" (dependent,
+        related_node=<"bezitten"'s own id>; agent node on "die", the
+        relative pronoun itself, since it stands in for the subject of
+        "bijdragen").
+      - "En de gehele wereld kwam naar Egypte om bij Jozef koren te
+        kopen, want de honger was sterk op de gehele aarde." (one
+        independent clause, TWO dependent clauses, subordinated two
+        different ways) -> action node on "kwam" (independent,
+        related_node=None; agent node on "wereld"); action node on
+        "kopen" (dependent, related_node=<"kwam"'s own id>, subordinated
+        by the purpose construction "om ... te ..."; target node on
+        "koren", the direct object -- no agent, since this clause's own
+        subject is never overtly expressed as a separate token); action
+        node on "was" (dependent, related_node=<"kwam"'s own id> also --
+        both dependent clauses attach to the same single independent
+        action -- subordinated by the conjunction "want"; this is a
+        linking verb, so agent node on "honger" (its subject) and target
+        node on "sterk" (its predicate complement), not a direct
+        object).
     """
 
     passage: str = dspy.InputField(description="The Dutch passage's raw text.")
