@@ -26,13 +26,15 @@ def _(mo):
     [`USAGE.md`](https://github.com/neelsmith/aat/blob/main/USAGE.md)).
 
 
-    *Enter a context reference and a passage of English text. Once you have
-    a graph, the diagram orientation control updates it live -- no need to
-    resubmit the form. You can also save the analysis (passage + graph):
-    pick a directory and click "Save analysis to file" -- the filename is
-    derived automatically from the context ID -- and reopen it later in
-    `aat_reader.py`, which replicates this same display but needs
-    no LM access at all.*
+    *Choose a language, enter a context reference, and a passage of text
+    in that language. Once you have a graph, the diagram orientation
+    control updates it live -- no need to resubmit the form. Switching
+    languages also requires resubmitting the form, since it changes which
+    extraction model actually runs. You can also save the analysis
+    (passage + graph): pick a directory and click "Save analysis to file"
+    -- the filename is derived automatically from the context ID -- and
+    reopen it later in `aat_reader.py`, which replicates this same
+    display but needs no LM access at all.*
     """)
     return
 
@@ -148,7 +150,7 @@ def _(os):
 
 
 @app.cell
-def _(DEFAULT_CEILING, dspy, getenv, os):
+def _(LM_MAX_TOKENS_CEILING, dspy, getenv, os):
     def configure_lm():
         # Reuse an already-configured LM across reactive re-runs -- cheap
         # insurance if this cell itself is ever re-run by hand.
@@ -171,12 +173,15 @@ def _(DEFAULT_CEILING, dspy, getenv, os):
         api_key = os.environ["API_KEY"]
 
         # An explicit numeric baseline, not None (dspy.LM's own default) --
-        # see aat_main.py's _configure_lm() for why: aat.english.token_budget.
-        # analyze_with_retry() overrides max_tokens per call anyway, but
-        # leaving this baseline at None made dspy's own truncation warning
-        # misleadingly report max_tokens=None even when a real, larger
-        # per-call budget had actually been used.
-        lm_kwargs = dict(model=model, api_base=api_base, max_tokens=DEFAULT_CEILING)
+        # see aat_main.py's _configure_lm() for why: whichever language's
+        # own token_budget.analyze_with_retry() ends up running overrides
+        # max_tokens per call anyway, but leaving this baseline at None
+        # made dspy's own truncation warning misleadingly report
+        # max_tokens=None even when a real, larger per-call budget had
+        # actually been used. LM_MAX_TOKENS_CEILING is the max across every
+        # language module's own DEFAULT_CEILING (see above), so this stays
+        # correct no matter which language ends up selected.
+        lm_kwargs = dict(model=model, api_base=api_base, max_tokens=LM_MAX_TOKENS_CEILING)
         if api_key:
             lm_kwargs["api_key"] = api_key
 
@@ -195,19 +200,38 @@ def _(configure_lm):
 
 @app.cell
 def _():
-    from aat.core import graph_to_mermaid, write_analysis
-    from aat.english import DEFAULT_CEILING, analyze_passage, tokens_to_html
+    import aat.dutch
+    import aat.english
+    from aat.core import graph_to_mermaid, tokens_to_html, write_analysis
     from aat.lm_cost import format_lm_cost, summarize_lm_cost
 
+    # Every language module this notebook can drive analyze_passage()
+    # through -- add a new language here (and nowhere else in this cell)
+    # once it has its own aat.<language> package mirroring aat.english's
+    # shape, and it picks up the radio button option automatically.
+    LANGUAGE_MODULES = {"English": aat.english, "Dutch": aat.dutch}
+
     return (
-        DEFAULT_CEILING,
-        analyze_passage,
+        LANGUAGE_MODULES,
         format_lm_cost,
         graph_to_mermaid,
         summarize_lm_cost,
         tokens_to_html,
         write_analysis,
     )
+
+
+@app.cell
+def _(LANGUAGE_MODULES):
+    # A single numeric baseline for dspy.LM's own max_tokens, used only to
+    # construct the LM once (see configure_lm below) -- every actual
+    # analyze() call overrides max_tokens per call via analyze_with_retry(),
+    # regardless of which language's token_budget module is doing the
+    # retrying. Taking the max across every language module here just means
+    # this baseline never undersells whichever language ends up selected;
+    # it has no effect on per-call behavior.
+    LM_MAX_TOKENS_CEILING = max(module.DEFAULT_CEILING for module in LANGUAGE_MODULES.values())
+    return (LM_MAX_TOKENS_CEILING,)
 
 
 @app.cell(hide_code=True)
@@ -235,6 +259,22 @@ def _(mo):
         label="*Passage*:",
     )
     return (passage_input,)
+
+
+@app.cell
+def _(LANGUAGE_MODULES, mo):
+    # Which language module (aat.english vs aat.dutch) analyze_passage()
+    # below actually calls -- part of passage_form's own batch (see below),
+    # not a live control like orientation_input, since changing it changes
+    # which LM signature runs and so needs a real re-submission, not just a
+    # re-render.
+    language_input = mo.ui.radio(
+        options=list(LANGUAGE_MODULES.keys()),
+        value="English",
+        inline=True,
+        label="*Language*:",
+    )
+    return (language_input,)
 
 
 @app.cell
@@ -284,19 +324,29 @@ def _(mo):
 
 
 @app.cell
-def _(context_input, mo, passage_input):
-    # Both inputs as one form -- marimo only updates passage_form.value (and
-    # so only re-triggers the analysis cell below) when the form is
-    # submitted, never on every keystroke in either field.
+def _(context_input, language_input, mo, passage_input):
+    # All three inputs as one form -- marimo only updates passage_form.value
+    # (and so only re-triggers the analysis cell below) when the form is
+    # submitted, never on every keystroke in a text field or every click of
+    # the language radio. That's deliberate for language_input too, not
+    # just the text fields: switching languages changes which LM signature
+    # analyze_passage() below actually calls, so it should require the same
+    # explicit re-submission a new passage would, not take effect live.
     passage_form = (
         mo.md(
             """
+            {language_input}
+
             {context_input}
 
             {passage_input}
             """
         )
-        .batch(context_input=context_input, passage_input=passage_input)
+        .batch(
+            context_input=context_input,
+            language_input=language_input,
+            passage_input=passage_input,
+        )
         .form(submit_button_label="Build AAT graph")
     )
     return (passage_form,)
@@ -409,15 +459,21 @@ def _(mo):
 
 
 @app.cell
-def _(analyze_passage, passage_form):
+def _(LANGUAGE_MODULES, passage_form):
     # Tokenize and analyze -- only once the form has been submitted at
     # least once (passage_form.value is None until then), and only again on
-    # each subsequent submission, not on every keystroke in the form's own
-    # inputs.
+    # each subsequent submission, not on every keystroke or radio click in
+    # the form's own inputs. The language picked in the form (default
+    # "English", since language_input's own value defaults to that even
+    # before a first submission) selects which language module's
+    # analyze_passage() actually runs -- each has its own dspy signature,
+    # tokenizer, and token-budget calibration.
     tokens, graph = [], None
     if passage_form.value and passage_form.value.get("passage_input"):
         context = passage_form.value.get("context_input") or ""
         text = passage_form.value["passage_input"]
+        language = passage_form.value.get("language_input") or "English"
+        analyze_passage = LANGUAGE_MODULES[language].analyze_passage
         tokens, graph = analyze_passage(text, context=context)
     return graph, tokens
 

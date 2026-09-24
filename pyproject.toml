@@ -12,7 +12,7 @@ build-backend = "setuptools.build_meta"
 # aatgraph` installs the `aat` package.
 name = "aatgraph"
 version = "0.3.0"
-description = "A reductive Agent-Action-Target (AAT) model of natural-language syntax, plus a DSPy-based pipeline applying it to English."
+description = "A reductive Agent-Action-Target (AAT) model of natural-language syntax, plus DSPy-based pipelines applying it to English and Dutch."
 readme = "README.md"
 license = "GPL-3.0-or-later"
 license-files = ["LICENSE"]
@@ -36,12 +36,20 @@ classifiers = [
 ]
 
 [project.optional-dependencies]
-# Only aat.english (and the root scripts that use it) need dspy. aat.core
-# -- the language-agnostic model itself -- has no dependency on it at all,
-# so `pip install aatgraph` alone is enough for a downstream project that
+# Only the language-specific extraction modules (aat.english, aat.dutch --
+# and the root scripts that use them) need dspy. aat.core -- the
+# language-agnostic model itself -- has no dependency on it at all, so
+# `pip install aatgraph` alone is enough for a downstream project that
 # only wants CitableToken/AATNode/AATGraph/validate/serialization/
 # tokens_to_html/graph_to_mermaid/graph_to_dot (see aat/core/__init__.py).
+# Install only the language(s) you actually need -- `pip install
+# "aatgraph[dutch]"` doesn't pull in aat.english's own dependencies (it
+# has none beyond dspy, which aat.dutch needs too, but the two extras are
+# listed separately so that stays true if that ever changes).
 english = [
+    "dspy>=3.0",
+]
+dutch = [
     "dspy>=3.0",
 ]
 dev = [

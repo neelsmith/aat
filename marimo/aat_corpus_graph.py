@@ -1,6 +1,6 @@
 import marimo
 
-__generated_with = "0.24.0"
+__generated_with = "0.24.2"
 app = marimo.App(width="medium")
 
 
@@ -25,22 +25,27 @@ def _(mo):
     >**Prerequisites**: access to a LM configured in `.env` in the root of this repository (see [`.env.example`](https://github.com/neelsmith/aat/blob/main/.env.example) and
     [`USAGE.md`](https://github.com/neelsmith/aat/blob/main/USAGE.md)).
 
-    *Browse to a corpus file in two-column CEX format (a CTS URN and that
-    citation unit's own text per line, e.g. one row per verse), set its
-    delimiter and how many citation units to analyze, then click "Analyze
-    corpus". A sentence's grammar can cross a citation-unit boundary
-    (Genesis 1:14-15 is a real example: verse 14 ends mid-clause with ':',
-    verse 15 finishes the sentence), so citation units are first grouped
-    into the smallest runs that end a sentence, and each group is
-    analyzed as ONE passage -- not one LM call per citation unit. Every
-    token's id stays unique by combining its own citation unit's passage
-    reference with its position within that unit (e.g. "1.14.t3") -- see
-    `aat/english/sentences.py` for the full reasoning. Once you have a
-    graph, the diagram orientation control updates it live -- no need to
-    re-analyze. You can also save the analysis (every citation unit read,
-    plus the combined graph): pick a directory and click "Save analysis
-    to file" -- the filename is derived from the corpus file's own name
-    -- and reopen it later in `aat_reader.py`.*
+    *Choose a language, browse to a corpus file in two-column CEX format
+    (a CTS URN and that citation unit's own text per line, e.g. one row
+    per verse), set its delimiter and how many citation units to
+    analyze, then click "Analyze corpus". A sentence's grammar can cross
+    a citation-unit boundary (Genesis 1:14-15 is a real example: verse 14
+    ends mid-clause with ':', verse 15 finishes the sentence), so
+    citation units are first grouped into the smallest runs that end a
+    sentence, and each group is analyzed as ONE passage -- not one LM
+    call per citation unit. Every token's id stays unique by combining
+    its own citation unit's passage reference with its position within
+    that unit (e.g. "1.14.t3") -- see `aat/english/sentences.py` (or its
+    `aat/dutch/sentences.py` counterpart, for whichever language you
+    pick) for the full reasoning. Once you have a graph, the diagram
+    orientation control updates it live -- no need to re-analyze.
+    Changing the language, corpus file, delimiter, or unit limit clears
+    the current display until you click "Analyze corpus" again, so a
+    result on screen always matches the inputs that produced it. You can
+    also save the analysis (every citation unit read, plus the combined
+    graph): pick a directory and click "Save analysis to file" -- the
+    filename is derived from the corpus file's own name -- and reopen it
+    later in `aat_reader.py`.*
     """)
     return
 
@@ -52,8 +57,8 @@ def _(corpus_file_browser):
 
 
 @app.cell(hide_code=True)
-def _(delimiter_input, limit_input, mo):
-    mo.hstack([delimiter_input, limit_input], justify="start")
+def _(delimiter_input, language_input, limit_input, mo):
+    mo.hstack([language_input, delimiter_input, limit_input], justify="start")
     return
 
 
@@ -181,7 +186,7 @@ def _(os):
 
 
 @app.cell
-def _(DEFAULT_CEILING, dspy, getenv, os):
+def _(LM_MAX_TOKENS_CEILING, dspy, getenv, os):
     def configure_lm():
         # Reuse an already-configured LM across reactive re-runs -- cheap
         # insurance if this cell itself is ever re-run by hand.
@@ -204,12 +209,15 @@ def _(DEFAULT_CEILING, dspy, getenv, os):
         api_key = os.environ["API_KEY"]
 
         # An explicit numeric baseline, not None (dspy.LM's own default) --
-        # see aat_main.py's _configure_lm() for why: aat.english.token_budget.
-        # analyze_with_retry() overrides max_tokens per call anyway, but
-        # leaving this baseline at None made dspy's own truncation warning
-        # misleadingly report max_tokens=None even when a real, larger
-        # per-call budget had actually been used.
-        lm_kwargs = dict(model=model, api_base=api_base, max_tokens=DEFAULT_CEILING)
+        # see aat_main.py's _configure_lm() for why: whichever language's
+        # own token_budget.analyze_with_retry() ends up running overrides
+        # max_tokens per call anyway, but leaving this baseline at None
+        # made dspy's own truncation warning misleadingly report
+        # max_tokens=None even when a real, larger per-call budget had
+        # actually been used. LM_MAX_TOKENS_CEILING is the max across every
+        # language module's own DEFAULT_CEILING (see below), so this stays
+        # correct no matter which language ends up selected.
+        lm_kwargs = dict(model=model, api_base=api_base, max_tokens=LM_MAX_TOKENS_CEILING)
         if api_key:
             lm_kwargs["api_key"] = api_key
 
@@ -228,15 +236,21 @@ def _(configure_lm):
 
 @app.cell
 def _():
-    from aat.core import graph_to_mermaid, read_cex_passages, write_analysis
-    from aat.english import DEFAULT_CEILING, analyze_units_by_sentence, cluster_sentences, ends_sentence, tokens_to_html
+    import aat.dutch
+    import aat.english
+    from aat.core import graph_to_mermaid, read_cex_passages, tokens_to_html, write_analysis
     from aat.lm_cost import format_lm_cost, summarize_lm_cost
 
+    # Every language module this notebook can drive analyze_units_by_
+    # sentence()/cluster_sentences()/ends_sentence() through -- add a new
+    # language here (and nowhere else in this cell) once it has its own
+    # aat.<language> package mirroring aat.english's shape, and it picks up
+    # the radio button option automatically. Mirrors aat_graph.py's own
+    # LANGUAGE_MODULES exactly.
+    LANGUAGE_MODULES = {"English": aat.english, "Dutch": aat.dutch}
+
     return (
-        DEFAULT_CEILING,
-        analyze_units_by_sentence,
-        cluster_sentences,
-        ends_sentence,
+        LANGUAGE_MODULES,
         format_lm_cost,
         graph_to_mermaid,
         read_cex_passages,
@@ -244,6 +258,19 @@ def _():
         tokens_to_html,
         write_analysis,
     )
+
+
+@app.cell
+def _(LANGUAGE_MODULES):
+    # See aat_graph.py's own identical cell -- a single numeric baseline
+    # for dspy.LM's own max_tokens, used only to construct the LM once.
+    # Every actual analyze() call overrides max_tokens per call via
+    # analyze_with_retry(), regardless of which language's token_budget
+    # module is doing the retrying, so taking the max across every
+    # language here just means this baseline never undersells whichever
+    # language ends up selected.
+    LM_MAX_TOKENS_CEILING = max(module.DEFAULT_CEILING for module in LANGUAGE_MODULES.values())
+    return (LM_MAX_TOKENS_CEILING,)
 
 
 @app.cell(hide_code=True)
@@ -276,8 +303,28 @@ def _(mo):
     # aat.core.cex's own docstring) -- '#' is the common convention and
     # this notebook's own default, but e.g.
     # scratch/eng-rv-vpl-genesis.cex uses '|' instead.
-    delimiter_input = mo.ui.text(value="#", label="*Delimiter*:")
+    delimiter_input = mo.ui.text(value="|", label="*Delimiter*:")
     return (delimiter_input,)
+
+
+@app.cell
+def _(LANGUAGE_MODULES, mo):
+    # Selects which language module (aat.english vs aat.dutch) the
+    # sentence-clustering and analyze_units_by_sentence() step below
+    # actually uses. Deliberately read only inside the analyze_button-
+    # gated cell below (see `language` there), not a live control the way
+    # orientation_input is -- touching it alone (without clicking
+    # "Analyze corpus" again) clears the current display rather than
+    # silently re-billing an LM call against a stale corpus read. Same
+    # reasoning as aat_graph.py's own language_input, adapted to this
+    # notebook's run_button pattern instead of a form.
+    language_input = mo.ui.radio(
+        options=list(LANGUAGE_MODULES.keys()),
+        value="English",
+        inline=True,
+        label="*Language*:",
+    )
+    return (language_input,)
 
 
 @app.cell
@@ -360,13 +407,27 @@ def _(mo):
 
 
 @app.cell
-def _(analyze_button, corpus_file_browser, delimiter_input, limit_input, read_cex_passages):
+def _(
+    analyze_button,
+    corpus_file_browser,
+    delimiter_input,
+    language_input,
+    limit_input,
+    read_cex_passages,
+):
     # Only (re-)reads the file -- and only spends any LM budget -- when
     # analyze_button is actually clicked (mo.ui.run_button's value is
     # True for exactly the run triggered by that click, then resets to
     # False). Browsing to a different file, or changing the
-    # delimiter/limit, does nothing on its own.
-    units, load_error = [], None
+    # delimiter/limit/language, resets `units` back to empty on its own
+    # (no new LM call, but the display clears until "Analyze corpus" is
+    # clicked again) rather than silently re-running the next cell
+    # against a stale corpus read paired with a new language. `language`
+    # is captured here, at read time, for exactly that reason -- the
+    # sentence-clustering cell below uses this captured value, not
+    # language_input directly, so it can't drift out of sync with the
+    # `units` it was read alongside.
+    units, load_error, language = [], None, language_input.value
     if analyze_button.value:
         if not corpus_file_browser.value:
             load_error = "Choose a corpus file first."
@@ -380,25 +441,32 @@ def _(analyze_button, corpus_file_browser, delimiter_input, limit_input, read_ce
                 units = all_units[: int(limit_input.value or 0)]
                 if not units:
                     load_error = "Delimiter or limit left zero citation units to analyze."
-    return load_error, units
+    return language, load_error, units
 
 
 @app.cell
-def _(analyze_units_by_sentence, cluster_sentences, ends_sentence, units):
-    # cluster_sentences() here is purely for the "N citation units, M
-    # sentences" info line below -- analyze_units_by_sentence() below
-    # re-derives the same grouping internally (it's a cheap, pure
-    # function; recomputing it once more costs nothing, and keeps this
-    # display-only info decoupled from analyze_units_by_sentence()'s own
-    # return shape).
+def _(LANGUAGE_MODULES, language, units):
+    # cluster_sentences()/ends_sentence()/analyze_units_by_sentence() all
+    # come from the language module captured above when "Analyze corpus"
+    # was last clicked (`language`), not aat.core -- sentence-boundary
+    # clustering is per-language logic (currently identical between
+    # English and Dutch, but not guaranteed to stay that way; see
+    # aat/dutch/sentences.py's own docstring on DEFAULT_SENTENCE_
+    # TERMINATORS). cluster_sentences() here is purely for the "N
+    # citation units, M sentences" info line below -- analyze_units_by_
+    # sentence() below re-derives the same grouping internally (it's a
+    # cheap, pure function; recomputing it once more costs nothing, and
+    # keeps this display-only info decoupled from analyze_units_by_
+    # sentence()'s own return shape).
     tokens, graph = [], None
     sentence_count = 0
     incomplete_final_sentence = False
     if units:
-        groups = cluster_sentences(units)
+        language_module = LANGUAGE_MODULES[language]
+        groups = language_module.cluster_sentences(units)
         sentence_count = len(groups)
-        incomplete_final_sentence = bool(groups) and not ends_sentence(groups[-1][-1].text)
-        tokens, graph = analyze_units_by_sentence(units)
+        incomplete_final_sentence = bool(groups) and not language_module.ends_sentence(groups[-1][-1].text)
+        tokens, graph = language_module.analyze_units_by_sentence(units)
     return graph, incomplete_final_sentence, sentence_count, tokens
 
 
