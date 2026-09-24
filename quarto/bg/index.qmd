@@ -5,6 +5,7 @@ title: Background and requirements
 Conceptual background:
 
 - [About `aat`](./about.qmd)
+- [Comparing AAT graphs](./aatgraphs.qmd)
 
 
 Technical requirements:

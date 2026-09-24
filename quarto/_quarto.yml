@@ -41,6 +41,7 @@ website:
         - bg/index.qmd
         - "---"
         - bg/about.qmd
+        - bg/aatgraphs.qmd
         - "---"
         - bg/install.qmd
         - bg/conf.qmd

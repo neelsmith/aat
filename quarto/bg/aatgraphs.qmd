@@ -1,0 +1,20 @@
+---
+title: Comparing AAT graphs
+---
+
+
+We define comparisons of graphs that use the AAT tree model with its vocabulary of *agent-action-target* for edge values in the following ways.
+
+
+-  **AAT-identical**: Two graphs are *identical* in the AAT model if they have the same same structure and the same edge values. (Node values are not considered.)
+- **AAT-similar**: Two graphs are *similar* if they have the same number of verbal units (*action* nodes) in the same relations. Another way to say this is that two graphs are similar in the AAT model if removing the *agent* and *target* nodes results in graphs that are AAT-identical,
+
+
+## Differences in AAT graphs
+
+If two AAT graphs are different (neither identical nor similar), there are three metrics that are especially useful in comparing them:
+
+- number of *action* nodes. Comparing these tells us how closely the graphs agree on the central concept of the AAT model
+- depth of the graph. Comparing these tells us how similar the graphs are in their syntactic complexity.
+- size of the graph. Comparing these values tells us how far the syntax of each text is expressed in terms of the AAT model.
+

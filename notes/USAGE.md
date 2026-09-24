@@ -185,6 +185,32 @@ reloaded_tokens, reloaded_graph = read_analysis("analysis.txt")
 `tokens` here is whatever `analyze_passage()`/`analyze_passages()`/`analyze_units_by_sentence()` returned alongside `graph` -- pass it straight through, don't reconstruct it. Call `serialize_analysis()` directly (no `path` argument) when you want the text itself rather than a file -- this is what powers `aat_graph.py`'s and `aat_corpus_graph.py`'s own "Save analysis to file" buttons, which write the string wherever the user's own directory picker points, not to a fixed path. `aat_reader.py` is the matching file-loading notebook -- see "Interactive notebook" below. The file has a `#!tokens` block (header `context|id|value`, one row per token, in reading order) alongside the `#!aatnodes` block; each is read independently by its own function (`read_tokens()`/`read_nodes()`), so the two block types can coexist in one file without interfering with each other. Unlike an earlier version of this format (a `#!passages` block of raw passage text, requiring a fresh `tokenize()` call to recover tokens on reload), a `#!tokens` block already *is* the resolved token list -- every token an `#!aatnodes` node's `id` can point at, not just the ones that became nodes, in file order -- so an id like `t3` (or a sentence-spanning composite id like `1.14.t3`, from `analyze_units_by_sentence()`) is resolvable back to its surface text and its position in the passage directly from the file, without running any code at all. `aat_main.py` (see "Running an analysis from the command line" above) is a third way to get this same text: it writes `serialize_analysis()`'s output straight to stdout instead of a file, so redirecting it (`> analysis.txt`) is equivalent to calling `write_analysis()` yourself.
 
 
+## Comparing AAT graphs
+
+`aat_identical()`, `aat_similar()`, and `aat_compare()` (in `aat/core/compare.py`) compare two `AATGraph`s structurally -- by role and shape only, never by node value, id, or context, so you can compare graphs built from entirely different passages (or different languages -- an English passage against a Dutch translation, say), not just re-analyses of the same text. See `quarto/bg/aatgraphs.qmd` for the underlying definitions.
+
+```python
+from aat.core import aat_identical, aat_similar, aat_compare
+
+aat_identical(g1, g2)   # same structure AND same edge (role) values
+aat_similar(g1, g2)     # same action-node structure once agents/targets are removed
+aat_compare(g1, g2)     # g1/g2 ratios, for graphs that are neither
+```
+
+`aat_identical()` is True when `g1` and `g2` have the same shape -- the same action-dependency tree, with the same agent/target roles attached at each position -- regardless of what the underlying tokens actually say. `aat_similar()` is a looser check: True when the two graphs' *action* nodes alone (agents and targets stripped out first) are AAT-identical, i.e. they agree on how many verbal units there are and how they're subordinated to each other, even if their agent/target structure differs.
+
+For graphs that are neither identical nor similar, `aat_compare()` returns an `AATComparison` with three g1/g2 ratios:
+
+```python
+result = aat_compare(g1, g2)
+result.action_node_ratio  # (# action nodes in g1) / (# action nodes in g2)
+result.depth_ratio        # (depth of g1) / (depth of g2)
+result.size_ratio         # (size of g1) / (size of g2)
+```
+
+"Depth" is the longest chain of subordinate actions (an independent action alone is depth 1); "size" is the graph's total node count (agents + actions + targets together). `aat_compare()` raises `ValueError` if any of `g2`'s three values is 0, since the ratio would be undefined.
+
+
 ## Rendering a graph as Mermaid
 
 `graph_to_mermaid()` (in `aat/core/mermaid.py`) renders an `AATGraph` as a [Mermaid](https://mermaid.js.org) flowchart: an action is a rectangle, an agent is rounded, a target is a stadium shape, and every node with a `related_node` becomes a labelled edge pointing at it. By default every node is also colored by which action it clusters with, so the separate clauses in a multi-action passage are visually distinguishable.

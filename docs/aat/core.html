@@ -122,6 +122,30 @@
                     <a class="function" href="#validate">validate</a>
             </li>
             <li>
+                    <a class="function" href="#aat_identical">aat_identical</a>
+            </li>
+            <li>
+                    <a class="function" href="#aat_similar">aat_similar</a>
+            </li>
+            <li>
+                    <a class="function" href="#aat_compare">aat_compare</a>
+            </li>
+            <li>
+                    <a class="class" href="#AATComparison">AATComparison</a>
+                            <ul class="memberlist">
+                        <li>
+                                <a class="variable" href="#AATComparison.action_node_ratio">action_node_ratio</a>
+                        </li>
+                        <li>
+                                <a class="variable" href="#AATComparison.depth_ratio">depth_ratio</a>
+                        </li>
+                        <li>
+                                <a class="variable" href="#AATComparison.size_ratio">size_ratio</a>
+                        </li>
+                </ul>
+
+            </li>
+            <li>
                     <a class="function" href="#serialize_nodes">serialize_nodes</a>
             </li>
             <li>
@@ -224,51 +248,56 @@ without pulling in dspy at all.</p>
 </span><span id="L-14"><a href="#L-14"><span class="linenos">14</span></a><span class="kn">from</span><span class="w"> </span><span class="nn">.tokens</span><span class="w"> </span><span class="kn">import</span> <span class="n">CitableToken</span><span class="p">,</span> <span class="n">CitedPassage</span>
 </span><span id="L-15"><a href="#L-15"><span class="linenos">15</span></a><span class="kn">from</span><span class="w"> </span><span class="nn">.graph</span><span class="w"> </span><span class="kn">import</span> <span class="n">AATGraph</span><span class="p">,</span> <span class="n">AATNode</span><span class="p">,</span> <span class="n">Role</span><span class="p">,</span> <span class="n">ROLES</span>
 </span><span id="L-16"><a href="#L-16"><span class="linenos">16</span></a><span class="kn">from</span><span class="w"> </span><span class="nn">.validate</span><span class="w"> </span><span class="kn">import</span> <span class="n">validate</span>
-</span><span id="L-17"><a href="#L-17"><span class="linenos">17</span></a><span class="kn">from</span><span class="w"> </span><span class="nn">.serialization</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
-</span><span id="L-18"><a href="#L-18"><span class="linenos">18</span></a>    <span class="n">serialize_nodes</span><span class="p">,</span>
-</span><span id="L-19"><a href="#L-19"><span class="linenos">19</span></a>    <span class="n">write_nodes</span><span class="p">,</span>
-</span><span id="L-20"><a href="#L-20"><span class="linenos">20</span></a>    <span class="n">read_nodes</span><span class="p">,</span>
-</span><span id="L-21"><a href="#L-21"><span class="linenos">21</span></a>    <span class="n">read_graph</span><span class="p">,</span>
-</span><span id="L-22"><a href="#L-22"><span class="linenos">22</span></a>    <span class="n">serialize_tokens</span><span class="p">,</span>
-</span><span id="L-23"><a href="#L-23"><span class="linenos">23</span></a>    <span class="n">write_tokens</span><span class="p">,</span>
-</span><span id="L-24"><a href="#L-24"><span class="linenos">24</span></a>    <span class="n">read_tokens</span><span class="p">,</span>
-</span><span id="L-25"><a href="#L-25"><span class="linenos">25</span></a>    <span class="n">serialize_analysis</span><span class="p">,</span>
-</span><span id="L-26"><a href="#L-26"><span class="linenos">26</span></a>    <span class="n">write_analysis</span><span class="p">,</span>
-</span><span id="L-27"><a href="#L-27"><span class="linenos">27</span></a>    <span class="n">read_analysis</span><span class="p">,</span>
-</span><span id="L-28"><a href="#L-28"><span class="linenos">28</span></a><span class="p">)</span>
-</span><span id="L-29"><a href="#L-29"><span class="linenos">29</span></a><span class="kn">from</span><span class="w"> </span><span class="nn">.html</span><span class="w"> </span><span class="kn">import</span> <span class="n">tokens_to_html</span>
-</span><span id="L-30"><a href="#L-30"><span class="linenos">30</span></a><span class="kn">from</span><span class="w"> </span><span class="nn">.mermaid</span><span class="w"> </span><span class="kn">import</span> <span class="n">graph_to_mermaid</span><span class="p">,</span> <span class="n">save_mermaid</span>
-</span><span id="L-31"><a href="#L-31"><span class="linenos">31</span></a><span class="kn">from</span><span class="w"> </span><span class="nn">.graphviz</span><span class="w"> </span><span class="kn">import</span> <span class="n">graph_to_dot</span><span class="p">,</span> <span class="n">save_dot</span>
-</span><span id="L-32"><a href="#L-32"><span class="linenos">32</span></a><span class="kn">from</span><span class="w"> </span><span class="nn">.coloring</span><span class="w"> </span><span class="kn">import</span> <span class="n">assign_action_colors</span>
-</span><span id="L-33"><a href="#L-33"><span class="linenos">33</span></a><span class="kn">from</span><span class="w"> </span><span class="nn">.cex</span><span class="w"> </span><span class="kn">import</span> <span class="n">parse_cex_ctsdata</span><span class="p">,</span> <span class="n">read_cex_passages</span>
-</span><span id="L-34"><a href="#L-34"><span class="linenos">34</span></a>
-</span><span id="L-35"><a href="#L-35"><span class="linenos">35</span></a><span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
-</span><span id="L-36"><a href="#L-36"><span class="linenos">36</span></a>    <span class="s2">"CitableToken"</span><span class="p">,</span>
-</span><span id="L-37"><a href="#L-37"><span class="linenos">37</span></a>    <span class="s2">"CitedPassage"</span><span class="p">,</span>
-</span><span id="L-38"><a href="#L-38"><span class="linenos">38</span></a>    <span class="s2">"AATGraph"</span><span class="p">,</span>
-</span><span id="L-39"><a href="#L-39"><span class="linenos">39</span></a>    <span class="s2">"AATNode"</span><span class="p">,</span>
-</span><span id="L-40"><a href="#L-40"><span class="linenos">40</span></a>    <span class="s2">"Role"</span><span class="p">,</span>
-</span><span id="L-41"><a href="#L-41"><span class="linenos">41</span></a>    <span class="s2">"ROLES"</span><span class="p">,</span>
-</span><span id="L-42"><a href="#L-42"><span class="linenos">42</span></a>    <span class="s2">"validate"</span><span class="p">,</span>
-</span><span id="L-43"><a href="#L-43"><span class="linenos">43</span></a>    <span class="s2">"serialize_nodes"</span><span class="p">,</span>
-</span><span id="L-44"><a href="#L-44"><span class="linenos">44</span></a>    <span class="s2">"write_nodes"</span><span class="p">,</span>
-</span><span id="L-45"><a href="#L-45"><span class="linenos">45</span></a>    <span class="s2">"read_nodes"</span><span class="p">,</span>
-</span><span id="L-46"><a href="#L-46"><span class="linenos">46</span></a>    <span class="s2">"read_graph"</span><span class="p">,</span>
-</span><span id="L-47"><a href="#L-47"><span class="linenos">47</span></a>    <span class="s2">"serialize_tokens"</span><span class="p">,</span>
-</span><span id="L-48"><a href="#L-48"><span class="linenos">48</span></a>    <span class="s2">"write_tokens"</span><span class="p">,</span>
-</span><span id="L-49"><a href="#L-49"><span class="linenos">49</span></a>    <span class="s2">"read_tokens"</span><span class="p">,</span>
-</span><span id="L-50"><a href="#L-50"><span class="linenos">50</span></a>    <span class="s2">"serialize_analysis"</span><span class="p">,</span>
-</span><span id="L-51"><a href="#L-51"><span class="linenos">51</span></a>    <span class="s2">"write_analysis"</span><span class="p">,</span>
-</span><span id="L-52"><a href="#L-52"><span class="linenos">52</span></a>    <span class="s2">"read_analysis"</span><span class="p">,</span>
-</span><span id="L-53"><a href="#L-53"><span class="linenos">53</span></a>    <span class="s2">"tokens_to_html"</span><span class="p">,</span>
-</span><span id="L-54"><a href="#L-54"><span class="linenos">54</span></a>    <span class="s2">"graph_to_mermaid"</span><span class="p">,</span>
-</span><span id="L-55"><a href="#L-55"><span class="linenos">55</span></a>    <span class="s2">"save_mermaid"</span><span class="p">,</span>
-</span><span id="L-56"><a href="#L-56"><span class="linenos">56</span></a>    <span class="s2">"graph_to_dot"</span><span class="p">,</span>
-</span><span id="L-57"><a href="#L-57"><span class="linenos">57</span></a>    <span class="s2">"save_dot"</span><span class="p">,</span>
-</span><span id="L-58"><a href="#L-58"><span class="linenos">58</span></a>    <span class="s2">"assign_action_colors"</span><span class="p">,</span>
-</span><span id="L-59"><a href="#L-59"><span class="linenos">59</span></a>    <span class="s2">"parse_cex_ctsdata"</span><span class="p">,</span>
-</span><span id="L-60"><a href="#L-60"><span class="linenos">60</span></a>    <span class="s2">"read_cex_passages"</span><span class="p">,</span>
-</span><span id="L-61"><a href="#L-61"><span class="linenos">61</span></a><span class="p">]</span>
+</span><span id="L-17"><a href="#L-17"><span class="linenos">17</span></a><span class="kn">from</span><span class="w"> </span><span class="nn">.compare</span><span class="w"> </span><span class="kn">import</span> <span class="n">aat_identical</span><span class="p">,</span> <span class="n">aat_similar</span><span class="p">,</span> <span class="n">aat_compare</span><span class="p">,</span> <span class="n">AATComparison</span>
+</span><span id="L-18"><a href="#L-18"><span class="linenos">18</span></a><span class="kn">from</span><span class="w"> </span><span class="nn">.serialization</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+</span><span id="L-19"><a href="#L-19"><span class="linenos">19</span></a>    <span class="n">serialize_nodes</span><span class="p">,</span>
+</span><span id="L-20"><a href="#L-20"><span class="linenos">20</span></a>    <span class="n">write_nodes</span><span class="p">,</span>
+</span><span id="L-21"><a href="#L-21"><span class="linenos">21</span></a>    <span class="n">read_nodes</span><span class="p">,</span>
+</span><span id="L-22"><a href="#L-22"><span class="linenos">22</span></a>    <span class="n">read_graph</span><span class="p">,</span>
+</span><span id="L-23"><a href="#L-23"><span class="linenos">23</span></a>    <span class="n">serialize_tokens</span><span class="p">,</span>
+</span><span id="L-24"><a href="#L-24"><span class="linenos">24</span></a>    <span class="n">write_tokens</span><span class="p">,</span>
+</span><span id="L-25"><a href="#L-25"><span class="linenos">25</span></a>    <span class="n">read_tokens</span><span class="p">,</span>
+</span><span id="L-26"><a href="#L-26"><span class="linenos">26</span></a>    <span class="n">serialize_analysis</span><span class="p">,</span>
+</span><span id="L-27"><a href="#L-27"><span class="linenos">27</span></a>    <span class="n">write_analysis</span><span class="p">,</span>
+</span><span id="L-28"><a href="#L-28"><span class="linenos">28</span></a>    <span class="n">read_analysis</span><span class="p">,</span>
+</span><span id="L-29"><a href="#L-29"><span class="linenos">29</span></a><span class="p">)</span>
+</span><span id="L-30"><a href="#L-30"><span class="linenos">30</span></a><span class="kn">from</span><span class="w"> </span><span class="nn">.html</span><span class="w"> </span><span class="kn">import</span> <span class="n">tokens_to_html</span>
+</span><span id="L-31"><a href="#L-31"><span class="linenos">31</span></a><span class="kn">from</span><span class="w"> </span><span class="nn">.mermaid</span><span class="w"> </span><span class="kn">import</span> <span class="n">graph_to_mermaid</span><span class="p">,</span> <span class="n">save_mermaid</span>
+</span><span id="L-32"><a href="#L-32"><span class="linenos">32</span></a><span class="kn">from</span><span class="w"> </span><span class="nn">.graphviz</span><span class="w"> </span><span class="kn">import</span> <span class="n">graph_to_dot</span><span class="p">,</span> <span class="n">save_dot</span>
+</span><span id="L-33"><a href="#L-33"><span class="linenos">33</span></a><span class="kn">from</span><span class="w"> </span><span class="nn">.coloring</span><span class="w"> </span><span class="kn">import</span> <span class="n">assign_action_colors</span>
+</span><span id="L-34"><a href="#L-34"><span class="linenos">34</span></a><span class="kn">from</span><span class="w"> </span><span class="nn">.cex</span><span class="w"> </span><span class="kn">import</span> <span class="n">parse_cex_ctsdata</span><span class="p">,</span> <span class="n">read_cex_passages</span>
+</span><span id="L-35"><a href="#L-35"><span class="linenos">35</span></a>
+</span><span id="L-36"><a href="#L-36"><span class="linenos">36</span></a><span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
+</span><span id="L-37"><a href="#L-37"><span class="linenos">37</span></a>    <span class="s2">"CitableToken"</span><span class="p">,</span>
+</span><span id="L-38"><a href="#L-38"><span class="linenos">38</span></a>    <span class="s2">"CitedPassage"</span><span class="p">,</span>
+</span><span id="L-39"><a href="#L-39"><span class="linenos">39</span></a>    <span class="s2">"AATGraph"</span><span class="p">,</span>
+</span><span id="L-40"><a href="#L-40"><span class="linenos">40</span></a>    <span class="s2">"AATNode"</span><span class="p">,</span>
+</span><span id="L-41"><a href="#L-41"><span class="linenos">41</span></a>    <span class="s2">"Role"</span><span class="p">,</span>
+</span><span id="L-42"><a href="#L-42"><span class="linenos">42</span></a>    <span class="s2">"ROLES"</span><span class="p">,</span>
+</span><span id="L-43"><a href="#L-43"><span class="linenos">43</span></a>    <span class="s2">"validate"</span><span class="p">,</span>
+</span><span id="L-44"><a href="#L-44"><span class="linenos">44</span></a>    <span class="s2">"aat_identical"</span><span class="p">,</span>
+</span><span id="L-45"><a href="#L-45"><span class="linenos">45</span></a>    <span class="s2">"aat_similar"</span><span class="p">,</span>
+</span><span id="L-46"><a href="#L-46"><span class="linenos">46</span></a>    <span class="s2">"aat_compare"</span><span class="p">,</span>
+</span><span id="L-47"><a href="#L-47"><span class="linenos">47</span></a>    <span class="s2">"AATComparison"</span><span class="p">,</span>
+</span><span id="L-48"><a href="#L-48"><span class="linenos">48</span></a>    <span class="s2">"serialize_nodes"</span><span class="p">,</span>
+</span><span id="L-49"><a href="#L-49"><span class="linenos">49</span></a>    <span class="s2">"write_nodes"</span><span class="p">,</span>
+</span><span id="L-50"><a href="#L-50"><span class="linenos">50</span></a>    <span class="s2">"read_nodes"</span><span class="p">,</span>
+</span><span id="L-51"><a href="#L-51"><span class="linenos">51</span></a>    <span class="s2">"read_graph"</span><span class="p">,</span>
+</span><span id="L-52"><a href="#L-52"><span class="linenos">52</span></a>    <span class="s2">"serialize_tokens"</span><span class="p">,</span>
+</span><span id="L-53"><a href="#L-53"><span class="linenos">53</span></a>    <span class="s2">"write_tokens"</span><span class="p">,</span>
+</span><span id="L-54"><a href="#L-54"><span class="linenos">54</span></a>    <span class="s2">"read_tokens"</span><span class="p">,</span>
+</span><span id="L-55"><a href="#L-55"><span class="linenos">55</span></a>    <span class="s2">"serialize_analysis"</span><span class="p">,</span>
+</span><span id="L-56"><a href="#L-56"><span class="linenos">56</span></a>    <span class="s2">"write_analysis"</span><span class="p">,</span>
+</span><span id="L-57"><a href="#L-57"><span class="linenos">57</span></a>    <span class="s2">"read_analysis"</span><span class="p">,</span>
+</span><span id="L-58"><a href="#L-58"><span class="linenos">58</span></a>    <span class="s2">"tokens_to_html"</span><span class="p">,</span>
+</span><span id="L-59"><a href="#L-59"><span class="linenos">59</span></a>    <span class="s2">"graph_to_mermaid"</span><span class="p">,</span>
+</span><span id="L-60"><a href="#L-60"><span class="linenos">60</span></a>    <span class="s2">"save_mermaid"</span><span class="p">,</span>
+</span><span id="L-61"><a href="#L-61"><span class="linenos">61</span></a>    <span class="s2">"graph_to_dot"</span><span class="p">,</span>
+</span><span id="L-62"><a href="#L-62"><span class="linenos">62</span></a>    <span class="s2">"save_dot"</span><span class="p">,</span>
+</span><span id="L-63"><a href="#L-63"><span class="linenos">63</span></a>    <span class="s2">"assign_action_colors"</span><span class="p">,</span>
+</span><span id="L-64"><a href="#L-64"><span class="linenos">64</span></a>    <span class="s2">"parse_cex_ctsdata"</span><span class="p">,</span>
+</span><span id="L-65"><a href="#L-65"><span class="linenos">65</span></a>    <span class="s2">"read_cex_passages"</span><span class="p">,</span>
+</span><span id="L-66"><a href="#L-66"><span class="linenos">66</span></a><span class="p">]</span>
 </span></pre></div>
 
 
@@ -504,7 +533,7 @@ order convenient for display.</p>
 <div class="attr function">
             
         <span class="def">def</span>
-        <span class="name">by_id</span><span class="signature pdoc-code condensed">(<span class="param"><span class="bp">self</span>, </span><span class="param"><span class="n">context</span><span class="p">:</span> <span class="nb">str</span>, </span><span class="param"><span class="nb">id</span><span class="p">:</span> <span class="nb">str</span></span><span class="return-annotation">) -> <span class="n"><a href="#AATNode">AATNode</a></span> <span class="o">|</span> <span class="kc">None</span>:</span></span>
+        <span class="name">by_id</span><span class="signature pdoc-code condensed">(<span class="param"><span class="bp">self</span>, </span><span class="param"><span class="n">context</span><span class="p">:</span> <span class="nb">str</span>, </span><span class="param"><span class="nb">id</span><span class="p">:</span> <span class="nb">str</span></span><span class="return-annotation">) -> <span class="n">Optional</span><span class="p">[</span><span class="n"><a href="#AATNode">AATNode</a></span><span class="p">]</span>:</span></span>
 
                 <label class="view-source-button" for="AATGraph.by_id-view-source"><span>View Source</span></label>
 
@@ -655,7 +684,7 @@ within the same context.</p>
 <div class="attr function">
             
         <span class="def">def</span>
-        <span class="name">governing_action</span><span class="signature pdoc-code condensed">(<span class="param"><span class="bp">self</span>, </span><span class="param"><span class="n">action</span><span class="p">:</span> <span class="n"><a href="#AATNode">AATNode</a></span></span><span class="return-annotation">) -> <span class="n"><a href="#AATNode">AATNode</a></span> <span class="o">|</span> <span class="kc">None</span>:</span></span>
+        <span class="name">governing_action</span><span class="signature pdoc-code condensed">(<span class="param"><span class="bp">self</span>, </span><span class="param"><span class="n">action</span><span class="p">:</span> <span class="n"><a href="#AATNode">AATNode</a></span></span><span class="return-annotation">) -> <span class="n">Optional</span><span class="p">[</span><span class="n"><a href="#AATNode">AATNode</a></span><span class="p">]</span>:</span></span>
 
                 <label class="view-source-button" for="AATGraph.governing_action-view-source"><span>View Source</span></label>
 
@@ -823,7 +852,7 @@ can be <code>None</code>.</li>
                             </div>
                             <div id="AATNode.related_node" class="classattr">
                                 <div class="attr variable">
-            <span class="name">related_node</span><span class="annotation">: str | None</span>        =
+            <span class="name">related_node</span><span class="annotation">: Optional[str]</span>        =
 <span class="default_value">None</span>
 
         
@@ -944,6 +973,189 @@ referential problems were found (not that the analysis is correct).</p>
 </div>
 
 
+                </section>
+                <section id="aat_identical">
+                            <input id="aat_identical-view-source" class="view-source-toggle-state" type="checkbox" aria-hidden="true" tabindex="-1">
+<div class="attr function">
+            
+        <span class="def">def</span>
+        <span class="name">aat_identical</span><span class="signature pdoc-code condensed">(<span class="param"><span class="n">g1</span><span class="p">:</span> <span class="n"><a href="#AATGraph">AATGraph</a></span>, </span><span class="param"><span class="n">g2</span><span class="p">:</span> <span class="n"><a href="#AATGraph">AATGraph</a></span></span><span class="return-annotation">) -> <span class="nb">bool</span>:</span></span>
+
+                <label class="view-source-button" for="aat_identical-view-source"><span>View Source</span></label>
+
+    </div>
+    <a class="headerlink" href="#aat_identical"></a>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="aat_identical-102"><a href="#aat_identical-102"><span class="linenos">102</span></a><span class="k">def</span><span class="w"> </span><span class="nf">aat_identical</span><span class="p">(</span><span class="n">g1</span><span class="p">:</span> <span class="n">AATGraph</span><span class="p">,</span> <span class="n">g2</span><span class="p">:</span> <span class="n">AATGraph</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+</span><span id="aat_identical-103"><a href="#aat_identical-103"><span class="linenos">103</span></a><span class="w">    </span><span class="sd">"""True if `g1` and `g2` are AAT-identical (aatgraphs.qmd): same</span>
+</span><span id="aat_identical-104"><a href="#aat_identical-104"><span class="linenos">104</span></a><span class="sd">    structure and same edge values (role labels at each position),</span>
+</span><span id="aat_identical-105"><a href="#aat_identical-105"><span class="linenos">105</span></a><span class="sd">    comparing node role and tree shape only -- node value, id, and</span>
+</span><span id="aat_identical-106"><a href="#aat_identical-106"><span class="linenos">106</span></a><span class="sd">    context are never considered, so this can compare graphs built from</span>
+</span><span id="aat_identical-107"><a href="#aat_identical-107"><span class="linenos">107</span></a><span class="sd">    entirely different passages. Raises ValueError if either graph's</span>
+</span><span id="aat_identical-108"><a href="#aat_identical-108"><span class="linenos">108</span></a><span class="sd">    action nodes form a related_node cycle."""</span>
+</span><span id="aat_identical-109"><a href="#aat_identical-109"><span class="linenos">109</span></a>    <span class="k">try</span><span class="p">:</span>
+</span><span id="aat_identical-110"><a href="#aat_identical-110"><span class="linenos">110</span></a>        <span class="k">return</span> <span class="n">_graph_canonical</span><span class="p">(</span><span class="n">g1</span><span class="p">)</span> <span class="o">==</span> <span class="n">_graph_canonical</span><span class="p">(</span><span class="n">g2</span><span class="p">)</span>
+</span><span id="aat_identical-111"><a href="#aat_identical-111"><span class="linenos">111</span></a>    <span class="k">except</span> <span class="n">_CycleError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+</span><span id="aat_identical-112"><a href="#aat_identical-112"><span class="linenos">112</span></a>        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">exc</span><span class="p">))</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span>
+</span></pre></div>
+
+
+            <div class="docstring"><p>True if <code>g1</code> and <code>g2</code> are AAT-identical (aatgraphs.qmd): same
+structure and same edge values (role labels at each position),
+comparing node role and tree shape only -- node value, id, and
+context are never considered, so this can compare graphs built from
+entirely different passages. Raises ValueError if either graph's
+action nodes form a related_node cycle.</p>
+</div>
+
+
+                </section>
+                <section id="aat_similar">
+                            <input id="aat_similar-view-source" class="view-source-toggle-state" type="checkbox" aria-hidden="true" tabindex="-1">
+<div class="attr function">
+            
+        <span class="def">def</span>
+        <span class="name">aat_similar</span><span class="signature pdoc-code condensed">(<span class="param"><span class="n">g1</span><span class="p">:</span> <span class="n"><a href="#AATGraph">AATGraph</a></span>, </span><span class="param"><span class="n">g2</span><span class="p">:</span> <span class="n"><a href="#AATGraph">AATGraph</a></span></span><span class="return-annotation">) -> <span class="nb">bool</span>:</span></span>
+
+                <label class="view-source-button" for="aat_similar-view-source"><span>View Source</span></label>
+
+    </div>
+    <a class="headerlink" href="#aat_similar"></a>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="aat_similar-121"><a href="#aat_similar-121"><span class="linenos">121</span></a><span class="k">def</span><span class="w"> </span><span class="nf">aat_similar</span><span class="p">(</span><span class="n">g1</span><span class="p">:</span> <span class="n">AATGraph</span><span class="p">,</span> <span class="n">g2</span><span class="p">:</span> <span class="n">AATGraph</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+</span><span id="aat_similar-122"><a href="#aat_similar-122"><span class="linenos">122</span></a><span class="w">    </span><span class="sd">"""True if `g1` and `g2` are AAT-similar (aatgraphs.qmd): same number</span>
+</span><span id="aat_similar-123"><a href="#aat_similar-123"><span class="linenos">123</span></a><span class="sd">    of action nodes in the same relations -- equivalently, per the doc,</span>
+</span><span id="aat_similar-124"><a href="#aat_similar-124"><span class="linenos">124</span></a><span class="sd">    AAT-identical once agent and target nodes are removed from both."""</span>
+</span><span id="aat_similar-125"><a href="#aat_similar-125"><span class="linenos">125</span></a>    <span class="k">return</span> <span class="n">aat_identical</span><span class="p">(</span><span class="n">_actions_only</span><span class="p">(</span><span class="n">g1</span><span class="p">),</span> <span class="n">_actions_only</span><span class="p">(</span><span class="n">g2</span><span class="p">))</span>
+</span></pre></div>
+
+
+            <div class="docstring"><p>True if <code>g1</code> and <code>g2</code> are AAT-similar (aatgraphs.qmd): same number
+of action nodes in the same relations -- equivalently, per the doc,
+AAT-identical once agent and target nodes are removed from both.</p>
+</div>
+
+
+                </section>
+                <section id="aat_compare">
+                            <input id="aat_compare-view-source" class="view-source-toggle-state" type="checkbox" aria-hidden="true" tabindex="-1">
+<div class="attr function">
+            
+        <span class="def">def</span>
+        <span class="name">aat_compare</span><span class="signature pdoc-code multiline">(<span class="param">	<span class="n">g1</span><span class="p">:</span> <span class="n"><a href="#AATGraph">AATGraph</a></span>,</span><span class="param">	<span class="n">g2</span><span class="p">:</span> <span class="n"><a href="#AATGraph">AATGraph</a></span></span><span class="return-annotation">) -> <span class="n"><a href="#AATComparison">AATComparison</a></span>:</span></span>
+
+                <label class="view-source-button" for="aat_compare-view-source"><span>View Source</span></label>
+
+    </div>
+    <a class="headerlink" href="#aat_compare"></a>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="aat_compare-160"><a href="#aat_compare-160"><span class="linenos">160</span></a><span class="k">def</span><span class="w"> </span><span class="nf">aat_compare</span><span class="p">(</span><span class="n">g1</span><span class="p">:</span> <span class="n">AATGraph</span><span class="p">,</span> <span class="n">g2</span><span class="p">:</span> <span class="n">AATGraph</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AATComparison</span><span class="p">:</span>
+</span><span id="aat_compare-161"><a href="#aat_compare-161"><span class="linenos">161</span></a><span class="w">    </span><span class="sd">"""Compare `g1` to `g2` on the three metrics aatgraphs.qmd names as</span>
+</span><span id="aat_compare-162"><a href="#aat_compare-162"><span class="linenos">162</span></a><span class="sd">    useful for graphs that are neither AAT-identical nor AAT-similar:</span>
+</span><span id="aat_compare-163"><a href="#aat_compare-163"><span class="linenos">163</span></a><span class="sd">    number of action nodes, depth, and size, each as a g1/g2 ratio.</span>
+</span><span id="aat_compare-164"><a href="#aat_compare-164"><span class="linenos">164</span></a><span class="sd">    Raises ValueError if any of g2's three corresponding values is 0 (the</span>
+</span><span id="aat_compare-165"><a href="#aat_compare-165"><span class="linenos">165</span></a><span class="sd">    ratio would be undefined), or on a related_node cycle in either</span>
+</span><span id="aat_compare-166"><a href="#aat_compare-166"><span class="linenos">166</span></a><span class="sd">    graph."""</span>
+</span><span id="aat_compare-167"><a href="#aat_compare-167"><span class="linenos">167</span></a>    <span class="n">g1_actions</span><span class="p">,</span> <span class="n">g2_actions</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">g1</span><span class="o">.</span><span class="n">actions</span><span class="p">()),</span> <span class="nb">len</span><span class="p">(</span><span class="n">g2</span><span class="o">.</span><span class="n">actions</span><span class="p">())</span>
+</span><span id="aat_compare-168"><a href="#aat_compare-168"><span class="linenos">168</span></a>    <span class="n">g1_depth</span><span class="p">,</span> <span class="n">g2_depth</span> <span class="o">=</span> <span class="n">_depth</span><span class="p">(</span><span class="n">g1</span><span class="p">),</span> <span class="n">_depth</span><span class="p">(</span><span class="n">g2</span><span class="p">)</span>
+</span><span id="aat_compare-169"><a href="#aat_compare-169"><span class="linenos">169</span></a>    <span class="n">g1_size</span><span class="p">,</span> <span class="n">g2_size</span> <span class="o">=</span> <span class="n">_size</span><span class="p">(</span><span class="n">g1</span><span class="p">),</span> <span class="n">_size</span><span class="p">(</span><span class="n">g2</span><span class="p">)</span>
+</span><span id="aat_compare-170"><a href="#aat_compare-170"><span class="linenos">170</span></a>
+</span><span id="aat_compare-171"><a href="#aat_compare-171"><span class="linenos">171</span></a>    <span class="k">if</span> <span class="n">g2_actions</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+</span><span id="aat_compare-172"><a href="#aat_compare-172"><span class="linenos">172</span></a>        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"cannot compute action_node_ratio: g2 has no action nodes"</span><span class="p">)</span>
+</span><span id="aat_compare-173"><a href="#aat_compare-173"><span class="linenos">173</span></a>    <span class="k">if</span> <span class="n">g2_depth</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+</span><span id="aat_compare-174"><a href="#aat_compare-174"><span class="linenos">174</span></a>        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"cannot compute depth_ratio: g2 has depth 0 (no action nodes)"</span><span class="p">)</span>
+</span><span id="aat_compare-175"><a href="#aat_compare-175"><span class="linenos">175</span></a>    <span class="k">if</span> <span class="n">g2_size</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+</span><span id="aat_compare-176"><a href="#aat_compare-176"><span class="linenos">176</span></a>        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"cannot compute size_ratio: g2 has no nodes"</span><span class="p">)</span>
+</span><span id="aat_compare-177"><a href="#aat_compare-177"><span class="linenos">177</span></a>
+</span><span id="aat_compare-178"><a href="#aat_compare-178"><span class="linenos">178</span></a>    <span class="k">return</span> <span class="n">AATComparison</span><span class="p">(</span>
+</span><span id="aat_compare-179"><a href="#aat_compare-179"><span class="linenos">179</span></a>        <span class="n">action_node_ratio</span><span class="o">=</span><span class="n">g1_actions</span> <span class="o">/</span> <span class="n">g2_actions</span><span class="p">,</span>
+</span><span id="aat_compare-180"><a href="#aat_compare-180"><span class="linenos">180</span></a>        <span class="n">depth_ratio</span><span class="o">=</span><span class="n">g1_depth</span> <span class="o">/</span> <span class="n">g2_depth</span><span class="p">,</span>
+</span><span id="aat_compare-181"><a href="#aat_compare-181"><span class="linenos">181</span></a>        <span class="n">size_ratio</span><span class="o">=</span><span class="n">g1_size</span> <span class="o">/</span> <span class="n">g2_size</span><span class="p">,</span>
+</span><span id="aat_compare-182"><a href="#aat_compare-182"><span class="linenos">182</span></a>    <span class="p">)</span>
+</span></pre></div>
+
+
+            <div class="docstring"><p>Compare <code>g1</code> to <code>g2</code> on the three metrics aatgraphs.qmd names as
+useful for graphs that are neither AAT-identical nor AAT-similar:
+number of action nodes, depth, and size, each as a g1/g2 ratio.
+Raises ValueError if any of g2's three corresponding values is 0 (the
+ratio would be undefined), or on a related_node cycle in either
+graph.</p>
+</div>
+
+
+                </section>
+                <section id="AATComparison">
+                            <input id="AATComparison-view-source" class="view-source-toggle-state" type="checkbox" aria-hidden="true" tabindex="-1">
+<div class="attr class">
+            
+    <span class="def">class</span>
+    <span class="name">AATComparison</span><wbr>(<span class="base">pydantic.main.BaseModel</span>):
+
+                <label class="view-source-button" for="AATComparison-view-source"><span>View Source</span></label>
+
+    </div>
+    <a class="headerlink" href="#AATComparison"></a>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="AATComparison-29"><a href="#AATComparison-29"><span class="linenos">29</span></a><span class="k">class</span><span class="w"> </span><span class="nc">AATComparison</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+</span><span id="AATComparison-30"><a href="#AATComparison-30"><span class="linenos">30</span></a><span class="w">    </span><span class="sd">"""Result of `aat_compare`: three g1/g2 ratios, meant for graphs that</span>
+</span><span id="AATComparison-31"><a href="#AATComparison-31"><span class="linenos">31</span></a><span class="sd">    are neither AAT-identical nor AAT-similar (aatgraphs.qmd's</span>
+</span><span id="AATComparison-32"><a href="#AATComparison-32"><span class="linenos">32</span></a><span class="sd">    "Differences in AAT graphs" section names these three as the useful</span>
+</span><span id="AATComparison-33"><a href="#AATComparison-33"><span class="linenos">33</span></a><span class="sd">    ones)."""</span>
+</span><span id="AATComparison-34"><a href="#AATComparison-34"><span class="linenos">34</span></a>
+</span><span id="AATComparison-35"><a href="#AATComparison-35"><span class="linenos">35</span></a>    <span class="n">action_node_ratio</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+</span><span id="AATComparison-36"><a href="#AATComparison-36"><span class="linenos">36</span></a>        <span class="n">description</span><span class="o">=</span><span class="s2">"(number of action nodes in g1) / (number of action nodes in g2)."</span>
+</span><span id="AATComparison-37"><a href="#AATComparison-37"><span class="linenos">37</span></a>    <span class="p">)</span>
+</span><span id="AATComparison-38"><a href="#AATComparison-38"><span class="linenos">38</span></a>    <span class="n">depth_ratio</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="s2">"(depth of g1) / (depth of g2)."</span><span class="p">)</span>
+</span><span id="AATComparison-39"><a href="#AATComparison-39"><span class="linenos">39</span></a>    <span class="n">size_ratio</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="s2">"(size of g1) / (size of g2)."</span><span class="p">)</span>
+</span></pre></div>
+
+
+            <div class="docstring"><p>Result of <code><a href="#aat_compare">aat_compare</a></code>: three g1/g2 ratios, meant for graphs that
+are neither AAT-identical nor AAT-similar (aatgraphs.qmd's
+"Differences in AAT graphs" section names these three as the useful
+ones).</p>
+</div>
+
+
+                            <div id="AATComparison.action_node_ratio" class="classattr">
+                                <div class="attr variable">
+            <span class="name">action_node_ratio</span><span class="annotation">: float</span>        =
+<span class="default_value">PydanticUndefined</span>
+
+        
+    </div>
+    <a class="headerlink" href="#AATComparison.action_node_ratio"></a>
+    
+            <div class="docstring"><p>(number of action nodes in g1) / (number of action nodes in g2).</p>
+</div>
+
+
+                            </div>
+                            <div id="AATComparison.depth_ratio" class="classattr">
+                                <div class="attr variable">
+            <span class="name">depth_ratio</span><span class="annotation">: float</span>        =
+<span class="default_value">PydanticUndefined</span>
+
+        
+    </div>
+    <a class="headerlink" href="#AATComparison.depth_ratio"></a>
+    
+            <div class="docstring"><p>(depth of g1) / (depth of g2).</p>
+</div>
+
+
+                            </div>
+                            <div id="AATComparison.size_ratio" class="classattr">
+                                <div class="attr variable">
+            <span class="name">size_ratio</span><span class="annotation">: float</span>        =
+<span class="default_value">PydanticUndefined</span>
+
+        
+    </div>
+    <a class="headerlink" href="#AATComparison.size_ratio"></a>
+    
+            <div class="docstring"><p>(size of g1) / (size of g2).</p>
+</div>
+
+
+                            </div>
                 </section>
                 <section id="serialize_nodes">
                             <input id="serialize_nodes-view-source" class="view-source-toggle-state" type="checkbox" aria-hidden="true" tabindex="-1">
@@ -1308,7 +1520,7 @@ any deterministic code either.</p>
 <div class="attr function">
             
         <span class="def">def</span>
-        <span class="name">tokens_to_html</span><span class="signature pdoc-code multiline">(<span class="param">	<span class="n">tokens</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n"><a href="#CitableToken">CitableToken</a></span><span class="p">]</span>,</span><span class="param">	<span class="n">graph</span><span class="p">:</span> <span class="n"><a href="#AATGraph">AATGraph</a></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span></span><span class="return-annotation">) -> <span class="nb">str</span>:</span></span>
+        <span class="name">tokens_to_html</span><span class="signature pdoc-code multiline">(<span class="param">	<span class="n">tokens</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n"><a href="#CitableToken">CitableToken</a></span><span class="p">]</span>,</span><span class="param">	<span class="n">graph</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n"><a href="#AATGraph">AATGraph</a></span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span></span><span class="return-annotation">) -> <span class="nb">str</span>:</span></span>
 
                 <label class="view-source-button" for="tokens_to_html-view-source"><span>View Source</span></label>
 

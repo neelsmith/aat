@@ -14,6 +14,7 @@ without pulling in dspy at all.
 from .tokens import CitableToken, CitedPassage
 from .graph import AATGraph, AATNode, Role, ROLES
 from .validate import validate
+from .compare import aat_identical, aat_similar, aat_compare, AATComparison
 from .serialization import (
     serialize_nodes,
     write_nodes,
@@ -40,6 +41,10 @@ __all__ = [
     "Role",
     "ROLES",
     "validate",
+    "aat_identical",
+    "aat_similar",
+    "aat_compare",
+    "AATComparison",
     "serialize_nodes",
     "write_nodes",
     "read_nodes",

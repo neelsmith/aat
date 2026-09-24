@@ -2,9 +2,13 @@
 title: Agent-Action-Target in Python
 ---
 
-Background:
+Conceptual background:
 
 - [About `aat`](./bg/about.qmd)
+- [Comparing AAT graphs](./bg/aatgraphs.qmd)
+
+Getting started:
+
 - [Installing `aat`](./bg/install.qmd)
 - [Configuring a language model](./bg/conf.qmd)
 
